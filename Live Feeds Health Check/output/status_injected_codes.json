@@ -1,0 +1,229 @@
+{
+  "statusPreparedOn": 1603424092,
+  "items": [
+    {
+      "id": "a6134ae01aad44c499d12feec782b386",
+      "title": "USA Weather Watches and Warnings",
+      "snippet": "A live data feed from the National Weather Service containing official weather warnings, watches, and advisory statements for the United States.",
+      "lastUpdateTime": 1603423860,
+      "updateRate": 10,
+      "featureCount": 7501,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "000" }
+    },
+    {
+      "id": "248e7b5827a34b248647afb012c58787",
+      "title": "Active Hurricanes, Cyclones and Typhoons",
+      "snippet": "This layer describes the observed path, forecast track, and intensity of tropical cyclone activity (hurricanes, typhoons, cyclones) from the National Hurricane Center (NHC) and Joint Typhoon Warning Center (JTWC).",
+      "lastUpdateTime": 1603423530,
+      "updateRate": 125,
+      "featureCount": 214,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "000" }
+    },
+    {
+      "id": "cb1886ff0a9d4156ba4d2fadd7e8a139",
+      "title": "Current Weather and Wind Station Data",
+      "snippet": "The Current Weather and Wind Station Data layer is created from hourly METAR station data provided from NOAA and contains approximately 11 weather variables for each location.",
+      "lastUpdateTime": 1603423800,
+      "updateRate": 60,
+      "featureCount": 5428,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "000" }
+    },
+    {
+      "id": "0a279bc085264a45b1c48ad6b60afd8d",
+      "title": "National Weather Service Ice Accumulation Forecast",
+      "snippet": "Ice Accumulation forecast for the next 72 hours across the Continental United States.",
+      "lastUpdateTime": 1603418461,
+      "updateRate": 121,
+      "featureCount": 1859,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "000" }
+    },
+    {
+      "id": "a98fd08751a5480c898b7cebe38807f4",
+      "title": "National Weather Service Smoke Forecast",
+      "snippet": "Smoke forecast for the next 48 hours across the Continental United States.",
+      "lastUpdateTime": 1603418460,
+      "updateRate": 1402,
+      "featureCount": 214386,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "002" }
+    },
+    {
+      "id": "be1bb766bf1c44a9be97bbb7c04355ff",
+      "title": "National Weather Service Snowfall Forecast",
+      "snippet": "Snowfall forecast for the next 72 hours across the Continental United States.",
+      "lastUpdateTime": 1603419247,
+      "updateRate": 121,
+      "featureCount": 64440,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "000" }
+    },
+    {
+      "id": "33820e818ebc4661b01bcd47e5f2a57e",
+      "title": "National Weather Service Wind Forecast",
+      "snippet": "Wind forecast for the next 72 hours across the Continental United States.",
+      "lastUpdateTime": 1603420931,
+      "updateRate": 127,
+      "featureCount": 4661572,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "001" }
+    },
+    {
+      "id": "0bf37bd236e848cf8b4a6dc5b162c11a",
+      "title": "National Weather Service Wind Gust Forecast",
+      "snippet": "Predicted wind gust for the next 72 hours across the Continental United States.",
+      "lastUpdateTime": 1603419670,
+      "updateRate": 123,
+      "featureCount": 243508,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "003" }
+    },
+    {
+      "id": "47ed83c3b4f943118e848fbfc33d119e",
+      "title": "National Weather Service Wind Speed Forecast",
+      "snippet": "Predicted wind speed for the next 72 hours across the Continental United States.",
+      "lastUpdateTime": 1603420316,
+      "updateRate": 125,
+      "featureCount": 177199,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "004" }
+    },
+    {
+      "id": "9e2f2b544c954fda9cd13b7f3e6eebce",
+      "title": "Recent Earthquakes",
+      "snippet": "This service presents recent earthquake information from the USGS Prompt Assessment of Global Earthquakes for Response (PAGER) program.",
+      "lastUpdateTime": 1603423800,
+      "updateRate": 5,
+      "featureCount": 3088,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "005" }
+    },
+    {
+      "id": "adfe292a67f8471a9d8230ef93294414",
+      "title": "Recent Hurricanes, Cyclones and Typhoons",
+      "snippet": "This layer features tropical storm (hurricanes, typhoons, cyclones) tracks, positions, and observed wind swaths from the past hurricane season for the Atlantic, Pacific, and Indian Basins.",
+      "lastUpdateTime": 1603423530,
+      "updateRate": 125,
+      "featureCount": 2315,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "100" }
+    },
+    {
+      "id": "b8f4033069f141729ffb298b7418b653",
+      "title": "Satellite (MODIS) Thermal Hotspots and Fire Activity",
+      "snippet": "Thermal activity detected by the MODIS sensors on the NASA Aqua and Terra satellites during the last 48 hours.",
+      "lastUpdateTime": 1603423855,
+      "updateRate": 61,
+      "featureCount": 31483,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "101" }
+    },
+    {
+      "id": "dece90af1a0242dcbf0ca36d30276aa3",
+      "title": "Satellite (VIIRS) Thermal Hotspots and Fire Activity",
+      "snippet": "Thermal activity detected by the VIIRS sensors on the NOAA/NASA Suomi NPP and NOAA-20 satellites during the last 7 days.",
+      "lastUpdateTime": 1603417802,
+      "updateRate": 134,
+      "featureCount": 742405,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "102" }
+    },
+    {
+      "id": "d957997ccee7408287a963600a77f61f",
+      "title": "USA Current Wildfires",
+      "snippet": "This layer shows wildfires that have been updated within the past 7 days in the United States from IRWIN and NIFC information.",
+      "lastUpdateTime": 1603420921,
+      "updateRate": 64,
+      "featureCount": 1627,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "200" }
+    },
+    {
+      "id": "bba3d0a070d34cea9a303c24a71d5190",
+      "title": "USA Short-Term Weather Warnings",
+      "snippet": "This layer presents continuously updated weather warnings for the United States based on data from NOAA's National Weather Service.",
+      "lastUpdateTime": 1603423943,
+      "updateRate": 159,
+      "featureCount": 1,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "201" }
+    },
+    {
+      "id": "e109e8fd9c5a495c813b5cbaee9c7d9b",
+      "title": "USA Storm Reports",
+      "snippet": "This layer contains continuously updated U.S. tornado reports, wind storm reports and hail storm reports. ",
+      "lastUpdateTime": 1603423931,
+      "updateRate": 320,
+      "featureCount": 3,
+      "usage": {
+        "trendingCode": 0,
+        "percentChange": 0,
+        "usageCounts": []
+      },
+      "status": { "code": "202" }
+    }
+  ]
+}
