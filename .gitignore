@@ -360,3 +360,4 @@ MigrationBackup/
 **/rss
 **/ResponseTimeData
 .idea/workspace.xml
+.idea/encodings.xml

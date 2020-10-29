@@ -261,51 +261,69 @@ if __name__ == "__main__":
                 "elapsed_sums": elapsedTimesTotal + elapsedTime
             })
 
-        # 10 digit Timestamp 'seconds since epoch' containing time of last 
-        # Successful Run (and Service update)
-        feedLastUpdateTimestamp = alfpResponse["lastUpdateTimestamp"]
-        # 10 digit Timestamp 'seconds since epoch' containing time of last
-        # Failed run (or Service update failure)
-        # feed_last_failure_timestamp = item["lastFailureTimestamp"]
-        # 10 digit Timestamp 'seconds since epoch' containing time of last
-        # run (having a Success, a Failure, or a No Action flag ('No Data
-        # Updates')
-        feedLastRunTimestamp = alfpResponse["lastRunTimestamp"]
-        # Average number of minutes between each successful run (or Service
-        # update)
-        avgUpdateIntervalInMins = alfpResponse["avgUpdateIntervalMins"]
-        # Average number of minutes between each run
-        avgFeedIntervalInMins = alfpResponse["avgFeedIntervalMins"]
-        #
-        consecutive_failures_count = alfpResponse["consecutiveFailures"]
-        #
-        consecutive_failures_threshold = int(itemResponse["config"]["consecutiveErrorsThreshold"])
-        #
-        alfp_code = alfpResponse["alf_status"]["code"]
+        if alfpResponse["success"]:
+            # 10 digit Timestamp 'seconds since epoch' containing time of last
+            # Successful Run (and Service update)
+            feedLastUpdateTimestamp = alfpResponse["lastUpdateTimestamp"]
+            # 10 digit Timestamp 'seconds since epoch' containing time of last
+            # Failed run (or Service update failure)
+            # feed_last_failure_timestamp = item["lastFailureTimestamp"]
+            # 10 digit Timestamp 'seconds since epoch' containing time of last
+            # run (having a Success, a Failure, or a No Action flag ('No Data
+            # Updates')
+            feedLastRunTimestamp = alfpResponse["lastRunTimestamp"]
+            # Average number of minutes between each successful run (or Service
+            # update)
+            avgUpdateIntervalInMins = alfpResponse["avgUpdateIntervalMins"]
+            # Average number of minutes between each run
+            avgFeedIntervalInMins = alfpResponse["avgFeedIntervalMins"]
+            #
+            consecutive_failures_count = alfpResponse["consecutiveFailures"]
+            #
+            consecutive_failures_threshold = int(itemResponse["config"]["consecutiveErrorsThreshold"])
+            #
+            alfp_code = alfpResponse["alf_status"]["code"]
 
-        print(f"\n\n{item_id}\t{title}")
-        print(f"\t{item_id}\t{snippet}")
-        print(f"\telapsed time  {elapsedTime}")
-        print(f"\tretry count   {retryCount}")
+            print(f"\n\n{item_id}\t{title}")
+            print(f"\t{item_id}\t{snippet}")
+            print(f"\telapsed time  {elapsedTime}")
+            print(f"\tretry count   {retryCount}")
 
-        statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
+            statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
 
-        item_dict = {
-            "id": item_id,
-            "title": title,
-            "snippet": snippet,
-            "lastUpdateTime": feedLastUpdateTimestamp,
-            "updateRate": avgUpdateIntervalInMins,
-            "featureCount": layerResponse["featureCount"],
-            "usage": {
-                "trendingCode": serviceResponse["trending"]["code"],
-                "percentChange": serviceResponse["trending"]["percent_change"],
-                "usageCounts": serviceResponse["trending"]["counts"]
-            },
-            "status": {
-                "code": "000"
+            item_dict = {
+                "id": item_id,
+                "title": title,
+                "snippet": snippet,
+                "lastUpdateTime": feedLastUpdateTimestamp,
+                "updateRate": avgUpdateIntervalInMins,
+                "featureCount": layerResponse["featureCount"],
+                "usage": {
+                    "trendingCode": serviceResponse["trending"]["code"],
+                    "percentChange": serviceResponse["trending"]["percent_change"],
+                    "usageCounts": serviceResponse["trending"]["counts"]
+                },
+                "status": {
+                    "code": "000"
+                }
             }
-        }
+        else:
+            item_dict = {
+                "id": item_id,
+                "title": title,
+                "snippet": snippet,
+                "lastUpdateTime": 0,
+                "updateRate": 0,
+                "featureCount": layerResponse["featureCount"],
+                "usage": {
+                    "trendingCode": serviceResponse["trending"]["code"],
+                    "percentChange": serviceResponse["trending"]["percent_change"],
+                    "usageCounts": serviceResponse["trending"]["counts"]
+                },
+                "status": {
+                    "code": "000"
+                }
+            }
 
         # The all() function returns True if all items in an iterable are
         # True, otherwise it returns False.
@@ -413,6 +431,11 @@ if __name__ == "__main__":
                         LoggingUtils.log_status_code_details(statusCode)
                     else:
                         print(f"Item | Fail")
+                        # If ALL of the Service states are False, we have reached
+                        # a critical failure in the system
+                        statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
+                        item_dict["status"]["code"] = "501"
+                        LoggingUtils.log_status_code_details(statusCode)
             else:
                 # If ALL of the Service states are False, we have reached
                 # a critical failure in the system

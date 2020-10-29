@@ -208,6 +208,7 @@ def add_alfp_results(data_model=None, input_data=None) -> dict:
                 if model_ele["itemResponse"]["id"] == item_id:
                     data_model[index].update({
                         "alfpResponse": {
+                            "success": True,
                             "consecutiveFailures": alfp_consecutive_failures,
                             "avgUpdateIntervalMins": avg_update_interval_mins,
                             "avgFeedIntervalMins": avg_feed_interval_mins,
@@ -220,9 +221,14 @@ def add_alfp_results(data_model=None, input_data=None) -> dict:
                         }
                     })
         else:
-            print(
-                f"ERROR: The Feed state is not accessible for the item {item_id}. Falling back to only the results "
-                f"generated from testing the Service state.")
+            for index, model_ele in enumerate(data_model):
+                if model_ele["itemResponse"]["id"] == item_id:
+                    data_model[index].update({
+                        "alfpResponse": {
+                            "success": False
+                        }
+                    })
+            print(f"ERROR: The Feed state is not accessible for the item {item_id}.")
 
     return data_model
 
