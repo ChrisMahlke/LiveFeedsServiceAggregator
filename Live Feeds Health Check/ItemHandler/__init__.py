@@ -49,7 +49,7 @@ def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
         }
 
         try:
-            agol_item = gis.content.get(itemId)
+            agol_item = gis.content.get(item_id)
             if agol_item is None:
                 print(f"ERROR\t{item_id} is invalid or item is inaccessible")
                 result["isItemValid"].update({
