@@ -1,10 +1,9 @@
+VERSION = "1.0.0"
+
 import arcgis
 import json
 
-VERSION = "1.0.0"
-
-
-def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
+def validateItems(gis: arcgis.gis.GIS = None, items: list = []) -> list:
     """ 
     Accepts a list of item Ids and retrieves the item in ArcGIS Online
     as well as the item's layers and returns a list of the item's
@@ -14,21 +13,18 @@ def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
     1) Is the item accessible
     2) Is the item's ID valid
     """
-    if items is None:
-        items = []
-
     def apply(item):
         # item ID on file
-        item_id = item["id"]
+        itemId = item["id"]
         # Item's service url stored on file
-        config_item_title = item["item_title"]
-        config_item_snippet = item["item_snippet"]
-        config_item_url = item["service_url"]
+        configItemTitle = item["item_title"]
+        configItemSnippet = item["item_snippet"]
+        configItemUrl = item["service_url"]
 
-        print(f"\nValidating Item: {item_id}")
+        print(f"\nValidating Item: {itemId}")
 
         result = {
-            "id": item_id,
+            "id": itemId,
             "agolItem": None,
             "config": {
                 "averageUpdateIntervalFactor": item["average_update_interval_factor"],
@@ -37,7 +33,7 @@ def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
                 "consecutiveErrorsThreshold": item["consecutive_failures_threshold"]
             },
             "queryParams": {
-                "url": config_item_url,
+                "url": configItemUrl,
                 "params": {},
                 "addToken": True,
                 "retryFactor": item["default_retry_count"],
@@ -53,9 +49,9 @@ def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
         }
 
         try:
-            agol_item = gis.content.get(item_id)
-            if agol_item is None:
-                print(f"ERROR\t{item_id} is invalid or item is inaccessible")
+            agolItem = gis.content.get(itemId)
+            if agolItem is None:
+                print(f"ERROR\t{itemId} is invalid or item is inaccessible")
                 result["isItemValid"].update({
                     "success": False,
                     "error": {
@@ -65,7 +61,7 @@ def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
                 })
                 return result
         except Exception as e:
-            print(f"ERROR\t{item_id} is having an issue: {e}")
+            print(f"ERROR\t{itemId} is having an issue: {e}")
             result["isItemValid"].update({
                 "success": False,
                 "error": {
@@ -75,55 +71,50 @@ def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
             })
             return result
         else:
-            print(f"SUCCESS\t{item_id}")
-            print(f"title: {agol_item['title']}")
-            print(f"snippet: {agol_item['snippet']}")
-            print(f"owner: {agol_item['owner']}")
-            print(f"access: {agol_item['access']}")
+            print(f"SUCCESS\t{itemId}")
+            print(f"title: {agolItem['title']}")
+            print(f"snippet: {agolItem['snippet']}")
+            print(f"owner: {agolItem['owner']}")
+            print(f"access: {agolItem['access']}")
             # the item is a valid ArcGIS Online item
-            if config_item_url == agol_item["url"]:
-                config_item_url = agol_item["url"]
+            if configItemUrl == agolItem["url"]:
+                configItemUrl = agolItem["url"]
             else:
-                print(f"WARNING: {item_id}")
+                print(f"WARNING: {itemId}")
                 print(f"There is a discrepency between the item's service URL and the item's URL on file")
                 print(f"Item URL\t{item['url']}")
-                print(f"Config URL\t{config_item_url}")
+                print(f"Config URL\t{configItemUrl}")
             # return a dict that contains the item from AGOL and query params
             # that will be used when we query the item's url
-            result["agolItem"] = agol_item
-            result["queryParams"]["url"] = config_item_url
+            result["agolItem"] = agolItem
+            result["queryParams"]["url"] = configItemUrl
             result["isItemValid"].update({
                 "success": True
             })
             return result
-
     return list(map(apply, items))
 
-
-def validate_service_layers(gis: arcgis.gis.GIS = None, items=None) -> list:
+def validateServiceLayers(gis: arcgis.gis.GIS = None, items: list = []) -> list:
     """ Validate the item service's layers """
-    if items is None:
-        items = []
     print("\n\n============ Validating layer details")
-
     def apply(item):
         print(f"{item['id']}")
-        agol_item = item["agolItem"]
+        agolItem = item["agolItem"]
         layers = []
-        exclusion_list = item["exclusionParams"].split(",")
-        exclusion_list_results = []
-        if isinstance(exclusion_list[0], str) and len(exclusion_list[0]) > 0:
-            exclusion_list_results = list(map(int, exclusion_list))
+        exclusionListInput = item["exclusionParams"].split(",")
+        exclusionListInputResults = []
+        if isinstance(exclusionListInput[0], str) and len(exclusionListInput[0]) > 0:
+            exclusionListInputResults = list(map(int, exclusionListInput))
         try:
-            for i, layer in enumerate(agol_item.layers):
-                if i not in exclusion_list_results:
+            for i, layer in enumerate(agolItem.layers):
+                if i not in exclusionListInputResults:
                     print(f"\t{layer.properties['name']}")
                     layers.append({
                         "id": item["id"],
-                        "name": layer.properties['name'],
+                        "name" : layer.properties['name'],
                         "success": True,
                         "token": gis._con.token,
-                        "url": layer.url
+                        "url" : layer.url
                     })
         except Exception as e:
             print(f"\t{e}")
@@ -138,26 +129,23 @@ def validate_service_layers(gis: arcgis.gis.GIS = None, items=None) -> list:
 
     return list(map(apply, items))
 
-
-def prepare_layer_query_params(layers=None) -> list:
+def prepareLayerQueryParams(layers: list = []) -> list:
     # we need to check if the item's service is valid
-    # the item can be accessible in ArcGIS Online, but the service url could be down
-
+    # the item can be accessbile in AGOL, but the service url could be down
+    
     # check the item's layers (if valid)
     # Same as above, the service URL could be accessible, but the layers
     # may not be accessible
-    if layers is None:
-        layers = []
-    layer_data = []
+    layerData = []
     for layer in layers:
-        item_id = layer["id"]
+        itemId = layer["id"]
         if layer["success"]:
-            layer_name = layer["name"]
-            layer_url = layer["url"]
-            layer_data.append({
-                "id": item_id,
-                "layerName": layer_name,
-                "url": layer_url + "/query",
+            layerName = layer["name"]
+            layerUrl = layer["url"]
+            layerData.append({
+                "id": itemId,
+                "layerName": layerName,
+                "url": layerUrl + "/query",
                 "try_json": True,
                 "add_token": True,
                 "params": {
@@ -169,24 +157,21 @@ def prepare_layer_query_params(layers=None) -> list:
                 "token": layer["token"]
             })
         else:
-            layer_data.append({
-                "id": item_id,
+            layerData.append({
+                "id": itemId,
                 "success": False
             })
-    return layer_data
+    return layerData
 
-
-def get_alfp_content(alfp_response=None) -> dict:
+def getAlfProcessorContent(alfp_response: dict = []) -> dict:
     """ """
-    if alfp_response is None:
-        alfp_response = {}
     if alfp_response["response"]["success"]:
-        item_id = alfp_response["id"]
-        print(f"{item_id}")
+        itemID = alfp_response["id"]
+        print(f"{itemID}")
         if alfp_response["response"]["response"].status_code == 200:
             content = json.loads(alfp_response["response"]["response"].content.decode('utf-8'))
             return {
-                "id": item_id,
+                "id": itemID,
                 "content": content,
                 "success": True
             }
@@ -194,14 +179,13 @@ def get_alfp_content(alfp_response=None) -> dict:
             status_code = alfp_response["response"]["response"].status_code
             reason = alfp_response["response"]["response"].reason
             return {
-                "id": item_id,
+                "id": itemID,
                 "status_code": status_code,
                 "reason": reason,
                 "success": False
             }
 
-
-def check_layers(layers):
+def checkLayers(layers):
     layer_check_list = []
     for layer in layers:
         if layer["success"]:
@@ -214,44 +198,34 @@ def check_layers(layers):
         else:
             return False
     else:
-        return False
+        return false
 
-
-def check_title(input_data=None, result_set=None) -> str:
+def checkTitle(input: dict = {}, resultSet: dict = {}) -> str:
     """
     We need to return the item's title from AGOL. However, it the item        
     title is not accessible, we return the title from the previous successful
     run that is on file
     """
-    if result_set is None:
-        result_set = {}
-    if input_data is None:
-        input_data = {}
     title = ""
-    if input_data["agolItem"] is None:
-        for ele in result_set["items"]:
-            if ele["id"] == input_data["id"]:
+    if input["agolItem"] is None:
+        for ele in resultSet["items"]:
+            if ele["id"] == input["id"]:
                 title = ele["title"]
     else:
-        title = input_data["agolItem"].title
+        title = input["agolItem"].title
     return title
 
-
-def check_summary(input_data=None, result_set=None) -> str:
+def checkItemSummary(input: dict = {}, resultSet: dict = {}) -> str:
     """
     We need to return the item's snippet from AGOL. However, it the item        
     snippet is not accessible, we return the snippet from the previous 
     successful run that is on file
     """
-    if result_set is None:
-        result_set = {}
-    if input_data is None:
-        input_data = {}
     snippet = ""
-    if input_data["agolItem"] is None:
-        for ele in result_set["items"]:
-            if ele["id"] == input_data["id"]:
+    if input["agolItem"] is None:
+        for ele in resultSet["items"]:
+            if ele["id"] == input["id"]:
                 snippet = ele["snippet"]
     else:
-        snippet = input_data["agolItem"].snippet
+        snippet = input["agolItem"].snippet
     return snippet

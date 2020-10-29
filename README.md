@@ -133,4 +133,17 @@ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
 LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-```````
+```
+
+[downloads-image]: http://img.shields.io/npm/dm/validator.svg
+
+[npm-url]: https://npmjs.org/package/validator
+[npm-image]: http://img.shields.io/npm/v/validator.svg
+
+[travis-image]: http://img.shields.io/travis/chriso/validator.js.svg
+
+[amd]: http://requirejs.org/docs/whyamd.html
+[bower]: http://bower.io/
+
+[mongoid]: http://docs.mongodb.org/manual/reference/object-id/
+[ISIN]: https://en.wikipedia.org/wiki/International_Securities_Identification_Number

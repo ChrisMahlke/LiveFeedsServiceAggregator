@@ -1,14 +1,18 @@
 """ """
+
+VERSION = "1.0.0"
+
+import arcgis
 import concurrent.futures
 import dump as dump
 import json
 import re
 import requests
+import threading
+from requests import Session
 from RetryUtils import retry
 from RetryUtils import get_retry_output
 from urllib.parse import urlencode
-
-VERSION = "1.0.0"
 
 # debugging flag
 DEBUG = False
@@ -32,21 +36,17 @@ ERROR_CODES = {
     }
 }
 
-
-def format_url(url):
+def formaturl(url):
     if not re.match('(?:http|ftp|https)://', url):
         return 'https://{}'.format(url)
     return url
 
-
-def check_request(path: str = "", params=None, **kwargs) -> dict:
+def check_request(path: str = "", params: dict = {}, **kwargs) -> dict:
     """ 
     Make a request and return a dictionary indicating
     success, failure, and the response object
     """
-    if params is None:
-        params = {}
-    path = format_url(path)
+    path = formaturl(path)
 
     item_id = kwargs.pop("id", False)
     try_json = kwargs.pop("try_json", False)
@@ -66,7 +66,7 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     # timeout (in seconds)
     if timeout_factor:
         timeout = int(timeout_factor)
-
+    
     if try_json:
         params['f'] = 'json'
 
@@ -79,6 +79,7 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
         base_url = path
     url = base_url + urlencode(params)
 
+    response = {}
     response_dict = {}
     response_dict.setdefault("error_message", [])
     response_dict.setdefault("success", False)
@@ -88,7 +89,7 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     try:
         session = requests.Session()
         current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id)
-        response = current_session.get(url, timeout=timeout)
+        response = current_session.get(url, timeout=timeout)    
     except requests.exceptions.HTTPError as errh:
         response_dict["error_message"].append(ERROR_CODES["HTTPError"])
         response_dict["error_message"].append(errh)
@@ -122,28 +123,22 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
             print(f"URL {response_dict}")
         return response_dict
 
-
-def validate_service_urls(items=None) -> list:
+def validateServiceUrls(items: list = []) -> list:
     # The ThreadPoolExecutor manages a set of worker threads, passing tasks to
     # them as they become available for more work.
-    if items is None:
-        items = []
     print("Validating Services")
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(items)) as executor:
-        # map() is used to concurrently produce a set of results from an input iterable.
-        generator = executor.map(_validate_service_url, items)
+        # map() is uesed to concurrently produce a set of results from an input iterable.
+        generator = executor.map(_validateServiceUrl, items)
         return list(generator)
 
-
-def _validate_service_url(item=None) -> dict:
+def _validateServiceUrl(item: dict = {}) -> dict:
     """ Check that the Item's url is valid """
-    if item is None:
-        item = {}
-    response = check_request(path=item["queryParams"]["url"],
-                             params=item["queryParams"]["params"],
-                             try_json=item["queryParams"]["tryJson"],
-                             add_token=item["queryParams"]["addToken"],
-                             retry_factor=item["queryParams"]["retryFactor"],
+    response = check_request(path=item["queryParams"]["url"], 
+                             params=item["queryParams"]["params"], 
+                             try_json=item["queryParams"]["tryJson"], 
+                             add_token=item["queryParams"]["addToken"], 
+                             retry_factor=item["queryParams"]["retryFactor"], 
                              timeout_factor=item["queryParams"]["timeoutFactor"],
                              token=item["queryParams"]["token"],
                              id=item["id"])
@@ -153,26 +148,21 @@ def _validate_service_url(item=None) -> dict:
         "serviceResponse": response
     }
 
-
-def check_layer_urls(input_items=None) -> list:
+def check_layer_urls(input_items: list = []) -> list:
     """ 
     Check the layers of the service
     """
-    if input_items is None:
-        input_items = []
     if len(input_items) > 0:
         # The ThreadPoolExecutor manages a set of worker threads, passing tasks to
         # them as they become available for more work.
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(input_items)) as executor:
-            # map() is used to concurrently produce a set of results from an input iterable.
+            # map() is uesed to concurrently produce a set of results from an input iterable.
             generator = executor.map(_check_layer_url, input_items)
             return list(generator)
 
-
-def _check_layer_url(layer=None) -> dict:
+def _check_layer_url(layer: dict = {}) -> dict:
     """ Check that the Item's url is valid """
-    if layer is None:
-        layer = {}
+    url = ""
     response = {
         "id": layer["id"],
         "success": False
@@ -180,10 +170,10 @@ def _check_layer_url(layer=None) -> dict:
     if layer["success"]:
         url = layer["url"]
         print(f"Checking layer: {layer['layerName']}")
-        response = check_request(path=url,
+        response = check_request(path=url, 
                                  params=layer['params'],
                                  try_json=layer['try_json'],
-                                 add_token=layer['add_token'],
+                                 add_token=layer['add_token'], 
                                  retry_factor=5,
                                  timeout_factor=5,
                                  id=layer["id"],
@@ -193,63 +183,60 @@ def _check_layer_url(layer=None) -> dict:
         "response": response
     }
 
-
-def validate_usage_details(items: list) -> list:
+def validateUsageDetails(items: list) -> list:
     """ Retrieve the usage details for all valid items """
     print("Validating Usage details")
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(items)) as executor:
-        generator = executor.map(_get_item_usage_details, items)
+        generator = executor.map(_getItemUsageDetails, items)
         results = list(generator)
         return results
 
-
-def _get_item_usage_details(input_item=None) -> dict:
+def _getItemUsageDetails(input_item: dict = {}) -> dict:
     """ Usage details show how many times the item has been used for the time period you select. """
     # Only check the items that are valid
-    if input_item is None:
-        input_item = {}
-    item_response = input_item["itemResponse"]
-    item_id = item_response["id"]
-    if item_response["isItemValid"]["success"]:
-        agol_item = item_response["agolItem"]
+    itemResponse = input_item["itemResponse"]
+    itemId = itemResponse["id"]
+    if itemResponse["isItemValid"]["success"]:
+        agolItem = itemResponse["agolItem"]
+        usage_details = {}
         try:
-            usage = agol_item.usage(date_range=item_response["usageParams"]["usageDataRange"], as_df=False)
+            usage = agolItem.usage(date_range=itemResponse["usageParams"]["usageDataRange"], as_df=False)
         except TypeError:
-            print(f"ERROR: (TypeError) Unable to retrieve usage details on: {item_id}")
+            print(f"ERROR: (TypeError) Unable to retrieve usage details on: {itemId}")
             return {
-                "itemResponse": item_response,
+                "itemResponse": input_item["itemResponse"],
                 "serviceResponse": input_item["serviceResponse"],
-                "usageResponse": {
-                    "usage": {
+                "usageResponse" : {
+                        "usage": {
                         "data": []
                     },
                     "itemHasUsageDetails": {
                         "success": False,
-                        "error": "ERROR: (TypeError) Unable to retrieve usage details on: {item_id}"
+                        "error": "ERROR: (TypeError) Unable to retrieve usage details on: {itemId}"
                     }
                 }
             }
         except IndexError:
-            print(f"ERROR: (IndexError) Unable to retrieve usage details on: {item_id}")
+            print(f"ERROR: (IndexError) Unable to retrieve usage details on: {itemId}")
             return {
-                "itemResponse": item_response,
+                "itemResponse": input_item["itemResponse"],
                 "serviceResponse": input_item["serviceResponse"],
-                "usageResponse": {
-                    "usage": {
+                "usageResponse" : {
+                        "usage": {
                         "data": []
                     },
                     "itemHasUsageDetails": {
                         "success": False,
-                        "error": "ERROR: (Index) Unable to retrieve usage details on: {item_id}"
+                        "error": "ERROR: (Index) Unable to retrieve usage details on: {itemId}"
                     }
                 }
             }
         else:
-            print(f"Usage details retrieved on: {item_id}\t{agol_item['title']}")
+            print(f"Usage details retrieved on: {itemId}\t{agolItem['title']}")
             return {
-                "itemResponse": item_response,
+                "itemResponse": input_item["itemResponse"],
                 "serviceResponse": input_item["serviceResponse"],
-                "usageResponse": {
+                "usageResponse" : {
                     "usage": usage,
                     "itemHasUsageDetails": {
                         "success": True
@@ -257,86 +244,73 @@ def _get_item_usage_details(input_item=None) -> dict:
                 }
             }
     else:
-        print(f"Usage details NOT retrieved on: {item_id}")
+        print(f"Usage details NOT retrieved on: {itemId}")
         return {
-            "itemResponse": item_response,
+            "itemResponse": input_item["itemResponse"],
             "serviceResponse": input_item["serviceResponse"],
-            "usageResponse": {
+            "usageResponse" : {
                 "usage": {
                     "data": []
                 },
                 "itemHasUsageDetails": {
                     "success": False,
-                    "error": "Unable to retrieve usage details on: {item_id}"
+                    "error": "Unable to retrieve usage details on: {itemId}"
                 }
             }
         }
 
-
-def get_alfp_content(input_items=None) -> list:
+def getAlfProcessorContent(input_items: list = []) -> list:
     """ """
-    if input_items is None:
-        input_items = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(input_items)) as executor:
-        # map() is used to concurrently produce a set of results from an input iterable.
-        generator = executor.map(_check_alfp_url, input_items)
+        # map() is uesed to concurrently produce a set of results from an input iterable.
+        generator = executor.map(checkAlfProcessorUrl, input_items)
         return list(generator)
 
-
-def _check_alfp_url(input_data=None) -> dict:
+def checkAlfProcessorUrl(input: dict = {}) -> dict:
     """ """
-    if input_data is None:
-        input_data = {}
-    response = check_request(path=input_data["url"],
-                             params=input_data['params'],
-                             try_json=input_data['try_json'],
-                             add_token=input_data['add_token'],
-                             retry_factor=input_data['retry_factor'],
-                             timeout_factor=input_data['timeout_factor'],
-                             token=input_data['token'],
-                             id=input_data["id"])
+    response = check_request(path=input["url"], 
+                             params=input['params'], 
+                             try_json=input['try_json'], 
+                             add_token=input['add_token'], 
+                             retry_factor=input['retry_factor'], 
+                             timeout_factor=input['timeout_factor'],
+                             token=input['token'],
+                             id=input["id"])
     return {
-        "id": input_data["id"],
+        "id": input["id"],
         "response": response
     }
 
-
-def get_all_feature_counts(input_layer_data=None) -> list:
+def getAllFeatureCounts(inputLayerData: list = []) -> dict:
     """ Iterate through the list of layers for each item and check the response """
-    if input_layer_data is None:
-        input_layer_data = []
     print("\n\n============ Getting Feature Counts")
-    result_counts = []
-    for layer in input_layer_data:
+    resultCounts = []
+    for layer in inputLayerData:
         # current item ID
-        current_item_id = layer[0]["id"]
+        currentItemID = layer[0]["id"]
         # reset the total feature count for this service
-        current_item_feature_count = 0
+        currentItemFeatureCount = 0
         # Query the list of layers of the current item in the iteration
         # and return the feature counts
-        validated_layers = check_layer_urls(layer)
-        if validated_layers is not None:
-            for validatedLayer in validated_layers:
+        validatedLayers = check_layer_urls(layer)
+        if validatedLayers is not None:
+            for validatedLayer in validatedLayers:
                 if validatedLayer["response"]["success"]:
-                    count_dict = json.loads(validatedLayer["response"]["response"].content.decode('utf-8'))
-                    current_item_feature_count += count_dict["count"]
-        print(f"currentItemFeatureCount: {current_item_id}\t{current_item_feature_count}\n")
-        result_counts.append({
-            "id": current_item_id,
-            "featureCount": current_item_feature_count
+                    #print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
+                    countDict = json.loads(validatedLayer["response"]["response"].content.decode('utf-8'))
+                    currentItemFeatureCount += countDict["count"]
+        print(f"currentItemFeatureCount: {currentItemID}\t{currentItemFeatureCount}\n")
+        resultCounts.append({
+            "id": currentItemID,
+            "featureCount": currentItemFeatureCount
         })
-    return result_counts
+    return resultCounts
 
-
-def prepare_alfp_query_params(input_dict=None) -> dict:
-    """ Prepare the query params that are used to retrieve content from the ALF Processor results """
-    if input_dict is None:
-        input_dict = {}
-    item_id = input_dict["id"]
-    # TODO Remove hard-coded URL
+def prepareAlfProcessoerQueryParams(input: dict = {}) -> dict:
+    itemID = input["id"]
     return {
-        "id": item_id,
-        "url": f"https://livefeedsdev.s3.amazonaws.com/Heartbeat/{item_id}.json",
+        "id": itemID,
+        "url": f"https://livefeedsdev.s3.amazonaws.com/Heartbeat/{itemID}.json",
         "try_json": False,
         "add_token": False,
         "params": {},

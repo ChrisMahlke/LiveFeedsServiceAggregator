@@ -12,11 +12,11 @@ functions:
 
     * greeting
 """
-import datetime
-import sys
 
 VERSION = "1.0.0"
 
+import datetime
+import sys
 
 class User:
     """ 
@@ -32,22 +32,21 @@ class User:
 
     """
 
-    def __init__(self, user, install_info):
+    def __init__(self, user, installInfo):
         """
         Parameters
         ----------
         user : str
             The user
-        install_info : str
+        installInfo : str
             Install information
         """
         self.user = user
-        self.install_info = install_info
+        self.installInfo = installInfo
 
     def greeting(self):
         """ Print to stdout a welcome message """
         print(datetime.datetime.now().strftime("%A, %B %d, %I:%M %p"))
         print("Welcome " + self.user.firstName + " " + self.user.lastName)
-        print(self.install_info["ProductName"] + " " + self.install_info["Version"] + " (" + self.install_info[
-            "LicenseLevel"] + ")")
+        print(self.installInfo["ProductName"] + " " + self.installInfo["Version"] + " (" + self.installInfo["LicenseLevel"] + ")")
         print("Python version " + sys.version)
