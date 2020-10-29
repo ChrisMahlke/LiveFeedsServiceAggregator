@@ -103,7 +103,8 @@ def validate_service_layers(gis: arcgis.gis.GIS = None, items=None) -> list:
     print("\n\n============ Validating layer details")
 
     def apply(item):
-        print(f"{item['id']}")
+        item_id = item["id"]
+        print(f"{item_id}")
         agol_item = item["agolItem"]
         layers = []
         exclusion_list_input = item["exclusionParams"].split(",")
@@ -112,10 +113,10 @@ def validate_service_layers(gis: arcgis.gis.GIS = None, items=None) -> list:
             exclusion_list_input_results = list(map(int, exclusion_list_input))
         try:
             for i, layer in enumerate(agol_item.layers):
-                if i not in exclusion_list_input_results:
+                if layer.properties["id"] not in exclusion_list_input_results:
                     print(f"\t{layer.properties['name']}")
                     layers.append({
-                        "id": item["id"],
+                        "id": item_id,
                         "name": layer.properties['name'],
                         "success": True,
                         "token": gis._con.token,
@@ -124,7 +125,7 @@ def validate_service_layers(gis: arcgis.gis.GIS = None, items=None) -> list:
         except Exception as e:
             print(f"\t{e}")
             layers.append({
-                "id": item["id"],
+                "id": item_id,
                 "success": False,
                 "message": e
             })

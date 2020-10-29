@@ -125,11 +125,12 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
 
 
 def validate_service_urls(items=None) -> list:
-    # The ThreadPoolExecutor manages a set of worker threads, passing tasks to
-    # them as they become available for more work.
+    """ Validate the service urls """
     if items is None:
         items = []
     print("Validating Services")
+    # The ThreadPoolExecutor manages a set of worker threads, passing tasks to
+    # them as they become available for more work.
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(items)) as executor:
         # map() is used to concurrently produce a set of results from an input iterable.
         generator = executor.map(_validate_service_url, items)
@@ -137,7 +138,7 @@ def validate_service_urls(items=None) -> list:
 
 
 def _validate_service_url(item=None) -> dict:
-    """ Check that the Item's url is valid """
+    """ Check that the Item's service url is valid """
     if item is None:
         item = {}
     response = check_request(path=item["queryParams"]["url"],
@@ -156,9 +157,7 @@ def _validate_service_url(item=None) -> dict:
 
 
 def check_layer_urls(input_items=None) -> list:
-    """ 
-    Check the layers of the service
-    """
+    """  Check the layers of the service """
     if input_items is None:
         input_items = []
     if len(input_items) > 0:
