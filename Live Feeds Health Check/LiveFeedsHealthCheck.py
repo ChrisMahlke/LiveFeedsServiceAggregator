@@ -244,7 +244,7 @@ if __name__ == "__main__":
         #
         consecutive_failures_count = alfpResponse["consecutiveFailures"]
         #
-        consecutive_failures_threshold = nt(itemResponse["config"]["consecutiveErrorsThreshold"])
+        consecutive_failures_threshold = int(itemResponse["config"]["consecutiveErrorsThreshold"])
         #
         alfp_code = alfpResponse["alf_status"]["code"]
 
@@ -403,34 +403,34 @@ if __name__ == "__main__":
                 FileManager.create_new_file(rssFilePath)
                 FileManager.set_file_permission(rssFilePath)
                 feed = FeedGenerator.Feed(rss="2.0",
-                                       channel="",
-                                       channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                       channelLink="https://www.arcgis.com",
-                                       channelDescription=snippet,
-                                       webmaster="livingatlas_admins@esri.com",
-                                       ttl="",
-                                       pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                       item="",
-                                       itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                       itemLink="https://www.esri.com",
-                                       itemDescription=statusCode["Description of Condition"])
+                                          channel="",
+                                          channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
+                                          channelLink="https://www.arcgis.com",
+                                          channelDescription=snippet,
+                                          webmaster="livingatlas_admins@esri.com",
+                                          ttl="",
+                                          pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
+                                          item="",
+                                          itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
+                                          itemLink="https://www.esri.com",
+                                          itemDescription=statusCode["Description of Condition"])
                 dataSerializer = FeedGenerator.DataSerializer()
                 elementTree = dataSerializer.serialize(feed, "XML")
                 elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
         else:
             # The RSS file does not already exists, create a new RSS file
             feed = FeedGenerator.Feed(rss="2.0",
-                                   channel="",
-                                   channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                   channelLink="https://www.arcgis.com",
-                                   channelDescription=snippet,
-                                   webmaster="livingatlas_admins@esri.com",
-                                   ttl="",
-                                   pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                   item="",
-                                   itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                   itemLink="https://www.esri.com",
-                                   itemDescription=statusCode["Description of Condition"])
+                                      channel="",
+                                      channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
+                                      channelLink="https://www.arcgis.com",
+                                      channelDescription=snippet,
+                                      webmaster="livingatlas_admins@esri.com",
+                                      ttl="",
+                                      pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
+                                      item="",
+                                      itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
+                                      itemLink="https://www.esri.com",
+                                      itemDescription=statusCode["Description of Condition"])
             dataSerializer = FeedGenerator.DataSerializer()
             elementTree = dataSerializer.serialize(feed, "XML")
             elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)

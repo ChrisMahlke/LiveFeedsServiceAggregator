@@ -76,7 +76,7 @@ def _serialize_to_xml(feed):
     # ttl
     _create_element(feed.pubDate, channel_element, "pubDate")
     # item
-    item_element = _createElement(feed.item, channel_element, "item")
+    item_element = _create_element(feed.item, channel_element, "item")
     # item title
     _create_element(feed.itemTitle, item_element, "title")
     # link
