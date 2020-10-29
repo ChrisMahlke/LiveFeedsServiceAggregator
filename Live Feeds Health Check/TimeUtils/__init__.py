@@ -10,13 +10,13 @@ functions:
 
     * getCurrentTimestamp
 """
-
-VERSION = "1.0.0"
-
 from datetime import datetime
 import math
 
-def getCurrentTimestamp():
+VERSION = "1.0.0"
+
+
+def get_current_time_and_date():
     """ 
     Get the current date and time (this wil be included at the root level
     of the JSON data model. The datetime module supplies classes for
@@ -40,6 +40,7 @@ def getCurrentTimestamp():
         "datetimeObj": dt_object
     }
 
-def convertFromUtcToDateTime(utcTimestamp):
+
+def convert_from_utc_to_datetime(utc_timestamp):
     """ Return the local date corresponding to the POSIX timestamp """
-    return datetime.fromtimestamp(utcTimestamp)
+    return datetime.fromtimestamp(utc_timestamp)

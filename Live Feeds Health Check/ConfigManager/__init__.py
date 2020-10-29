@@ -1,54 +1,35 @@
+import configparser
+import os
+
 VERSION = "1.0.0"
 
-import configparser
-import os, stat
-import pathlib
-import json
 
 class ConfigManager:
     """ 
-    Routines for handling the loading and parsing of the config ini file 
-    
-    Attributes
-    ----------
-    None
-
-    Methods
-    -------
-    getConfigData(configType)
-        Retreived the config data
-
-    _getSectionsFromIniFile(self)
-        Parse the sections of the ini file
-
-    _loadItem(self, section: str = "")
-        Use the section name as the unique identifier (key)
-
-    _loadStatusCode(self, section: str = "")
-        TODO
+    Routines for handling the loading and parsing of the config ini file
     """
 
-    def __init__(self, root, fileName):     
+    def __init__(self, root, file_name):
         # project root
         self.root = root
         # ini file name
-        self.fileName = fileName
+        self.file_name = file_name
         # path to ini file
-        self.path = os.path.join(self.root, self.fileName)
+        self.path = os.path.join(self.root, self.file_name)
         # instantiate config parser
         self.parser = configparser.SafeConfigParser()
 
-    def getConfigData(self, configType):
+    def get_config_data(self, config_type):
         """ """
-        sections = self._getSectionsFromIniFile()
+        sections = self._get_sections_from_ini_file()
         # Prepare the script's input data model from the config file
-        if configType == "items":
-            inputDataModel = list(map(self._loadItem, sections))
+        if config_type == "items":
+            input_data_model = list(map(self._load_item, sections))
         else:
-            inputDataModel = list(map(self._loadStatusCode, sections))
-        return inputDataModel
+            input_data_model = list(map(self._load_status_code, sections))
+        return input_data_model
 
-    def _getSectionsFromIniFile(self):
+    def _get_sections_from_ini_file(self):
         """ """
         # read in config file
         self.parser.read(self.path)
@@ -56,14 +37,14 @@ class ConfigManager:
         sections = self.parser.sections()
         return sections
 
-    def _loadItem(self, section: str = "") -> dict:
+    def _load_item(self, section: str = "") -> dict:
         details_dict = dict(self.parser.items(section))
         details_dict.update({
             "id": section
         })
         return details_dict
 
-    def _loadStatusCode(self, section: str = "") -> dict:
+    def _load_status_code(self, section: str = "") -> dict:
         details_dict = dict(self.parser.items(section))
         details_dict.update({
             "code": section

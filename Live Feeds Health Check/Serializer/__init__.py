@@ -1,14 +1,15 @@
 """
 Very lightweight data serializer.
 """
+import json
+import xml.etree.ElementTree as Et
 
 VERSION = "1.0.0"
 
-import json
-import xml.etree.ElementTree as et
 
 class Feed:
     """ """
+
     def __init__(self, **kwargs):
         prop_defaults = {
             "rss": "2.0",
@@ -28,65 +29,67 @@ class Feed:
         for (prop, default) in prop_defaults.items():
             setattr(self, prop, kwargs.get(prop, default))
 
+
 class DataSerializer:
     """ """
-    def serialize(self, feed, format):
-        serializer = get_serializer(format)
+
+    @staticmethod
+    def serialize(feed, file_format):
+        serializer = get_serializer(file_format)
         return serializer(feed)
 
 
-def get_serializer(format):
+def get_serializer(file_format):
     """ """
-    if format == 'JSON':
+    if file_format == 'JSON':
         return _serialize_to_json
-    elif format == 'XML':
+    elif file_format == 'XML':
         return _serialize_to_xml
     else:
-        raise ValueError(format)
+        raise ValueError(file_format)
 
 
-def _serialize_to_json(feed):
+def _serialize_to_json():
     """ """
     payload = {}
     return json.dumps(payload)
 
 
 def _serialize_to_xml(feed):
-    """ Create the Element(s) heirarchy"""
+    """ Create the Element(s) hierarchy """
     # rss element
-    rssElement = et.Element('rss', attrib={
+    rss_element = Et.Element('rss', attrib={
         'version': feed.rss
     })
     # channel
-    channelElement = et.SubElement(rssElement, 'channel')
+    channel_element = Et.SubElement(rss_element, 'channel')
     # title
-    _createElement(feed.channelTitle, channelElement, "title")
+    _create_element(feed.channelTitle, channel_element, "title")
     # link
-    _createElement(feed.channelLink, channelElement, "link")
+    _create_element(feed.channelLink, channel_element, "link")
     # description
-    _createElement(feed.channelDescription, channelElement, "description")
+    _create_element(feed.channelDescription, channel_element, "description")
     # web master
-    _createElement(feed.webmaster, channelElement, "webMaster")
+    _create_element(feed.webmaster, channel_element, "webMaster")
     # ttl
-    _createElement(feed.ttl, channelElement, "ttl")
+    _create_element(feed.ttl, channel_element, "ttl")
     # ttl
-    _createElement(feed.pubDate, channelElement, "pubDate")
+    _create_element(feed.pubDate, channel_element, "pubDate")
     # item
-    itemElement = _createElement(feed.item, channelElement, "item")
+    item_element = _createElement(feed.item, channel_element, "item")
     # item title
-    _createElement(feed.itemTitle, itemElement, "title")
+    _create_element(feed.itemTitle, item_element, "title")
     # link
-    _createElement(feed.itemLink, itemElement, "link")
+    _create_element(feed.itemLink, item_element, "link")
     # item status
-    _createElement(feed.itemDescription, itemElement, "description")
+    _create_element(feed.itemDescription, item_element, "description")
 
-    #return et.tostring(rssElement, encoding="unicode", method="xml")
-    tree = et.ElementTree(rssElement)
+    tree = Et.ElementTree(rss_element)
     return tree
 
-def _createElement(feedProp, targetEle, newTag):
-    """Create an element instance, and appends it to an existing parent."""
-    ele = et.SubElement(targetEle, newTag)
-    ele.text = feedProp
-    return ele
 
+def _create_element(feed_prop, target_ele, new_tag):
+    """Create an element instance, and appends it to an existing parent."""
+    ele = Et.SubElement(target_ele, new_tag)
+    ele.text = feed_prop
+    return ele

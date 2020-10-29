@@ -1,7 +1,4 @@
 """ """
-
-VERSION = "1.0.0"
-
 from datetime import timedelta
 from typing import Optional, Tuple, TypeVar, Union
 
@@ -11,6 +8,8 @@ from urllib3 import Retry
 
 import http.client
 import socket
+
+VERSION = "1.0.0"
 
 # Python is a dynamically typed language. This means that the Python
 # interpreter does type checking only as code runs, and that the type of a
@@ -23,13 +22,17 @@ T = TypeVar("T", bound=requests.Session)
 
 retry_output = []
 
+
 def _patch_send():
     """ Debugging: Represents one transaction with an HTTP server """
     old_send = http.client.HTTPConnection.send
+
     def new_send(self, data):
         print(data.decode('utf-8'))
         return old_send(self, data)
+
     http.client.HTTPConnection.send = new_send
+
 
 class TimeoutSession(requests.Session):
     """A session that has a timeout for all of its requests."""
@@ -60,8 +63,9 @@ class TimeoutSession(requests.Session):
         kwargs.setdefault("timeout", self.timeout)
         # output request calls for debugging
         print(f"request")
-        #_patch_send()
+        # _patch_send()
         return super().request(method, url, *args, **kwargs)
+
 
 class RetrySession(TimeoutSession):
     """A session that has a timeout and a `raises_for_status`
@@ -70,10 +74,12 @@ class RetrySession(TimeoutSession):
      raise_for_status: will raise an HTTPError if the HTTP request returned an
      unsuccessful status code.
     """
+
     def __init__(self, timeout: Union[int, timedelta] = 5):
         super().__init__(timeout)
         print(f"RetrySession")
         self.hooks["response"] = lambda r, *args, **kwargs: r.raise_for_status()
+
 
 class CallbackRetry(Retry):
     def __init__(self, *args, **kwargs):
@@ -99,23 +105,26 @@ class CallbackRetry(Retry):
                 print("Callback raised an exception, ignoring")
         return super(CallbackRetry, self).increment(method, url, *args, **kwargs)
 
-def retry_callback(url, id, counter):
-    print(f"Callback invoked: {id}\t{counter}\t{url}")
+
+def retry_callback(url, item_id, counter):
+    print(f"Callback invoked: {item_id}\t{counter}\t{url}")
     retry_output.append({
-        "id": id,
+        "id": item_id,
         "retryCount": counter
     })
+
 
 def get_retry_output():
     return retry_output
 
+
 def retry(
-    session: Optional[T] = None,
-    retries: int = 3,
-    backoff_factor: float = 1,
-    status_to_retry: Tuple[int, ...] = (500, 502, 504),
-    prefixes: Tuple[str, ...] = ("http://", "https://"),
-    **kwargs
+        session: Optional[T] = None,
+        retries: int = 3,
+        backoff_factor: float = 1,
+        status_to_retry: Tuple[int, ...] = (500, 502, 504),
+        prefixes: Tuple[str, ...] = ("http://", "https://"),
+        **kwargs
 ) -> Union[T, RetrySession]:
     """
     Configures the passed-in session to retry on failed requests
@@ -148,7 +157,8 @@ def retry(
     # Retry too in non-idempotent methods like POST
     kwargs.setdefault("method_whitelist", False)
     #
-    retries = CallbackRetry(total=retries, status_forcelist=[408, 500, 502, 503, 504], callback=retry_callback, id=item_id, counter=0)
+    retries = CallbackRetry(total=retries, status_forcelist=[408, 500, 502, 503, 504], callback=retry_callback,
+                            id=item_id, counter=0)
     for prefix in prefixes:
         session.mount(prefix, HTTPAdapter(max_retries=retries))
     return session

@@ -37,14 +37,14 @@ try:
     from UserUtils import User
     from collections import defaultdict
 except ImportError as e:
-    print(f"Impoert Error: {e}")
+    print(f"Import Error: {e}")
 
 if __name__ == "__main__":
     print("=================================================================")
     print(f"Setting up project and checking folders and directories")
     print("=================================================================")
     # get the current date and time
-    timeUtilsResponse = TimeUtils.getCurrentTimestamp()
+    timeUtilsResponse = TimeUtils.get_current_time_and_date()
     timestamp = timeUtilsResponse["timestamp"]
 
     # The root directory of the script
@@ -52,8 +52,8 @@ if __name__ == "__main__":
     print(f"Root Directory: {ROOT_DIR}")
 
     # Read in the input items data model
-    configIniManager = ConfigManager(root=ROOT_DIR, fileName="config.ini")
-    itemsDataModel = configIniManager.getConfigData(configType="items")
+    configIniManager = ConfigManager(root=ROOT_DIR, file_name="config.ini")
+    itemsDataModel = configIniManager.get_config_data(config_type="items")
     if len(itemsDataModel) < 1:
         print(f"ERROR: Either there are no items in the config file, or the config file has not been loaded!")
 
@@ -61,29 +61,29 @@ if __name__ == "__main__":
     # statusCodesManager = ConfigManager(root=ROOT_DIR, fileName="statusCodes.ini")
     # statusCodesDataModel = statusCodesManager.getConfigData(configType="statusCodes")
     statusCodeConfigPath = ROOT_DIR + r"\statusCodes.json"
-    statusCodeJsonExist = FileManager.checkFileExistByPathlib(path=statusCodeConfigPath)
+    statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
     statusCodesDataModel = None
     if statusCodeJsonExist is False:
         print(f"ERROR: The status code file is not available or inaccessible!")
     else:
-        statusCodesDataModel = FileManager.loadStatusConfigData(path=statusCodeConfigPath)
+        statusCodesDataModel = FileManager.load_status_config_data(path=statusCodeConfigPath)
 
     # Create a new directory to hold the rss feeds (if it does not exist)
     rssDirPath = os.path.realpath(ROOT_DIR + r"\rss")
-    FileManager.createNewFolder(rssDirPath)
+    FileManager.create_new_folder(rssDirPath)
 
     # Read in the previous status output file
     # output folder path for output file
     outputStatusDirPath = os.path.realpath(ROOT_DIR + r"\output")
     # Create a new directory if it does not exists
-    FileManager.createNewFolder(outputStatusDirPath)
+    FileManager.create_new_folder(outputStatusDirPath)
     # path to output file
     outputFilePath = outputStatusDirPath + r"\status.json"
     # Check file existence.
-    fileExist = FileManager.checkFileExistByPathlib(path=outputFilePath)
+    fileExist = FileManager.check_file_exist_by_pathlib(path=outputFilePath)
     previousStatusCheckData = {}
     if fileExist:
-        previousStatusCheckData = FileManager.getResponseTimeData(outputFilePath)
+        previousStatusCheckData = FileManager.get_response_time_data(outputFilePath)
 
     print("\n=================================================================")
     print(f"Authenticate GIS profile")
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     else:
         # get the installation properties and print to stdout
         INSTALL_INFO = arcpy.GetInstallInfo()
-        USER_SYS = User(user=USER, installInfo=INSTALL_INFO)
+        USER_SYS = User(user=USER, install_info=INSTALL_INFO)
         USER_SYS.greeting()
 
     print("\n=================================================================")
@@ -114,50 +114,50 @@ if __name__ == "__main__":
     }
 
     # Initialize the input data model with item ID's from the config file
-    inputDataModel["items"] = list(ModelUtils.hydrateDataModel(inputConfig=itemsDataModel))
+    inputDataModel["items"] = list(ModelUtils.hydrate_input_data_model(input_config=itemsDataModel))
 
     print("\n=================================================================")
     print(f"Validating item meta-data")
     print("===================================================================")
     # Item validation
-    validatedItems = ItemHandler.validateItems(gis=GIS, items=itemsDataModel)
+    validatedItems = ItemHandler.validate_items(gis=GIS, items=itemsDataModel)
     print(f"Item meta-data validation completed")
 
     print("\n=================================================================")
     print(f"Validating item service response data")
     print("===================================================================")
     # For each item check the item's service
-    validatedServiceResponses = RequestUtils.validateServiceUrls(items=validatedItems)
+    validatedServiceResponses = RequestUtils.validate_service_urls(items=validatedItems)
     # update data model with validated services
-    validatedServices = ModelUtils.updateDataModelWithServiceResponses(inputData=validatedServiceResponses)
+    validatedServices = ModelUtils.add_service_responses(input_data=validatedServiceResponses)
 
     print("\n=================================================================")
     print(f"Validating item usage details")
     print("===================================================================")
-    validatedUsageDetailsResponse = RequestUtils.validateUsageDetails(items=validatedServices)
+    validatedUsageDetailsResponse = RequestUtils.validate_usage_details(items=validatedServices)
     # UPDATE data model with usage details
-    validatedUsageDetails = ModelUtils.updateDataModelWithUsageDetails(dataModel=inputDataModel, inputData=validatedUsageDetailsResponse)
+    validatedUsageDetails = ModelUtils.add_usage_details(input_data=validatedUsageDetailsResponse)
 
     print("\n=================================================================")
     print(f"Retrieving layer data to derive feature counts")
     print("===================================================================")
     # Retrieve layer data for each service, this will be used to derive the
     # feature count for each service
-    layerData = ItemHandler.validateServiceLayers(gis=GIS, items=validatedItems)
+    layerData = ItemHandler.validate_service_layers(gis=GIS, items=validatedItems)
     # Prepare the layers for querying
-    layerInputQueryParams = list(map(ItemHandler.prepareLayerQueryParams, layerData))
+    layerInputQueryParams = list(map(ItemHandler.prepare_layer_query_params, layerData))
     # UPDATE data model with feature counts
-    allFeatureCounts = RequestUtils.getAllFeatureCounts(inputLayerData=layerInputQueryParams)
-    validatedLayers = ModelUtils.updateDataModelWithFeatureCount(inputDataModel=validatedUsageDetails, totalFeatureCounts=allFeatureCounts)
+    allFeatureCounts = RequestUtils.get_all_feature_counts(input_layer_data=layerInputQueryParams)
+    validatedLayers = ModelUtils.add_feature_counts(input_data_model=validatedUsageDetails, feature_counts=allFeatureCounts)
 
     print("\n=================================================================")
     print(f"Integrating ALF Processor results")
     print("===================================================================")
     # retrieve the alf statuses
-    alfProcessorQueries = list(map(RequestUtils.prepareAlfProcessoerQueryParams, inputDataModel["items"]))
-    alfProcessorResponse = RequestUtils.getAlfProcessorContent(alfProcessorQueries)
+    alfProcessorQueries = list(map(RequestUtils.prepare_alfp_query_params, inputDataModel["items"]))
+    alfProcessorResponse = RequestUtils.get_alfp_content(alfProcessorQueries)
 
-    inputDataModel = ModelUtils.updateDataModelWithAlfProcessorContent(data_model=validatedLayers, inputData=alfProcessorResponse)
+    inputDataModel = ModelUtils.add_alfp_results(data_model=validatedLayers, input_data=alfProcessorResponse)
 
     print("\n=================================================================")
     print(f"Process input data model")
@@ -182,13 +182,13 @@ if __name__ == "__main__":
         serviceIsValid = serviceResponse["success"]
         # layers
         layers = layerData[i]
-        isLayersValid = ItemHandler.checkLayers(layers)
+        isLayersValid = ItemHandler.check_layers(layers)
 
         # ID
         id = itemResponse["id"]
         # Item title and snippet
-        title = ItemHandler.checkTitle(input=itemResponse, resultSet=previousStatusCheckData)
-        snippet = ItemHandler.checkItemSummary(input=itemResponse, resultSet=previousStatusCheckData)
+        title = ItemHandler.check_title(input_data=itemResponse, result_set=previousStatusCheckData)
+        snippet = ItemHandler.check_summary(input_data=itemResponse, result_set=previousStatusCheckData)
         # elapsed time
         elapsedTime = serviceResponse["ellapsedTime"]
         # retry count
@@ -198,16 +198,16 @@ if __name__ == "__main__":
         # response time directory
         responseTimeDataDir = os.path.realpath(ROOT_DIR + r"\ResponseTimeData")
         # Create a new directory if it does not exists
-        FileManager.createNewFolder(responseTimeDataDir)
+        FileManager.create_new_folder(responseTimeDataDir)
         # path to output file
         responseTimeDataFilePath = os.path.join(responseTimeDataDir, id + "." + "json")
         # Check file existence.
-        fileExist = FileManager.checkFileExistByPathlib(path=responseTimeDataFilePath)
+        fileExist = FileManager.check_file_exist_by_pathlib(path=responseTimeDataFilePath)
         elapsedTimeCount = 1
         if (not fileExist):
             # If file does not exist then create it.
-            FileManager.createNewFile(responseTimeDataFilePath)
-            FileManager.setFilePermission(responseTimeDataFilePath)
+            FileManager.create_new_file(responseTimeDataFilePath)
+            FileManager.set_file_permission(responseTimeDataFilePath)
             FileManager.save(data={
                 "id" : id,
                 "elapsed_sums": elapsedTime,
@@ -215,16 +215,16 @@ if __name__ == "__main__":
             }, path=responseTimeDataFilePath)
             elapsedTimeAverage = elapsedTime/elapsedTimeCount
         else:
-            # Retreive the elapsed time DIVIDE by count
-            responseTimeData = FileManager.getResponseTimeData(responseTimeDataFilePath)
+            # Retrieve the elapsed time DIVIDE by count
+            responseTimeData = FileManager.get_response_time_data(responseTimeDataFilePath)
             # total counts
             elapsedTimesCount = responseTimeData["elapsed_count"]
             # sum of all times
             elapsedTimesTotal = responseTimeData["elapsed_sums"]
-            #calculated average
+            # calculated average
             elapsedTimeAverage = elapsedTimesTotal/elapsedTimesCount
 
-            FileManager.updateResponseTimeData(path=responseTimeDataFilePath, inputData={
+            FileManager.update_response_time_data(path=responseTimeDataFilePath, input_data={
                 "id": id,
                 "elapsed_count": elapsedTimesCount + 1,
                 "elapsed_sums": elapsedTimesTotal + elapsedTime
@@ -253,7 +253,7 @@ if __name__ == "__main__":
         print(f"\telapsed time  {elapsedTime}")
         print(f"\tretry count   {retryCount}")
 
-        statusCode = StatusManager.getStatusCode("000", statusCodesDataModel)
+        statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
 
         item_dict = {
             "id": id,
@@ -283,9 +283,9 @@ if __name__ == "__main__":
             lastRunTimestampDiff = outputDataModel["statusPreparedOn"] - feedLastRunTimestamp
 
             # debugging and logging
-            p_currentTimeStamp = TimeUtils.convertFromUtcToDateTime(outputDataModel['statusPreparedOn'])
-            p_feedLastUpdateTimestamp = TimeUtils.convertFromUtcToDateTime(feedLastUpdateTimestamp)
-            p_lastUpdateTimestampDiff = TimeUtils.convertFromUtcToDateTime(lastUpdateTimestampDiff)
+            p_currentTimeStamp = TimeUtils.convert_from_utc_to_datetime(outputDataModel['statusPreparedOn'])
+            p_feedLastUpdateTimestamp = TimeUtils.convert_from_utc_to_datetime(feedLastUpdateTimestamp)
+            p_lastUpdateTimestampDiff = TimeUtils.convert_from_utc_to_datetime(lastUpdateTimestampDiff)
             print(f"\tRun time of script:\t\t{p_currentTimeStamp}")
             print(f"\tLast update of Feed:\t\t{p_feedLastUpdateTimestamp}")
             print(f"\tLast update timestamp delta:\t{p_lastUpdateTimestampDiff}")
@@ -343,7 +343,7 @@ if __name__ == "__main__":
                 print(f"\telapsed time threshold: {avg_elapsed_time_threshold}")
                 item_dict["status"]["code"] = "101"
                 
-            statusCode = StatusManager.getStatusCode(item_dict["status"]["code"], statusCodesDataModel)
+            statusCode = StatusManager.get_status_code(item_dict["status"]["code"], statusCodesDataModel)
             LoggingUtils.log_status_code_details(statusCode)
 
         else:
@@ -360,19 +360,19 @@ if __name__ == "__main__":
                         print(f"Item | Success | AGOL must be down, then why is the item accessible?")
                     else:
                         # 102
-                        statusCode = StatusManager.getStatusCode("102", statusCodesDataModel)
+                        statusCode = StatusManager.get_status_code("102", statusCodesDataModel)
                         item_dict["status"]["code"] = "102"
                         LoggingUtils.log_status_code_details(statusCode)
 
                     # 201 Check
                     if isLayersValid is not True:
-                        statusCode = StatusManager.getStatusCode("201", statusCodesDataModel)
+                        statusCode = StatusManager.get_status_code("201", statusCodesDataModel)
                         item_dict["status"]["code"] = "201"
                         LoggingUtils.log_status_code_details(statusCode)
                 else:
                     # 500
                     if itemIsValid:
-                        statusCode = StatusManager.getStatusCode("500", statusCodesDataModel)
+                        statusCode = StatusManager.get_status_code("500", statusCodesDataModel)
                         item_dict["status"]["code"] = "500"
                         LoggingUtils.log_status_code_details(statusCode)
                     else:
@@ -380,7 +380,7 @@ if __name__ == "__main__":
             else:
                 # If ALL of the Service states are False, we have reached
                 # a critical failure in the system
-                statusCode = StatusManager.getStatusCode("501", statusCodesDataModel)
+                statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
                 item_dict["status"]["code"] = "501"
                 LoggingUtils.log_status_code_details(statusCode)
             
@@ -392,16 +392,16 @@ if __name__ == "__main__":
         # path to RSS output file
         rssFilePath = os.path.join(rssDirPath, id + "." + "rss")
         # Check if the file already exist
-        rssFileExist = FileManager.checkFileExistByPathlib(path=rssFilePath)
+        rssFileExist = FileManager.check_file_exist_by_pathlib(path=rssFilePath)
         if rssFileExist:
             # If the file exist, check the status
-            previousStatus = FileManager.getStatusFromFeed(rssFilePath)
+            previousStatus = FileManager.get_status_from_feed(rssFilePath)
             if previousStatus == statusCode["Description of Condition"]:
                 print(f"RSS FEED status: {statusCode['Description of Condition']}")
             else:
                 # If the new status is different than what is on file, update the feed
-                FileManager.createNewFile(rssFilePath)
-                FileManager.setFilePermission(rssFilePath)
+                FileManager.create_new_file(rssFilePath)
+                FileManager.set_file_permission(rssFilePath)
                 feed = Serializer.Feed(rss="2.0", 
                                    channel="", 
                                    channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
@@ -441,9 +441,9 @@ if __name__ == "__main__":
     print(f"Output file path: {outputFilePath}")
     print("===================================================================")
     # If file do not exist then create it.
-    if (not fileExist):
-        FileManager.createNewFile(outputFilePath)
-        FileManager.setFilePermission(outputFilePath)
+    if not fileExist:
+        FileManager.create_new_file(outputFilePath)
+        FileManager.set_file_permission(outputFilePath)
     else:
         # open file
         print()
