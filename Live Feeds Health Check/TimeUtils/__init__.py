@@ -13,8 +13,6 @@ functions:
 from datetime import datetime
 import math
 
-VERSION = "1.0.0"
-
 
 def get_current_time_and_date():
     """ 

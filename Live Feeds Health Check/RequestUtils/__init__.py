@@ -11,8 +11,6 @@ from RetryUtils import retry
 from RetryUtils import get_retry_output
 from urllib.parse import urlencode
 
-VERSION = "1.0.0"
-
 # debugging flag
 DEBUG = False
 

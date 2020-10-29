@@ -9,8 +9,6 @@ from urllib3 import Retry
 import http.client
 import socket
 
-VERSION = "1.0.0"
-
 # Python is a dynamically typed language. This means that the Python
 # interpreter does type checking only as code runs, and that the type of a
 # variable is allowed to change over its lifetime.

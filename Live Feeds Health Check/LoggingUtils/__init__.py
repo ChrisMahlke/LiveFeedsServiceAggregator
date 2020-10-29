@@ -1,8 +1,6 @@
 """ """
 import json
 
-VERSION = "1.0.0"
-
 
 def print_data(input_data):
     print(json.dumps(input_data, sort_keys=True, indent=4))

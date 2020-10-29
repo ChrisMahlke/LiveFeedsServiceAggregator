@@ -4,8 +4,6 @@ Very lightweight data serializer.
 import json
 import xml.etree.ElementTree as Et
 
-VERSION = "1.0.0"
-
 
 class Feed:
     """ """

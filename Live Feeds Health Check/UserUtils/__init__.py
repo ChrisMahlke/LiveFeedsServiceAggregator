@@ -15,8 +15,6 @@ functions:
 import datetime
 import sys
 
-VERSION = "1.0.0"
-
 
 class User:
     """ 

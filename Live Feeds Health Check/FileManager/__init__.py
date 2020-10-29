@@ -5,8 +5,6 @@ import pathlib
 import stat
 import xml.etree.ElementTree as Et
 
-VERSION = "1.0.0"
-
 
 def check_file_exist_by_os_path(path: str = ""):
     """ Check if the path exist """

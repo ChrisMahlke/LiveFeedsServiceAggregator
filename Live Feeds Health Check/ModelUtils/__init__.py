@@ -4,8 +4,6 @@ import math
 import ItemHandler as ItemHandler
 import RequestUtils as RequestUtils
 
-VERSION = "1.0.0"
-
 PERCENT_UPPER_BOUND = 5
 PERCENT_LOWER_BOUND = -5
 

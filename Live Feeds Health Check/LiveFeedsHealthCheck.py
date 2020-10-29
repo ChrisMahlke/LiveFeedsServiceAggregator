@@ -30,6 +30,7 @@ try:
     import FeedGenerator as FeedGenerator
     import StatusManager as StatusManager
     import TimeUtils as TimeUtils
+    import version as version
 
     from ConfigManager import ConfigManager
     from UserUtils import User
@@ -37,9 +38,42 @@ try:
 except ImportError as e:
     print(f"Import Error: {e}")
 
-VERSION = "1.0.0"
+
+class ItemCountNotInRangeError(Exception):
+    """Exception raised for errors when the input item count is 0
+
+        Attributes:
+            item_count -- input item count which caused the error
+            message -- explanation of the error
+    """
+
+    def __init__(self, num_items, message="No items found!"):
+        self.num_items = num_items
+        self.message = message
+
+    def __str__(self):
+        return f"\nItem count: {self.num_items} \nThere are not items in the config file!"
+
+
+class InputFileNotFoundError(Exception):
+    """Exception raised for errors in the input file is not found.
+
+        Attributes:
+            file -- input file
+            message -- explanation of the error
+    """
+
+    def __init__(self, input_file, message="The file is not found"):
+        self.input_file = input_file
+        self.message = message
+
+    def __str__(self):
+        return f"\nThe file {self.input_file} was not found or does not exist!"
+
 
 if __name__ == "__main__":
+    print(f"\nRunning version: {version.version_str}\n")
+
     print("=================================================================")
     print(f"Setting up project and checking folders and directories")
     print("=================================================================")
@@ -54,15 +88,16 @@ if __name__ == "__main__":
     # Read in the input items data model
     configIniManager = ConfigManager(root=ROOT_DIR, file_name="config.ini")
     itemsDataModel = configIniManager.get_config_data(config_type="items")
-    if len(itemsDataModel) < 1:
-        print(f"ERROR: Either there are no items in the config file, or the config file has not been loaded!")
+    item_count = len(itemsDataModel)
+    if item_count < 1:
+        raise ItemCountNotInRangeError(item_count)
 
     # Read in the status codes data model
     statusCodeConfigPath = ROOT_DIR + r"\statusCodes.json"
     statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
     statusCodesDataModel = None
     if statusCodeJsonExist is False:
-        print(f"ERROR: The status code file is not available or inaccessible!")
+        raise InputFileNotFoundError(statusCodeConfigPath)
     else:
         statusCodesDataModel = FileManager.load_status_config_data(path=statusCodeConfigPath)
 
@@ -389,6 +424,7 @@ if __name__ == "__main__":
         outputDataModel["items"].append(item_dict)
 
         print(f"Process RSS Feed")
+        # TODO Clean!
         # path to RSS output file
         rssFilePath = os.path.join(rssDirPath, item_id + "." + "rss")
         # Check if the file already exist

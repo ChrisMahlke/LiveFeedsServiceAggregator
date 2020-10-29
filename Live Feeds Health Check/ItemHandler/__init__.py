@@ -1,8 +1,6 @@
 import arcgis
 import json
 
-VERSION = "1.0.0"
-
 
 def validate_items(gis: arcgis.gis.GIS = None, items=None) -> list:
     """ 
