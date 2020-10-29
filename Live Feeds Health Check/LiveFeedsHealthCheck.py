@@ -16,8 +16,6 @@
 # =============================================================================
 """LiveFeedsHealthCheck"""
 
-VERSION = "1.0.0"
-
 try:
     import arcgis
     import arcpy
@@ -29,7 +27,7 @@ try:
     import LoggingUtils as LoggingUtils
     import ModelUtils as ModelUtils
     import RequestUtils as RequestUtils
-    import Serializer as Serializer
+    import FeedGenerator as FeedGenerator
     import StatusManager as StatusManager
     import TimeUtils as TimeUtils
 
@@ -38,6 +36,8 @@ try:
     from collections import defaultdict
 except ImportError as e:
     print(f"Import Error: {e}")
+
+VERSION = "1.0.0"
 
 if __name__ == "__main__":
     print("=================================================================")
@@ -58,8 +58,6 @@ if __name__ == "__main__":
         print(f"ERROR: Either there are no items in the config file, or the config file has not been loaded!")
 
     # Read in the status codes data model
-    # statusCodesManager = ConfigManager(root=ROOT_DIR, fileName="statusCodes.ini")
-    # statusCodesDataModel = statusCodesManager.getConfigData(configType="statusCodes")
     statusCodeConfigPath = ROOT_DIR + r"\statusCodes.json"
     statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
     statusCodesDataModel = None
@@ -106,15 +104,12 @@ if __name__ == "__main__":
     print("\n=================================================================")
     print(f"Hydrating input data model")
     print("===================================================================")
-    # create the in-memory data model with the current UTC time and an empy
+    # create the in-memory data model with the current UTC time and an empty
     # list to hold the health and status of each Live Feed (or service)
-    inputDataModel = {
-        "statusPreparedOn" : timestamp,
-        "items" : []
-    }
+    inputDataModel = {"statusPreparedOn": timestamp,
+                      "items": list(ModelUtils.hydrate_input_data_model(input_config=itemsDataModel))}
 
     # Initialize the input data model with item ID's from the config file
-    inputDataModel["items"] = list(ModelUtils.hydrate_input_data_model(input_config=itemsDataModel))
 
     print("\n=================================================================")
     print(f"Validating item meta-data")
@@ -148,7 +143,8 @@ if __name__ == "__main__":
     layerInputQueryParams = list(map(ItemHandler.prepare_layer_query_params, layerData))
     # UPDATE data model with feature counts
     allFeatureCounts = RequestUtils.get_all_feature_counts(input_layer_data=layerInputQueryParams)
-    validatedLayers = ModelUtils.add_feature_counts(input_data_model=validatedUsageDetails, feature_counts=allFeatureCounts)
+    validatedLayers = ModelUtils.add_feature_counts(input_data_model=validatedUsageDetails,
+                                                    feature_counts=allFeatureCounts)
 
     print("\n=================================================================")
     print(f"Integrating ALF Processor results")
@@ -185,12 +181,12 @@ if __name__ == "__main__":
         isLayersValid = ItemHandler.check_layers(layers)
 
         # ID
-        id = itemResponse["id"]
+        item_id = itemResponse["id"]
         # Item title and snippet
         title = ItemHandler.check_title(input_data=itemResponse, result_set=previousStatusCheckData)
         snippet = ItemHandler.check_summary(input_data=itemResponse, result_set=previousStatusCheckData)
         # elapsed time
-        elapsedTime = serviceResponse["ellapsedTime"]
+        elapsedTime = serviceResponse["elapsedTime"]
         # retry count
         retryCount = serviceResponse["retryCount"]
 
@@ -200,20 +196,20 @@ if __name__ == "__main__":
         # Create a new directory if it does not exists
         FileManager.create_new_folder(responseTimeDataDir)
         # path to output file
-        responseTimeDataFilePath = os.path.join(responseTimeDataDir, id + "." + "json")
+        responseTimeDataFilePath = os.path.join(responseTimeDataDir, item_id + "." + "json")
         # Check file existence.
         fileExist = FileManager.check_file_exist_by_pathlib(path=responseTimeDataFilePath)
         elapsedTimeCount = 1
-        if (not fileExist):
+        if not fileExist:
             # If file does not exist then create it.
             FileManager.create_new_file(responseTimeDataFilePath)
             FileManager.set_file_permission(responseTimeDataFilePath)
             FileManager.save(data={
-                "id" : id,
+                "id": item_id,
                 "elapsed_sums": elapsedTime,
                 "elapsed_count": 1
             }, path=responseTimeDataFilePath)
-            elapsedTimeAverage = elapsedTime/elapsedTimeCount
+            elapsedTimeAverage = elapsedTime / elapsedTimeCount
         else:
             # Retrieve the elapsed time DIVIDE by count
             responseTimeData = FileManager.get_response_time_data(responseTimeDataFilePath)
@@ -222,10 +218,10 @@ if __name__ == "__main__":
             # sum of all times
             elapsedTimesTotal = responseTimeData["elapsed_sums"]
             # calculated average
-            elapsedTimeAverage = elapsedTimesTotal/elapsedTimesCount
+            elapsedTimeAverage = elapsedTimesTotal / elapsedTimesCount
 
             FileManager.update_response_time_data(path=responseTimeDataFilePath, input_data={
-                "id": id,
+                "id": item_id,
                 "elapsed_count": elapsedTimesCount + 1,
                 "elapsed_sums": elapsedTimesTotal + elapsedTime
             })
@@ -246,24 +242,28 @@ if __name__ == "__main__":
         # Average number of minutes between each run
         avgFeedIntervalInMins = alfpResponse["avgFeedIntervalMins"]
         #
-        consecutiveFailuers = alfpResponse["consecutiveFailures"]
+        consecutive_failures_count = alfpResponse["consecutiveFailures"]
+        #
+        consecutive_failures_threshold = nt(itemResponse["config"]["consecutiveErrorsThreshold"])
+        #
+        alfp_code = alfpResponse["alf_status"]["code"]
 
-        print(f"\n\n{id}\t{title}")
-        print(f"\t{id}\t{snippet}")
+        print(f"\n\n{item_id}\t{title}")
+        print(f"\t{item_id}\t{snippet}")
         print(f"\telapsed time  {elapsedTime}")
         print(f"\tretry count   {retryCount}")
 
         statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
 
         item_dict = {
-            "id": id,
+            "id": item_id,
             "title": title,
             "snippet": snippet,
             "lastUpdateTime": feedLastUpdateTimestamp,
             "updateRate": avgUpdateIntervalInMins,
             "featureCount": layerResponse["featureCount"],
             "usage": {
-                "trendingCode" : serviceResponse["trending"]["code"],
+                "trendingCode": serviceResponse["trending"]["code"],
                 "percentChange": serviceResponse["trending"]["percent_change"],
                 "usageCounts": serviceResponse["trending"]["counts"]
             },
@@ -271,7 +271,7 @@ if __name__ == "__main__":
                 "code": "000"
             }
         }
-            
+
         # The all() function returns True if all items in an iterable are
         # True, otherwise it returns False.
         if all([agolIsValid, itemIsValid, serviceIsValid, isLayersValid]):
@@ -286,46 +286,46 @@ if __name__ == "__main__":
             p_currentTimeStamp = TimeUtils.convert_from_utc_to_datetime(outputDataModel['statusPreparedOn'])
             p_feedLastUpdateTimestamp = TimeUtils.convert_from_utc_to_datetime(feedLastUpdateTimestamp)
             p_lastUpdateTimestampDiff = TimeUtils.convert_from_utc_to_datetime(lastUpdateTimestampDiff)
-            print(f"\tRun time of script:\t\t{p_currentTimeStamp}")
-            print(f"\tLast update of Feed:\t\t{p_feedLastUpdateTimestamp}")
-            print(f"\tLast update timestamp delta:\t{p_lastUpdateTimestampDiff}")
+            print(f"Run time of script:\t\t{p_currentTimeStamp}")
+            print(f"Last update of Feed:\t\t{p_feedLastUpdateTimestamp}")
+            print(f"Last update timestamp delta:\t{p_lastUpdateTimestampDiff}")
 
             # If the Difference exceeds the average update interval by an interval of X, flag it
-            lastUpdateTimestampDiffMinutes = lastUpdateTimestampDiff/60
-            print(f"\tLast update timestamp delta:\t{lastUpdateTimestampDiffMinutes} seconds")
+            lastUpdateTimestampDiffMinutes = lastUpdateTimestampDiff / 60
+            print(f"Last update timestamp delta:\t{lastUpdateTimestampDiffMinutes} seconds")
             # calculate the threshold
             avgUpdateIntThreshold = int(itemResponse["config"]["averageUpdateIntervalFactor"]) * avgUpdateIntervalInMins
-            print(f"\tAverage update interval threshold: {avgUpdateIntThreshold}")
+            print(f"Average update interval threshold: {avgUpdateIntThreshold}")
             if lastUpdateTimestampDiffMinutes > avgUpdateIntThreshold:
                 item_dict["status"]["code"] = "001"
 
             # 002 Check
-            lastRunTimestampDiffMinutes = lastRunTimestampDiff/60
-            print(f"\tLast run timestamp delta:\t{lastRunTimestampDiffMinutes} seconds")
+            lastRunTimestampDiffMinutes = lastRunTimestampDiff / 60
+            print(f"Last run timestamp delta:\t{lastRunTimestampDiffMinutes} seconds")
             # calculate the threshold
             avgFeedIntThreshold = int(itemResponse["config"]["averageFeedIntervalFactor"]) * avgFeedIntervalInMins
-            print(f"\tAverage Feed Interval threshold: {avgFeedIntThreshold}")
+            print(f"Average Feed Interval threshold: {avgFeedIntThreshold}")
             if lastRunTimestampDiffMinutes > avgFeedIntThreshold:
                 item_dict["status"]["code"] = "002"
-                    
-            alfp_code = alfpResponse["alf_status"]["code"]
-            print(f"\tALF Processor status code: {alfp_code}")
-            print(f"Consecutive Failuers: {alfpResponse['consecutiveFailures']}")
+
+            print(f"ALF Processor status code: {alfp_code}")
+            print(f"Consecutive Failures: {consecutive_failures_count}")
+
             # 003 Check
             if alfp_code == 2:
-                if alfpResponse["consecutiveFailures"] > int(itemResponse["config"]["consecutiveErrorsThreshold"]):
+                if consecutive_failures_count > consecutive_failures_threshold:
                     item_dict["status"]["code"] = "003"
 
             # 004 Check
             if alfp_code == 3:
-                if alfpResponse["consecutiveFailures"] > int(itemResponse["config"]["consecutiveErrorsThreshold"]):
+                if consecutive_failures_count > consecutive_failures_threshold:
                     item_dict["status"]["code"] = "004"
 
             # 005 Check 
             if alfp_code == 1:
-                if alfpResponse["consecutiveFailures"] > int(itemResponse["config"]["consecutiveErrorsThreshold"]):
+                if consecutive_failures_count > consecutive_failures_threshold:
                     item_dict["status"]["code"] = "005"
-                     
+
             # 006 Check
             if alfp_code == -1:
                 item_dict["status"]["code"] = "006"
@@ -338,11 +338,12 @@ if __name__ == "__main__":
 
             # 101
             # Check elapsed time
-            avg_elapsed_time_threshold = float(itemResponse["config"]["averageElapsedTimeFactor"]) * float(elapsedTimeAverage)
+            avg_elapsed_time_threshold = float(itemResponse["config"]["averageElapsedTimeFactor"]) * float(
+                elapsedTimeAverage)
             if elapsedTime > avg_elapsed_time_threshold:
                 print(f"\telapsed time threshold: {avg_elapsed_time_threshold}")
                 item_dict["status"]["code"] = "101"
-                
+
             statusCode = StatusManager.get_status_code(item_dict["status"]["code"], statusCodesDataModel)
             LoggingUtils.log_status_code_details(statusCode)
 
@@ -383,14 +384,13 @@ if __name__ == "__main__":
                 statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
                 item_dict["status"]["code"] = "501"
                 LoggingUtils.log_status_code_details(statusCode)
-            
+
         # append to output data model
         outputDataModel["items"].append(item_dict)
 
-
         print(f"Process RSS Feed")
         # path to RSS output file
-        rssFilePath = os.path.join(rssDirPath, id + "." + "rss")
+        rssFilePath = os.path.join(rssDirPath, item_id + "." + "rss")
         # Check if the file already exist
         rssFileExist = FileManager.check_file_exist_by_pathlib(path=rssFilePath)
         if rssFileExist:
@@ -402,39 +402,38 @@ if __name__ == "__main__":
                 # If the new status is different than what is on file, update the feed
                 FileManager.create_new_file(rssFilePath)
                 FileManager.set_file_permission(rssFilePath)
-                feed = Serializer.Feed(rss="2.0", 
-                                   channel="", 
-                                   channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                   channelLink="https://www.arcgis.com",
-                                   channelDescription=snippet,
-                                   webmaster="livingatlas_admins@esri.com",
-                                   ttl="",
-                                   pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                   item="", 
-                                   itemTitle=title + " - ArcGIS Living Atlas of the World, Esri", 
-                                   itemLink="https://www.esri.com",
-                                   itemDescription=statusCode["Description of Condition"])
-                dataSerializer = Serializer.DataSerializer()
+                feed = FeedGenerator.Feed(rss="2.0",
+                                       channel="",
+                                       channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
+                                       channelLink="https://www.arcgis.com",
+                                       channelDescription=snippet,
+                                       webmaster="livingatlas_admins@esri.com",
+                                       ttl="",
+                                       pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
+                                       item="",
+                                       itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
+                                       itemLink="https://www.esri.com",
+                                       itemDescription=statusCode["Description of Condition"])
+                dataSerializer = FeedGenerator.DataSerializer()
                 elementTree = dataSerializer.serialize(feed, "XML")
                 elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
         else:
             # The RSS file does not already exists, create a new RSS file
-            feed = Serializer.Feed(rss="2.0", 
-                                   channel="", 
+            feed = FeedGenerator.Feed(rss="2.0",
+                                   channel="",
                                    channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
                                    channelLink="https://www.arcgis.com",
                                    channelDescription=snippet,
                                    webmaster="livingatlas_admins@esri.com",
                                    ttl="",
                                    pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                   item="", 
-                                   itemTitle=title + " - ArcGIS Living Atlas of the World, Esri", 
+                                   item="",
+                                   itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
                                    itemLink="https://www.esri.com",
                                    itemDescription=statusCode["Description of Condition"])
-            dataSerializer = Serializer.DataSerializer()
+            dataSerializer = FeedGenerator.DataSerializer()
             elementTree = dataSerializer.serialize(feed, "XML")
             elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
-        
 
     print("\n=================================================================")
     print("Saving results")

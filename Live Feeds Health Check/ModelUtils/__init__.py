@@ -105,7 +105,7 @@ def add_service_responses(input_data=None) -> dict:
 
         input_data[index].update({
             "serviceResponse": {
-                "ellapsedTime": elapsed_time,
+                "elapsedTime": elapsed_time,
                 "retryCount": retry_count,
                 "response": response,
                 "success": success,
