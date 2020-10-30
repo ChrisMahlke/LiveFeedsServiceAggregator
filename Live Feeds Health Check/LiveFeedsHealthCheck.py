@@ -28,6 +28,7 @@ try:
     import ModelUtils as ModelUtils
     import RequestUtils as RequestUtils
     import FeedGenerator as FeedGenerator
+    import ServiceValidator as ServiceValidator
     import StatusManager as StatusManager
     import TimeUtils as TimeUtils
     import version as version
@@ -74,67 +75,137 @@ class InputFileNotFoundError(Exception):
 if __name__ == "__main__":
     print(f"\nRunning version: {version.version_str}\n")
 
-    print("=================================================================")
-    print(f"Setting up project and checking folders and directories")
-    print("=================================================================")
-    # get the current date and time
-    timeUtilsResponse = TimeUtils.get_current_time_and_date()
-    timestamp = timeUtilsResponse["timestamp"]
-
-    # The root directory of the script
-    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    print(f"Root Directory: {ROOT_DIR}")
-
-    # Read in the input items data model
-    configIniManager = ConfigManager(root=ROOT_DIR, file_name="config.ini")
-    itemsDataModel = configIniManager.get_config_data(config_type="items")
-    item_count = len(itemsDataModel)
-    if item_count < 1:
-        raise ItemCountNotInRangeError(item_count)
-
-    # Read in the status codes data model
-    statusCodeConfigPath = ROOT_DIR + r"\statusCodes.json"
-    statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
-    statusCodesDataModel = None
-    if statusCodeJsonExist is False:
-        raise InputFileNotFoundError(statusCodeConfigPath)
-    else:
-        statusCodesDataModel = FileManager.load_status_config_data(path=statusCodeConfigPath)
-
-    # Create a new directory to hold the rss feeds (if it does not exist)
-    rssDirPath = os.path.realpath(ROOT_DIR + r"\rss")
-    FileManager.create_new_folder(rssDirPath)
-
-    # Read in the previous status output file
-    # output folder path for output file
-    outputStatusDirPath = os.path.realpath(ROOT_DIR + r"\output")
-    # Create a new directory if it does not exists
-    FileManager.create_new_folder(outputStatusDirPath)
-    # path to output file
-    outputFilePath = outputStatusDirPath + r"\status.json"
-    # Check file existence.
-    fileExist = FileManager.check_file_exist_by_pathlib(path=outputFilePath)
-    previousStatusCheckData = {}
-    if fileExist:
-        previousStatusCheckData = FileManager.get_response_time_data(outputFilePath)
-
     print("\n=================================================================")
     print(f"Authenticate GIS profile")
     print("=================================================================")
     # TODO: Not the best way at all to get the profile property from the config file
-    gisProfile = itemsDataModel[0]["profile"]
+    gisProfile = "cmahlke_developer"
     # initialize GIS object
     GIS = arcgis.GIS(profile=gisProfile)
     # initialize User object
     USER = GIS.users.get(gisProfile)
     if USER is None:
         print("You are not signed in")
-        # TODO: Exit script gracefully and notify Admin
+        # TODO: Exit script gracefully and notify Admin(?)
     else:
         # get the installation properties and print to stdout
         INSTALL_INFO = arcpy.GetInstallInfo()
         USER_SYS = User(user=USER, install_info=INSTALL_INFO)
         USER_SYS.greeting()
+
+    print("=================================================================")
+    print(f"Setting up project and checking folders and directories")
+    print("=================================================================")
+    # The root directory of the script
+    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+    print(f"Project Root Directory: {ROOT_DIR}\n")
+
+    # Load config ini file
+    print("Loading input items from configuration file")
+    configIniManager = ConfigManager(root=ROOT_DIR, file_name="config.ini")
+    input_items = configIniManager.get_config_data(config_type="items")
+    item_count = len(input_items)
+    data_model_dict = {}
+    if item_count < 1:
+        raise ItemCountNotInRangeError(item_count)
+    else:
+        for input_item in input_items:
+            data_model_dict.update({
+                input_item["id"]: {**input_item, **{"token": GIS._con.token}}
+            })
+
+    # Read in the status codes
+    print("Loading status codes")
+    statusCodeConfigPath = os.path.realpath(ROOT_DIR + r"\statusCodes.json")
+    statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
+    statusCodesDataModel = None
+    if statusCodeJsonExist is False:
+        raise InputFileNotFoundError(statusCodeConfigPath)
+    else:
+        statusCodesDataModel = FileManager.open_file(path=statusCodeConfigPath)
+
+    # retrieve the alf statuses
+    print("Retrieving and Processing Active Live Feed Processed files")
+    alfProcessorQueries = list(map(ServiceValidator.prepare_alfp_query_params, input_items))
+    alfProcessorResponse = ServiceValidator.get_alfp_content(alfProcessorQueries)
+    alfpContent = list(map(ServiceValidator.process_alfp_response, alfProcessorResponse))
+    alfpDict = {}
+    for content in alfpContent:
+        unique_item_key = content["id"]
+        try:
+            alfpDict.update({
+                unique_item_key: content["content"]
+            })
+        except KeyError:
+            print(f"{unique_item_key} is unknown.")
+
+    # Read in the previous status output file
+    print("Loading output from previous run")
+    outputStatusDirPath = os.path.realpath(ROOT_DIR + r"\output")
+    # Create a new directory if it does not exists
+    FileManager.create_new_folder(outputStatusDirPath)
+    # path to output file
+    outputFilePath = os.path.realpath(outputStatusDirPath + r"\status.json")
+    # Check file existence
+    fileExist = FileManager.check_file_exist_by_pathlib(path=outputFilePath)
+    if fileExist:
+        # iterate through the items in the config file
+        for key, value in data_model_dict.items():
+            # iterate through the items in the status file
+            for ele in FileManager.open_file(outputFilePath)["items"]:
+                status_file_key = ele["id"]
+                if key == status_file_key:
+                    merged_dict = {**ele, **value}
+                    data_model_dict.update({
+                        key: merged_dict
+                    })
+
+    print("\n=================================================================")
+    print(f"Validating item meta-data")
+    print("===================================================================")
+    # Item validation
+    data_model_dict = ServiceValidator.validate_items(gis=GIS, data_model=data_model_dict)
+    data_model_dict = ServiceValidator.validate_services(data_model=data_model_dict)
+    data_model_dict = ServiceValidator.validate_layers(data_model=data_model_dict)
+    print()
+
+    """
+        Validate each item
+            Does the item exist, is it valid, and is it accessible?
+                Yes - Get meta-data (overwrite) in data model
+                    itemIsValid = True
+                No - Do not overwrite Title and Snippet
+                    itemIsValid = False
+
+            Validate service
+                Does the service returns response?
+                    Yes - Record response
+                        serviceIsValid = True
+                        Run checks against alfp content
+                        Validate layers
+                            Do the layers return a response?
+                                Yes - Record response
+                                    Get feature count of layers NOT excluded
+                                    layersNotValid = True
+                                No -
+                                    layersNotValid = False
+                    No - No need to validate layers
+                        serviceIsValid = False
+
+
+
+        """
+
+    print("\n=================================================================")
+    print(f"Current data and time")
+    print("===================================================================")
+    # get the current date and time
+    timeUtilsResponse = TimeUtils.get_current_time_and_date()
+    timestamp = timeUtilsResponse["timestamp"]
+
+    # Create a new directory to hold the rss feeds (if it does not exist)
+    rssDirPath = os.path.realpath(ROOT_DIR + r"\rss")
+    FileManager.create_new_folder(rssDirPath)
 
     print("\n=================================================================")
     print(f"Hydrating input data model")

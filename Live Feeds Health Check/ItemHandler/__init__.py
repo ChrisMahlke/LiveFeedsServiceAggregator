@@ -173,30 +173,6 @@ def prepare_layer_query_params(layers=None) -> list:
     return layer_data
 
 
-def get_alfp_content(alfp_response=None) -> dict:
-    """ """
-    if alfp_response is None:
-        alfp_response = []
-    if alfp_response["response"]["success"]:
-        item_id = alfp_response["id"]
-        if alfp_response["response"]["response"].status_code == 200:
-            content = json.loads(alfp_response["response"]["response"].content.decode('utf-8'))
-            return {
-                "id": item_id,
-                "content": content,
-                "success": True
-            }
-        else:
-            status_code = alfp_response["response"]["response"].status_code
-            reason = alfp_response["response"]["response"].reason
-            return {
-                "id": item_id,
-                "status_code": status_code,
-                "reason": reason,
-                "success": False
-            }
-
-
 def check_layers(layers):
     layer_check_list = []
     for layer in layers:

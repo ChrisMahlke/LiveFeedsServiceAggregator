@@ -69,7 +69,7 @@ def save(data=None, path: str = "") -> None:
         json.dump(data, outfile)
 
 
-def load_status_config_data(path: str = "") -> dict:
+def open_file(path: str = "") -> dict:
     with open(path) as json_file:
         data = json.load(json_file)
     return data
