@@ -14,7 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # =============================================================================
-"""LiveFeedsHealthCheck"""
+"""
+LiveFeedsHealthCheck
+"""
 
 try:
     import arcgis
@@ -184,34 +186,12 @@ if __name__ == "__main__":
     print(f"Retrieve feature counts")
     print("===================================================================")
     data_model_dict = ServiceValidator.get_feature_counts(data_model=data_model_dict)
-    print()
-
-    """
-        Validate each item
-            Does the item exist, is it valid, and is it accessible?
-                Yes - Get meta-data (overwrite) in data model
-                    itemIsValid = True
-                No - Do not overwrite Title and Snippet
-                    itemIsValid = False
-
-            Validate service
-                Does the service returns response?
-                    Yes - Record response
-                        serviceIsValid = True
-                        Run checks against alfp content
-                        Validate layers
-                            Do the layers return a response?
-                                Yes - Record response
-                                    Get feature count of layers NOT excluded
-                                    layersNotValid = True
-                                No -
-                                    layersNotValid = False
-                    No - No need to validate layers
-                        serviceIsValid = False
 
 
 
-        """
+
+
+
 
     print("\n=================================================================")
     print(f"Current data and time")
