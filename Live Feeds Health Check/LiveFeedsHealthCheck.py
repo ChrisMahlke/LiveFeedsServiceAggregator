@@ -16,6 +16,14 @@
 # =============================================================================
 """
 LiveFeedsHealthCheck
+
+1) Authenticate GIS profile
+2) Setup
+3) Validation and Health check
+4) Process results
+5) Create/Update RSS files
+6) Save output
+
 """
 
 try:
