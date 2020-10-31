@@ -34,34 +34,6 @@ ERROR_CODES = {
 }
 
 
-def get_all_feature_counts(input_layer_data=None) -> list:
-    """ Iterate through the list of layers for each item and check the response """
-    if input_layer_data is None:
-        input_layer_data = []
-    print("\n\n============ Getting Feature Counts")
-    result_counts = []
-    for layer in input_layer_data:
-        # current item ID
-        current_item_id = layer[0]["id"]
-        # reset the total feature count for this service
-        current_item_feature_count = 0
-        # Query the list of layers of the current item in the iteration
-        # and return the feature counts
-        validated_layers = check_layer_urls(layer)
-        if validated_layers is not None:
-            for validatedLayer in validated_layers:
-                if validatedLayer["response"]["success"]:
-                    # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
-                    count_dict = json.loads(validatedLayer["response"]["response"].content.decode('utf-8'))
-                    current_item_feature_count += count_dict["count"]
-        print(f"currentItemFeatureCount: {current_item_id}\t{current_item_feature_count}\n")
-        result_counts.append({
-            "id": current_item_id,
-            "featureCount": current_item_feature_count
-        })
-    return result_counts
-
-
 def _format_url(url):
     """
     Format a url's protocol

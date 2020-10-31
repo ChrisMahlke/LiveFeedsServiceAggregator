@@ -233,7 +233,27 @@ def get_feature_counts(data_model=None) -> dict:
         data_model = {}
 
     def get_feature_count():
-        print()
+        result_counts = []
+        for layer in input_layer_data:
+            # current item ID
+            current_item_id = layer[0]["id"]
+            # reset the total feature count for this service
+            current_item_feature_count = 0
+            # Query the list of layers of the current item in the iteration
+            # and return the feature counts
+            validated_layers = check_layer_urls(layer)
+            if validated_layers is not None:
+                for validatedLayer in validated_layers:
+                    if validatedLayer["response"]["success"]:
+                        # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
+                        count_dict = json.loads(validatedLayer["response"]["response"].content.decode('utf-8'))
+                        current_item_feature_count += count_dict["count"]
+            print(f"currentItemFeatureCount: {current_item_id}\t{current_item_feature_count}\n")
+            result_counts.append({
+                "id": current_item_id,
+                "featureCount": current_item_feature_count
+            })
+        return result_counts
 
     return data_model
 
