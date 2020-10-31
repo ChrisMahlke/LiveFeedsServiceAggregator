@@ -62,15 +62,19 @@ def validate_services(data_model=None) -> dict:
         :return: Dictionary of results
         """
         item_id = current_item[0]
-        params = current_item[1]
-        response = RequestUtils.check_request(path=params["service_url"],
-                                  params={},
-                                  try_json=True,
-                                  add_token=True,
-                                  retry_factor=params["default_retry_count"],
-                                  timeout_factor=params["default_timeout"],
-                                  token=params["token"],
-                                  id=item_id)
+        item_content = current_item[1]
+        if item_content["itemIsValid"]:
+            service_url = item_content["agolItem"]["url"]
+        else:
+            service_url = item_content["service_url"]
+        response = RequestUtils.check_request(path=service_url,
+                                              params={},
+                                              try_json=True,
+                                              add_token=True,
+                                              retry_factor=item_content["default_retry_count"],
+                                              timeout_factor=item_content["default_timeout"],
+                                              token=item_content["token"],
+                                              id=item_id)
         return current_item[0], {**current_item[1], **{"serviceResponse": response}}
 
     return dict(map(validate_service, data_model.items()))
@@ -91,26 +95,31 @@ def validate_layers(data_model=None) -> dict:
         :return: Dictionary of validated layers
         """
         item_id = current_item[0]
+        item_content = current_item[1]
         print(f"{item_id}")
+        # TODO ???
+        exclusion_list_input = current_item[1]["exclusion"].split(",")
+        exclusion_list_input_results = []
+        if isinstance(exclusion_list_input[0], str) and len(exclusion_list_input[0]) > 0:
+            exclusion_list_input_results = list(map(int, exclusion_list_input))
+
         layers = []
-        if current_item[1]["itemIsValid"]:
-            exclusion_list_input = current_item[1]["exclusion"].split(",")
-            exclusion_list_input_results = []
-            if isinstance(exclusion_list_input[0], str) and len(exclusion_list_input[0]) > 0:
-                exclusion_list_input_results = list(map(int, exclusion_list_input))
+
+        if item_content["itemIsValid"]:
+            # item is valid
             try:
-                for i, layer in enumerate(current_item[1]["agolItem"].layers):
+                for i, layer in enumerate(item_content["agolItem"].layers):
                     if layer.properties["id"] not in exclusion_list_input_results:
                         print(f"\t{layer.properties['name']}")
                         layers.append({
                             "id": item_id,
-                            "name": layer.properties['name'],
+                            "name": layer.properties["name"],
                             "success": True,
-                            "token": current_item[1]["token"],
+                            "token": item_content["token"],
                             "url": layer.url
                         })
             except Exception as e:
-                print(f"\t{e}")
+                print(f"\tThe item {item_id} is either inaccessible or not valid: {e}")
                 layers.append({
                     "id": item_id,
                     "success": False,
@@ -118,11 +127,49 @@ def validate_layers(data_model=None) -> dict:
                 })
                 layer_query_params = prepare_layer_query_params(layers)
                 layers_are_valid = check_all_layers(layers)
-                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid}, **{"layers": layers}, **{"layerQueryParams": layer_query_params}}
+                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
+                                         **{"layers": layers},
+                                         **{"layerQueryParams": layer_query_params}}
             else:
                 layer_query_params = prepare_layer_query_params(layers)
                 layers_are_valid = check_all_layers(layers)
-                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid}, **{"layers": layers}, **{"layerQueryParams": layer_query_params}}
+                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
+                                         **{"layers": layers},
+                                         **{"layerQueryParams": layer_query_params}}
+        else:
+            # item is not valid or not accessible, use the url on file
+            if item_content["serviceResponse"]["success"]:
+                # we have a successful response from using the service url on file
+                response = json.loads(item_content["serviceResponse"]["response"].content.decode('utf-8'))
+                for i, layer in enumerate(response["layers"]):
+                    if layer["id"] not in exclusion_list_input_results:
+                        print(f"\t{layer['name']}")
+                        layers.append({
+                            "id": item_id,
+                            "name": layer["name"],
+                            "success": True,
+                            "token": current_item[1]["token"],
+                            "url": item_content["service_url"] + "/" + str(layer["id"])
+                        })
+                layer_query_params = prepare_layer_query_params(layers)
+                layers_are_valid = check_all_layers(layers)
+                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
+                                         **{"layers": layers},
+                                         **{"layerQueryParams": layer_query_params}}
+            else:
+                # we have a failed response
+                print(f"\tThe item {item_id} not inaccessible or not valid and the service url is not accessible.")
+                layers.append({
+                    "id": item_id,
+                    "success": False,
+                    "message": f"\tThe item {item_id} is either inaccessible or not valid and the service url is not "
+                               f"accessible. "
+                })
+                layer_query_params = prepare_layer_query_params(layers)
+                layers_are_valid = check_all_layers(layers)
+                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
+                                         **{"layers": layers},
+                                         **{"layerQueryParams": layer_query_params}}
 
     def prepare_layer_query_params(layers):
         """
@@ -199,63 +246,91 @@ def get_usage_details(data_model=None) -> dict:
         """
         item_id = current_item[0]
         item_content = current_item[1]
-        if item_content["itemIsValid"]:
+
+        try:
             agol_item = item_content["agolItem"]
-            try:
-                usage = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
-            except (TypeError, IndexError) as e:
-                print(f"ERROR: Unable to retrieve usage details on: {item_id}. {e}")
-                response = {
-                    "usage": {
-                        "data": []
-                    },
-                    "itemHasUsageDetails": {
-                        "success": False,
-                        "error": f"ERROR: Unable to retrieve usage details on: {itemId}. {e}"
-                    }
+            usage = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
+        except (IndexError, KeyError, TypeError) as e:
+            print(f"ERROR: Unable to retrieve usage details on: {item_id}. {e}")
+            response = {
+                "usage": {
+                    "data": []
+                },
+                "itemHasUsageDetails": {
+                    "success": False,
+                    "error": f"ERROR: Unable to retrieve usage details on: {item_id}. {e}"
                 }
-                return current_item[0], {**current_item[1], **{"usageResponse": response}}
-            else:
-                print(f"Usage details retrieved on: {item_id}\t{agol_item['title']}")
-                response = {
-                    "usage": usage,
-                    "itemHasUsageDetails": {
-                        "success": True
-                    }
+            }
+            return current_item[0], {**current_item[1], **{"usageResponse": response}}
+        else:
+            response = {
+                "usage": usage,
+                "itemHasUsageDetails": {
+                    "success": True
                 }
-                return current_item[0], {**current_item[1], **{"usageResponse": response}}
+            }
+            return current_item[0], {**current_item[1], **{"usageResponse": response}}
 
     return dict(map(get_usage_detail, data_model.items()))
 
 
 def get_feature_counts(data_model=None) -> dict:
+    """
+    Get the sum of all "included" features in all the feature services in the input data model
+    :param data_model: Input data model
+    :return: Updated data model
+    """
     if data_model is None:
         data_model = {}
 
-    def get_feature_count():
-        result_counts = []
-        for layer in input_layer_data:
-            # current item ID
-            current_item_id = layer[0]["id"]
-            # reset the total feature count for this service
-            current_item_feature_count = 0
-            # Query the list of layers of the current item in the iteration
-            # and return the feature counts
-            validated_layers = check_layer_urls(layer)
-            if validated_layers is not None:
-                for validatedLayer in validated_layers:
-                    if validatedLayer["response"]["success"]:
+    def get_feature_count(current_item):
+        """
+        Get the sum of all the "included" feature counts in the service
+        :param current_item:
+        :return:
+        """
+        item_content = current_item[1]
+        layer_query_params = item_content["layerQueryParams"]
+        # reset the total feature count for this service
+        current_item_feature_count = 0
+        # We check if the service is accessible, not the item
+        if item_content["serviceResponse"]["success"]:
+            for layer in layer_query_params:
+                # Query the list of layers of the current item in the iteration
+                # and return the feature counts
+                validated_layer = check_layer_url(layer)
+                if validated_layer is not None:
+                    if validated_layer["success"]:
                         # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
-                        count_dict = json.loads(validatedLayer["response"]["response"].content.decode('utf-8'))
+                        count_dict = json.loads(validated_layer["response"].content.decode('utf-8'))
                         current_item_feature_count += count_dict["count"]
-            print(f"currentItemFeatureCount: {current_item_id}\t{current_item_feature_count}\n")
-            result_counts.append({
-                "id": current_item_id,
-                "featureCount": current_item_feature_count
-            })
-        return result_counts
+        else:
+            # The item is not valid or inaccessible, use the cached feature count
+            if "featureCount" in item_content:
+                current_item_feature_count = item_content["featureCount"]
+        return current_item[0], {**current_item[1], **{"featureCount": current_item_feature_count}}
 
-    return data_model
+    def check_layer_url(layer=None) -> dict:
+        """ Check that the Item's url is valid """
+        if layer is None:
+            layer = {}
+        response = {
+            "id": layer["id"],
+            "success": False
+        }
+        if layer["success"]:
+            url = layer["url"]
+            response = RequestUtils.check_request(path=url,
+                                                  params=layer['params'],
+                                                  try_json=layer['try_json'],
+                                                  add_token=layer['add_token'],
+                                                  retry_factor=5,
+                                                  timeout_factor=5,
+                                                  id=layer["id"],
+                                                  token=layer['token'])
+        return response
+
+    return dict(map(get_feature_count, data_model.items()))
 
 
 def process_alfp_response(alfp_response=None) -> dict:
@@ -297,13 +372,13 @@ def check_alfp_url(input_data=None) -> dict:
     if input_data is None:
         input_data = {}
     response = RequestUtils.check_request(path=input_data["url"],
-                              params=input_data['params'],
-                              try_json=input_data['try_json'],
-                              add_token=input_data['add_token'],
-                              retry_factor=input_data['retry_factor'],
-                              timeout_factor=input_data['timeout_factor'],
-                              token=input_data['token'],
-                              id=input_data["id"])
+                                          params=input_data['params'],
+                                          try_json=input_data['try_json'],
+                                          add_token=input_data['add_token'],
+                                          retry_factor=input_data['retry_factor'],
+                                          timeout_factor=input_data['timeout_factor'],
+                                          token=input_data['token'],
+                                          id=input_data["id"])
     return {
         "id": input_data["id"],
         "response": response

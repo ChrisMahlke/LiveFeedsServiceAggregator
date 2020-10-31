@@ -19,6 +19,22 @@
             "code":"000"
          }
       },
+            {
+         "id":"c62775e280ff4fcd9a15e96f026ce5bb",
+         "title":"A PRIVATE ITEM",
+         "snippet":"A live data feed from the National Weather Service containing official weather warnings, watches, and advisory statements for the United States.",
+         "lastUpdateTime":1603996260,
+         "updateRate":10,
+         "featureCount":20001,
+         "usage":{
+            "trendingCode":1,
+            "percentChange":56,
+            "usageCounts":[45,3]
+         },
+         "status":{
+            "code":"000"
+         }
+      },
      {
          "id":"76da51c846524fd5a319b110040b62c1",
          "title":"Private or Inaccessible item",
