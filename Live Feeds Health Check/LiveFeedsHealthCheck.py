@@ -76,7 +76,7 @@ class InputFileNotFoundError(Exception):
 
 
 if __name__ == "__main__":
-    print(f"\nRunning version: {version.version_str}\n")
+    print(f"\nRunning version: {version.version_str}")
 
     print("\n=================================================================")
     print(f"Authenticate GIS profile")
@@ -129,9 +129,9 @@ if __name__ == "__main__":
 
     # retrieve the alf statuses
     print("\nRetrieving and Processing Active Live Feed Processed files")
-    alfProcessorQueries = list(map(ServiceValidator.prepare_alfp_query_params, input_items))
-    alfProcessorResponse = ServiceValidator.get_alfp_content(alfProcessorQueries)
-    alfpContent = list(map(ServiceValidator.process_alfp_response, alfProcessorResponse))
+    alfProcessorQueries = list(map(QueryEngine.prepare_alfp_query_params, input_items))
+    alfProcessorResponse = QueryEngine.get_alfp_content(alfProcessorQueries)
+    alfpContent = list(map(QueryEngine.process_alfp_response, alfProcessorResponse))
     alfpDict = {}
     for content in alfpContent:
         unique_item_key = content["id"]
@@ -188,6 +188,12 @@ if __name__ == "__main__":
     print("===================================================================")
     data_model_dict = QueryEngine.get_feature_counts(data_model=data_model_dict)
 
+    for key, value in data_model_dict.items():
+        item_id = key
+        item_is_valid = value["itemIsValid"]
+        service_is_valid = value["serviceResponse"]["success"]
+        layers_are_valid = value["allLayersAreValid"]
+        print()
 
 
 
