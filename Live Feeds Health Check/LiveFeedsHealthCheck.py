@@ -93,7 +93,7 @@ if __name__ == "__main__":
         USER_SYS = User(user=USER, install_info=INSTALL_INFO)
         USER_SYS.greeting()
 
-    print("=================================================================")
+    print("\n=================================================================")
     print(f"Setting up project and checking folders and directories")
     print("=================================================================")
     # The root directory of the script
@@ -160,12 +160,19 @@ if __name__ == "__main__":
                         key: merged_dict
                     })
 
-    print("\n=================================================================")
+    print("\n===================================================================")
     print(f"Validating item meta-data")
     print("===================================================================")
-    # Item validation
     data_model_dict = ServiceValidator.validate_items(gis=GIS, data_model=data_model_dict)
+
+    print("\n===================================================================")
+    print(f"Validating services")
+    print("===================================================================")
     data_model_dict = ServiceValidator.validate_services(data_model=data_model_dict)
+
+    print("\n===================================================================")
+    print(f"Validating layers")
+    print("===================================================================")
     data_model_dict = ServiceValidator.validate_layers(data_model=data_model_dict)
     print()
 

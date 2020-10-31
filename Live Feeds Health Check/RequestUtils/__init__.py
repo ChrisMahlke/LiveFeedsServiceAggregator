@@ -1,6 +1,5 @@
 """ """
 import arcgis
-import concurrent.futures
 import dump as dump
 import json
 import re
@@ -10,107 +9,6 @@ from requests import Session
 from RetryUtils import retry
 from RetryUtils import get_retry_output
 from urllib.parse import urlencode
-
-# debugging flag
-DEBUG = False
-
-# TODO: Remove strings
-ERROR_CODES = {
-    "HTTPError": {
-        "message": "An HTTP error occurred"
-    },
-    "ConnectionError": {
-        "message": "A Connection error occurred"
-    },
-    "Timeout": {
-        "message": "The request timed out"
-    },
-    "RequestException": {
-        "message": "There was an ambiguous exception that occurred while handling your request"
-    },
-    "InvalidURL": {
-        "message": "The URL provided was somehow invalid"
-    }
-}
-
-
-def validate_service_urls(items=None) -> list:
-    """ Validate the service urls """
-    if items is None:
-        items = []
-    print("Validating Services")
-    # The ThreadPoolExecutor manages a set of worker threads, passing tasks to
-    # them as they become available for more work.
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(items)) as executor:
-        # map() is used to concurrently produce a set of results from an input iterable.
-        generator = executor.map(_validate_service_url, items)
-        return list(generator)
-
-
-def _validate_service_url(item=None) -> dict:
-    """ Check that the Item's service url is valid """
-    if item is None:
-        item = {}
-    response = check_request(path=item["queryParams"]["url"],
-                             params={},
-                             try_json=item["queryParams"]["tryJson"],
-                             add_token=item["queryParams"]["addToken"],
-                             retry_factor=item["queryParams"]["retryFactor"],
-                             timeout_factor=item["queryParams"]["timeoutFactor"],
-                             token=item["queryParams"]["token"],
-                             id=item["id"])
-    print(f"{item['id']}")
-    return {
-        "itemResponse": item,
-        "serviceResponse": response
-    }
-
-
-def check_layer_urls(input_items=None) -> list:
-    """  Check the layers of the service """
-    if input_items is None:
-        input_items = []
-    if len(input_items) > 0:
-        # The ThreadPoolExecutor manages a set of worker threads, passing tasks to
-        # them as they become available for more work.
-        with concurrent.futures.ThreadPoolExecutor(max_workers=len(input_items)) as executor:
-            # map() is used to concurrently produce a set of results from an input iterable.
-            generator = executor.map(_check_layer_url, input_items)
-            return list(generator)
-
-
-def _check_layer_url(layer=None) -> dict:
-    """ Check that the Item's url is valid """
-    if layer is None:
-        layer = {}
-    response = {
-        "id": layer["id"],
-        "success": False
-    }
-    if layer["success"]:
-        url = layer["url"]
-        print(f"Checking layer: {layer['layerName']}")
-        response = check_request(path=url,
-                                 params=layer['params'],
-                                 try_json=layer['try_json'],
-                                 add_token=layer['add_token'],
-                                 retry_factor=5,
-                                 timeout_factor=5,
-                                 id=layer["id"],
-                                 token=layer['token'])
-    return {
-        "item": input,
-        "response": response
-    }
-
-
-def validate_usage_details(items: list) -> list:
-    """ Retrieve the usage details for all valid items """
-    print("Validating Usage details")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(items)) as executor:
-        generator = executor.map(_get_item_usage_details, items)
-        results = list(generator)
-        return results
 
 
 def _get_item_usage_details(input_item=None) -> dict:
@@ -183,8 +81,6 @@ def _get_item_usage_details(input_item=None) -> dict:
         }
 
 
-
-
 def get_all_feature_counts(input_layer_data=None) -> list:
     """ Iterate through the list of layers for each item and check the response """
     if input_layer_data is None:
@@ -213,4 +109,100 @@ def get_all_feature_counts(input_layer_data=None) -> list:
     return result_counts
 
 
+def _format_url(url):
+    """
+    Format a url's protocol
+    :param url:
+    :return:
+    """
+    if not re.match('(?:http|ftp|https)://', url):
+        return 'https://{}'.format(url)
+    return url
+
+
+def check_request(path: str = "", params=None, **kwargs) -> dict:
+    """
+    Make a request and return a dictionary indicating success, failure, and the response object
+    :param path:
+    :param params:
+    :param kwargs:
+    :return:
+    """
+    if params is None:
+        params = {}
+    path = _format_url(path)
+
+    item_id = kwargs.pop("id", False)
+    try_json = kwargs.pop("try_json", False)
+    add_token = kwargs.pop('add_token', False)
+    retry_factor = kwargs.pop('retry_factor', False)
+    timeout_factor = kwargs.pop('timeout_factor', False)
+    token = kwargs.pop('token', False)
+
+    # default retry count if none is specified
+    retries = 5
+    # retry count
+    if retry_factor:
+        retries = int(retry_factor)
+
+    # default timeout (in seconds) if none is specified
+    timeout = 5
+    # timeout (in seconds)
+    if timeout_factor:
+        timeout = int(timeout_factor)
+
+    if try_json:
+        params['f'] = 'json'
+
+    if add_token:
+        params['token'] = token
+
+    if try_json or add_token:
+        base_url = path + "?"
+    else:
+        base_url = path
+    url = base_url + urlencode(params)
+
+    response_dict = {}
+    response_dict.setdefault("error_message", [])
+    response_dict.setdefault("success", False)
+    response_dict.setdefault("response", {})
+    response_dict.setdefault("retryCount", {})
+
+    try:
+        session = requests.Session()
+        current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id)
+        response = current_session.get(url, timeout=timeout)
+    except requests.exceptions.HTTPError as http_error:
+        response_dict["error_message"].append(ERROR_CODES["HTTPError"])
+        response_dict["error_message"].append(http_error)
+    except requests.exceptions.ConnectionError as connection_error:
+        response_dict["error_message"].append(ERROR_CODES["ConnectionError"])
+        response_dict["error_message"].append(connection_error)
+    except requests.exceptions.Timeout as timeout_error:
+        response_dict["error_message"].append(ERROR_CODES["Timeout"])
+        response_dict["error_message"].append(timeout_error)
+    except requests.exceptions.RequestException as request_exception_error:
+        response_dict["error_message"].append(ERROR_CODES["RequestException"])
+        response_dict["error_message"].append(request_exception_error)
+    except requests.exceptions.InvalidURL as invalid_url_error:
+        response_dict["error_message"].append(ERROR_CODES["InvalidURL"])
+        response_dict["error_message"].append(invalid_url_error)
+    else:
+        response_dict["success"] = True
+        response_dict["response"] = response
+        if DEBUG:
+            data = dump.dump_response(response)
+            print(data.decode('utf-8'))
+            print("------------------------------------------------------------------\n")
+    finally:
+        tmp_retry_output = get_retry_output()
+        retry_count = {}
+        for rc in tmp_retry_output:
+            if rc["id"] == item_id:
+                retry_count = rc
+        response_dict["retryCount"] = retry_count
+        if DEBUG:
+            print(f"URL {response_dict}")
+        return response_dict
 

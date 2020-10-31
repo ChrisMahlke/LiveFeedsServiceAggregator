@@ -1,15 +1,6 @@
-""" """
 import arcgis
-import concurrent.futures
-import dump as dump
 import json
-import re
-import requests
-import threading
-from requests import Session
-from RetryUtils import retry
-from RetryUtils import get_retry_output
-from urllib.parse import urlencode
+import RequestUtils as RequestUtils
 
 # debugging flag
 DEBUG = False
@@ -78,14 +69,23 @@ def validate_items(gis: arcgis.gis.GIS = None, data_model=None) -> dict:
 
 
 def validate_services(data_model=None) -> dict:
-    """ """
+    """
+    Validate all the services on the input data model
+    :param data_model:
+    :return: Updated data model with the results of the validated services
+    """
     if data_model is None:
         data_model = {}
 
     def validate_service(current_item):
+        """
+        Validate a single service
+        :param current_item: Input item/service
+        :return: Dictionary of results
+        """
         item_id = current_item[0]
         params = current_item[1]
-        response = _check_request(path=params["service_url"],
+        response = RequestUtils.check_request(path=params["service_url"],
                                   params={},
                                   try_json=True,
                                   add_token=True,
@@ -95,33 +95,40 @@ def validate_services(data_model=None) -> dict:
                                   id=item_id)
         return current_item[0], {**current_item[1], **{"serviceResponse": response}}
 
-    updated_data_model = dict(map(validate_service, data_model.items()))
-
-    return updated_data_model
+    return dict(map(validate_service, data_model.items()))
 
 
 def validate_layers(data_model=None) -> dict:
-    """ """
+    """
+    Validate the layers of the service
+    :param data_model:
+    :return:
+    """
     if data_model is None:
         data_model = {}
 
     def validate_service_layers(current_item):
-        item_id = current_item["id"]
-        if current_item["itemIsValid"]["success"]:
-            layers = []
-            exclusion_list_input = item["exclusion"].split(",")
+        """
+        :param current_item: The current item
+        :return: Dictionary of validated layers
+        """
+        item_id = current_item[0]
+        print(f"{item_id}")
+        layers = []
+        if current_item[1]["itemIsValid"]:
+            exclusion_list_input = current_item[1]["exclusion"].split(",")
             exclusion_list_input_results = []
             if isinstance(exclusion_list_input[0], str) and len(exclusion_list_input[0]) > 0:
                 exclusion_list_input_results = list(map(int, exclusion_list_input))
             try:
-                for i, layer in enumerate(current_item["agol_item"].layers):
+                for i, layer in enumerate(current_item[1]["agolItem"].layers):
                     if layer.properties["id"] not in exclusion_list_input_results:
                         print(f"\t{layer.properties['name']}")
                         layers.append({
                             "id": item_id,
                             "name": layer.properties['name'],
                             "success": True,
-                            "token": current_item["token"],
+                            "token": current_item[1]["token"],
                             "url": layer.url
                         })
             except Exception as e:
@@ -131,17 +138,20 @@ def validate_layers(data_model=None) -> dict:
                     "success": False,
                     "message": e
                 })
-                return layers
+                layer_query_params = prepare_layer_query_params(layers)
+                layers_are_valid = check_all_layers(layers)
+                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid}, **{"layers": layers}, **{"layerQueryParams": layer_query_params}}
             else:
-                return layers
+                layer_query_params = prepare_layer_query_params(layers)
+                layers_are_valid = check_all_layers(layers)
+                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid}, **{"layers": layers}, **{"layerQueryParams": layer_query_params}}
 
-    def prepare_layer_query_params(layers=None) -> list:
-        # we need to check if the item's service is valid
-        # the item can be accessible in ArcGIS Online, but the service url could be down
-
-        # check the item's layers (if valid)
-        # Same as above, the service URL could be accessible, but the layers
-        # may not be accessible
+    def prepare_layer_query_params(layers):
+        """
+        Build the layer query params for each layer
+        :param layers:
+        :return:
+        """
         if layers is None:
             layers = []
         layer_data = []
@@ -171,15 +181,27 @@ def validate_layers(data_model=None) -> dict:
                 })
         return layer_data
 
-    validated_layers = list(map(validate_service_layers, data_model.items()))
-    print(validated_layers)
-    layer_input_query_params = list(map(prepare_layer_query_params, validated_layers))
-    print(layer_input_query_params)
-    print()
+    def check_all_layers(layers):
+        """
+        Returns a True/False if all the layers were a success or not
+        :param layers: All layer query results
+        :return: Boolean value
+        """
+        layer_check_list = []
+        for layer in layers:
+            if layer["success"]:
+                layer_check_list.append(True)
+            else:
+                layer_check_list.append(False)
+        if len(layer_check_list) > 0:
+            if all(layer_check_list):
+                return True
+            else:
+                return False
+        else:
+            return False
 
-    return updated_data_model
-
-
+    return dict(map(validate_service_layers, data_model.items()))
 
 
 def process_alfp_response(alfp_response=None) -> dict:
@@ -220,7 +242,7 @@ def check_alfp_url(input_data=None) -> dict:
     """ """
     if input_data is None:
         input_data = {}
-    response = _check_request(path=input_data["url"],
+    response = RequestUtils.check_request(path=input_data["url"],
                               params=input_data['params'],
                               try_json=input_data['try_json'],
                               add_token=input_data['add_token'],
@@ -248,94 +270,3 @@ def prepare_alfp_query_params(input_data=None) -> dict:
         "timeout_factor": 5,
         "retry_factor": 5
     }
-
-
-def _format_url(url):
-    if not re.match('(?:http|ftp|https)://', url):
-        return 'https://{}'.format(url)
-    return url
-
-
-def _check_request(path: str = "", params=None, **kwargs) -> dict:
-    """
-    Make a request and return a dictionary indicating
-    success, failure, and the response object
-    """
-    if params is None:
-        params = {}
-    path = _format_url(path)
-
-    item_id = kwargs.pop("id", False)
-    try_json = kwargs.pop("try_json", False)
-    add_token = kwargs.pop('add_token', False)
-    retry_factor = kwargs.pop('retry_factor', False)
-    timeout_factor = kwargs.pop('timeout_factor', False)
-    token = kwargs.pop('token', False)
-
-    # default retry count if none is specified
-    retries = 5
-    # retry count
-    if retry_factor:
-        retries = int(retry_factor)
-
-    # default timeout (in seconds) if none is specified
-    timeout = 5
-    # timeout (in seconds)
-    if timeout_factor:
-        timeout = int(timeout_factor)
-
-    if try_json:
-        params['f'] = 'json'
-
-    if add_token:
-        params['token'] = token
-
-    if try_json or add_token:
-        base_url = path + "?"
-    else:
-        base_url = path
-    url = base_url + urlencode(params)
-
-    response_dict = {}
-    response_dict.setdefault("error_message", [])
-    response_dict.setdefault("success", False)
-    response_dict.setdefault("response", {})
-    response_dict.setdefault("retryCount", {})
-
-    try:
-        print(f"URL: {url}")
-        session = requests.Session()
-        current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id)
-        response = current_session.get(url, timeout=timeout)
-    except requests.exceptions.HTTPError as http_error:
-        response_dict["error_message"].append(ERROR_CODES["HTTPError"])
-        response_dict["error_message"].append(http_error)
-    except requests.exceptions.ConnectionError as connection_error:
-        response_dict["error_message"].append(ERROR_CODES["ConnectionError"])
-        response_dict["error_message"].append(connection_error)
-    except requests.exceptions.Timeout as timeout_error:
-        response_dict["error_message"].append(ERROR_CODES["Timeout"])
-        response_dict["error_message"].append(timeout_error)
-    except requests.exceptions.RequestException as request_exception_error:
-        response_dict["error_message"].append(ERROR_CODES["RequestException"])
-        response_dict["error_message"].append(request_exception_error)
-    except requests.exceptions.InvalidURL as invalid_url_error:
-        response_dict["error_message"].append(ERROR_CODES["InvalidURL"])
-        response_dict["error_message"].append(invalid_url_error)
-    else:
-        response_dict["success"] = True
-        response_dict["response"] = response
-        if DEBUG:
-            data = dump.dump_response(response)
-            print(data.decode('utf-8'))
-            print("------------------------------------------------------------------\n")
-    finally:
-        tmp_retry_output = get_retry_output()
-        retry_count = {}
-        for rc in tmp_retry_output:
-            if rc["id"] == item_id:
-                retry_count = rc
-        response_dict["retryCount"] = retry_count
-        if DEBUG:
-            print(f"URL {response_dict}")
-        return response_dict
