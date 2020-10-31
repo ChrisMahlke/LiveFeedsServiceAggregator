@@ -101,7 +101,7 @@ if __name__ == "__main__":
     print(f"Project Root Directory: {ROOT_DIR}\n")
 
     # Load config ini file
-    print("Loading input items from configuration file")
+    print("\nLoading input items from configuration file")
     configIniManager = ConfigManager(root=ROOT_DIR, file_name="config.ini")
     input_items = configIniManager.get_config_data(config_type="items")
     item_count = len(input_items)
@@ -115,7 +115,7 @@ if __name__ == "__main__":
             })
 
     # Read in the status codes
-    print("Loading status codes")
+    print("\nLoading status codes")
     statusCodeConfigPath = os.path.realpath(ROOT_DIR + r"\statusCodes.json")
     statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
     statusCodesDataModel = None
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         statusCodesDataModel = FileManager.open_file(path=statusCodeConfigPath)
 
     # retrieve the alf statuses
-    print("Retrieving and Processing Active Live Feed Processed files")
+    print("\nRetrieving and Processing Active Live Feed Processed files")
     alfProcessorQueries = list(map(ServiceValidator.prepare_alfp_query_params, input_items))
     alfProcessorResponse = ServiceValidator.get_alfp_content(alfProcessorQueries)
     alfpContent = list(map(ServiceValidator.process_alfp_response, alfProcessorResponse))
@@ -140,7 +140,7 @@ if __name__ == "__main__":
             print(f"{unique_item_key} is unknown.")
 
     # Read in the previous status output file
-    print("Loading output from previous run")
+    print("\nLoading output from previous run")
     outputStatusDirPath = os.path.realpath(ROOT_DIR + r"\output")
     # Create a new directory if it does not exists
     FileManager.create_new_folder(outputStatusDirPath)
@@ -174,6 +174,16 @@ if __name__ == "__main__":
     print(f"Validating layers")
     print("===================================================================")
     data_model_dict = ServiceValidator.validate_layers(data_model=data_model_dict)
+
+    print("\n===================================================================")
+    print(f"Retrieve usage statistics")
+    print("===================================================================")
+    data_model_dict = ServiceValidator.get_usage_details(data_model=data_model_dict)
+
+    print("\n===================================================================")
+    print(f"Retrieve feature counts")
+    print("===================================================================")
+    data_model_dict = ServiceValidator.get_feature_counts(data_model=data_model_dict)
     print()
 
     """

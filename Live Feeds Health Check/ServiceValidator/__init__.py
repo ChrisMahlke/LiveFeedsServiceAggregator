@@ -1,28 +1,7 @@
 import arcgis
+import concurrent.futures
 import json
 import RequestUtils as RequestUtils
-
-# debugging flag
-DEBUG = False
-
-# TODO: Remove strings
-ERROR_CODES = {
-    "HTTPError": {
-        "message": "An HTTP error occurred"
-    },
-    "ConnectionError": {
-        "message": "A Connection error occurred"
-    },
-    "Timeout": {
-        "message": "The request timed out"
-    },
-    "RequestException": {
-        "message": "There was an ambiguous exception that occurred while handling your request"
-    },
-    "InvalidURL": {
-        "message": "The URL provided was somehow invalid"
-    }
-}
 
 
 def validate_items(gis: arcgis.gis.GIS = None, data_model=None) -> dict:
@@ -60,12 +39,11 @@ def validate_items(gis: arcgis.gis.GIS = None, data_model=None) -> dict:
                 "agolItem": agol_item,
                 "itemIsValid": True
             })
+            print(f"{item_id}")
         finally:
             return current_item[0], current_item[1]
 
-    updated_data_model = dict(map(validate_item, data_model.items()))
-
-    return updated_data_model
+    return dict(map(validate_item, data_model.items()))
 
 
 def validate_services(data_model=None) -> dict:
@@ -202,6 +180,62 @@ def validate_layers(data_model=None) -> dict:
             return False
 
     return dict(map(validate_service_layers, data_model.items()))
+
+
+def get_usage_details(data_model=None) -> dict:
+    """
+    Retrieve the item's usage statistics
+    :param data_model: Input data model
+    :return: Updated data model dictionary
+    """
+    if data_model is None:
+        data_model = {}
+
+    def get_usage_detail(current_item):
+        """
+        Get the usage detail for a single item
+        :param current_item: The current item
+        :return: A response from the usage query
+        """
+        item_id = current_item[0]
+        item_content = current_item[1]
+        if item_content["itemIsValid"]:
+            agol_item = item_content["agolItem"]
+            try:
+                usage = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
+            except (TypeError, IndexError) as e:
+                print(f"ERROR: Unable to retrieve usage details on: {item_id}. {e}")
+                response = {
+                    "usage": {
+                        "data": []
+                    },
+                    "itemHasUsageDetails": {
+                        "success": False,
+                        "error": f"ERROR: Unable to retrieve usage details on: {itemId}. {e}"
+                    }
+                }
+                return current_item[0], {**current_item[1], **{"usageResponse": response}}
+            else:
+                print(f"Usage details retrieved on: {item_id}\t{agol_item['title']}")
+                response = {
+                    "usage": usage,
+                    "itemHasUsageDetails": {
+                        "success": True
+                    }
+                }
+                return current_item[0], {**current_item[1], **{"usageResponse": response}}
+
+    return dict(map(get_usage_detail, data_model.items()))
+
+
+def get_feature_counts(data_model=None) -> dict:
+    if data_model is None:
+        data_model = {}
+
+    def get_feature_count():
+        print()
+
+    return data_model
 
 
 def process_alfp_response(alfp_response=None) -> dict:

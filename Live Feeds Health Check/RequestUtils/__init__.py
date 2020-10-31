@@ -11,74 +11,27 @@ from RetryUtils import get_retry_output
 from urllib.parse import urlencode
 
 
-def _get_item_usage_details(input_item=None) -> dict:
-    """ Usage details show how many times the item has been used for the time period you select. """
-    # Only check the items that are valid
-    if input_item is None:
-        input_item = {}
-    item_response = input_item["itemResponse"]
-    item_id = item_response["id"]
-    if item_response["isItemValid"]["success"]:
-        agol_item = item_response["agolItem"]
-        try:
-            usage = agol_item.usage(date_range=item_response["usageParams"]["usageDataRange"], as_df=False)
-        except TypeError:
-            print(f"ERROR: (TypeError) Unable to retrieve usage details on: {item_id}")
-            return {
-                "itemResponse": input_item["itemResponse"],
-                "serviceResponse": input_item["serviceResponse"],
-                "usageResponse": {
-                    "usage": {
-                        "data": []
-                    },
-                    "itemHasUsageDetails": {
-                        "success": False,
-                        "error": "ERROR: (TypeError) Unable to retrieve usage details on: {itemId}"
-                    }
-                }
-            }
-        except IndexError:
-            print(f"ERROR: (IndexError) Unable to retrieve usage details on: {item_id}")
-            return {
-                "itemResponse": input_item["itemResponse"],
-                "serviceResponse": input_item["serviceResponse"],
-                "usageResponse": {
-                    "usage": {
-                        "data": []
-                    },
-                    "itemHasUsageDetails": {
-                        "success": False,
-                        "error": "ERROR: (Index) Unable to retrieve usage details on: {itemId}"
-                    }
-                }
-            }
-        else:
-            print(f"Usage details retrieved on: {item_id}\t{agol_item['title']}")
-            return {
-                "itemResponse": input_item["itemResponse"],
-                "serviceResponse": input_item["serviceResponse"],
-                "usageResponse": {
-                    "usage": usage,
-                    "itemHasUsageDetails": {
-                        "success": True
-                    }
-                }
-            }
-    else:
-        print(f"Usage details NOT retrieved on: {item_id}")
-        return {
-            "itemResponse": input_item["itemResponse"],
-            "serviceResponse": input_item["serviceResponse"],
-            "usageResponse": {
-                "usage": {
-                    "data": []
-                },
-                "itemHasUsageDetails": {
-                    "success": False,
-                    "error": "Unable to retrieve usage details on: {itemId}"
-                }
-            }
-        }
+# debugging flag
+DEBUG = False
+
+# TODO: Remove strings
+ERROR_CODES = {
+    "HTTPError": {
+        "message": "An HTTP error occurred"
+    },
+    "ConnectionError": {
+        "message": "A Connection error occurred"
+    },
+    "Timeout": {
+        "message": "The request timed out"
+    },
+    "RequestException": {
+        "message": "There was an ambiguous exception that occurred while handling your request"
+    },
+    "InvalidURL": {
+        "message": "The URL provided was somehow invalid"
+    }
+}
 
 
 def get_all_feature_counts(input_layer_data=None) -> list:
