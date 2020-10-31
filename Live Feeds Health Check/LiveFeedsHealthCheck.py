@@ -28,6 +28,7 @@ try:
     import ItemHandler as ItemHandler
     import LoggingUtils as LoggingUtils
     import ModelUtils as ModelUtils
+    import QueryEngine as QueryEngine
     import RequestUtils as RequestUtils
     import FeedGenerator as FeedGenerator
     import ServiceValidator as ServiceValidator
@@ -180,13 +181,12 @@ if __name__ == "__main__":
     print("\n===================================================================")
     print(f"Retrieve usage statistics")
     print("===================================================================")
-    data_model_dict = ServiceValidator.get_usage_details(data_model=data_model_dict)
+    data_model_dict = QueryEngine.get_usage_details(data_model=data_model_dict)
 
     print("\n===================================================================")
     print(f"Retrieve feature counts")
     print("===================================================================")
-    data_model_dict = ServiceValidator.get_feature_counts(data_model=data_model_dict)
-
+    data_model_dict = QueryEngine.get_feature_counts(data_model=data_model_dict)
 
 
 
@@ -203,60 +203,6 @@ if __name__ == "__main__":
     # Create a new directory to hold the rss feeds (if it does not exist)
     rssDirPath = os.path.realpath(ROOT_DIR + r"\rss")
     FileManager.create_new_folder(rssDirPath)
-
-    print("\n=================================================================")
-    print(f"Hydrating input data model")
-    print("===================================================================")
-    # create the in-memory data model with the current UTC time and an empty
-    # list to hold the health and status of each Live Feed (or service)
-    inputDataModel = {"statusPreparedOn": timestamp,
-                      "items": list(ModelUtils.hydrate_input_data_model(input_config=itemsDataModel))}
-
-    # Initialize the input data model with item ID's from the config file
-
-    print("\n=================================================================")
-    print(f"Validating item meta-data")
-    print("===================================================================")
-    # Item validation
-    validatedItems = ItemHandler.validate_items(gis=GIS, items=itemsDataModel)
-    print(f"Item meta-data validation completed")
-
-    print("\n=================================================================")
-    print(f"Validating item service response data")
-    print("===================================================================")
-    # For each item check the item's service
-    validatedServiceResponses = RequestUtils.validate_service_urls(items=validatedItems)
-    # update data model with validated services
-    validatedServices = ModelUtils.add_service_responses(input_data=validatedServiceResponses)
-
-    print("\n=================================================================")
-    print(f"Validating item usage details")
-    print("===================================================================")
-    validatedUsageDetailsResponse = RequestUtils.validate_usage_details(items=validatedServices)
-    # UPDATE data model with usage details
-    validatedUsageDetails = ModelUtils.add_usage_details(input_data=validatedUsageDetailsResponse)
-
-    print("\n=================================================================")
-    print(f"Retrieving layer data to derive feature counts")
-    print("===================================================================")
-    # Retrieve layer data for each service, this will be used to derive the
-    # feature count for each service
-    layerData = ItemHandler.validate_service_layers(gis=GIS, items=validatedItems)
-    # Prepare the layers for querying
-    layerInputQueryParams = list(map(ItemHandler.prepare_layer_query_params, layerData))
-    # UPDATE data model with feature counts
-    allFeatureCounts = RequestUtils.get_all_feature_counts(input_layer_data=layerInputQueryParams)
-    validatedLayers = ModelUtils.add_feature_counts(input_data_model=validatedUsageDetails,
-                                                    feature_counts=allFeatureCounts)
-
-    print("\n=================================================================")
-    print(f"Integrating ALF Processor results")
-    print("===================================================================")
-    # retrieve the alf statuses
-    alfProcessorQueries = list(map(RequestUtils.prepare_alfp_query_params, inputDataModel["items"]))
-    alfProcessorResponse = RequestUtils.get_alfp_content(alfProcessorQueries)
-
-    inputDataModel = ModelUtils.add_alfp_results(data_model=validatedLayers, input_data=alfProcessorResponse)
 
     print("\n=================================================================")
     print(f"Process input data model")
