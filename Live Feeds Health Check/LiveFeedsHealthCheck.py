@@ -117,12 +117,13 @@ if __name__ == "__main__":
         raise ItemCountNotInRangeError(item_count)
     else:
         for input_item in input_items:
+            print(f"{input_item['id']}")
             data_model_dict.update({
                 input_item["id"]: {**input_item, **{"token": GIS._con.token}}
             })
 
     # Read in the status codes
-    print("\nLoading status codes")
+    print("\nLoading status codes configuration file")
     statusCodeConfigPath = os.path.realpath(ROOT_DIR + r"\statusCodes.json")
     statusCodeJsonExist = FileManager.check_file_exist_by_pathlib(path=statusCodeConfigPath)
     statusCodesDataModel = None
@@ -140,6 +141,7 @@ if __name__ == "__main__":
     for content in alfpContent:
         unique_item_key = content["id"]
         try:
+            print(f"{unique_item_key}")
             alfpDict.update({
                 unique_item_key: content["content"]
             })
@@ -158,9 +160,11 @@ if __name__ == "__main__":
     if fileExist:
         # iterate through the items in the config file
         for key, value in data_model_dict.items():
+            print(f"{key}")
             # iterate through the items in the status file
             for ele in FileManager.open_file(outputFilePath)["items"]:
                 status_file_key = ele["id"]
+                # if the item in the config file is also in the previous run, merge the output from the previous run
                 if key == status_file_key:
                     merged_dict = {**ele, **value}
                     data_model_dict.update({
@@ -173,7 +177,7 @@ if __name__ == "__main__":
     FileManager.create_new_folder(rssDirPath)
 
     print("\n===================================================================")
-    print(f"Validating item meta-data")
+    print(f"Validating item's unique key and meta-data")
     print("===================================================================")
     data_model_dict = ServiceValidator.validate_items(gis=GIS, data_model=data_model_dict)
 
@@ -210,19 +214,15 @@ if __name__ == "__main__":
         service_is_valid = value["serviceResponse"]["success"]
         layers_are_valid = value["allLayersAreValid"]
 
+        if item_id == "248e7b5827a34b248647afb012c58787":
+            item_is_valid = False
+
         # Process Retry Count
-        retry_count = 0
-        if len(value["serviceResponse"]["retryCount"]) > 0:
-            retry_count = value["serviceResponse"]["retryCount"]["retryCount"]
-        print(f"Retry count: {retry_count}")
+        retry_count = ServiceValidator.get_retry_count(value["serviceResponse"]["retryCount"])
 
         # Process Elapsed Time
-        elapsed_time = 0
-        # elapsed time
-        if service_is_valid:
-            # get elapsed time in seconds
-            elapsed_time = value["serviceResponse"]["response"].elapsed.total_seconds()
-        print(f"Elapsed time: {elapsed_time}")
+        elapsed_time = ServiceValidator.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
+
         # Obtain the total elapsed time and counts
         # response time directory
         response_time_data_dir = os.path.realpath(ROOT_DIR + r"\ResponseTimeData")
@@ -263,8 +263,6 @@ if __name__ == "__main__":
         if alfp_data is None:
             print(f"There is no ALF Processor data for item ID: {item_id}")
         else:
-            print("Success")
-
             statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
 
             if all([agol_is_valid, item_is_valid, service_is_valid, layers_are_valid]):
@@ -355,17 +353,17 @@ if __name__ == "__main__":
 
             LoggingUtils.log_status_code_details(statusCode)
 
-            # print("\n=================================================================")
-            # print("Saving results")
-            # print(f"Output file path: {outputFilePath}")
-            # print("===================================================================")
-            # If file do not exist then create it.
-            # if not fileExist:
-            #    FileManager.create_new_file(outputFilePath)
-            #    FileManager.set_file_permission(outputFilePath)
-            # else:
-            # open file
-            #    print()
-            # FileManager.save(data=outputDataModel, path=outputFilePath)
+    # print("\n=================================================================")
+    # print("Saving results")
+    # print(f"Output file path: {outputFilePath}")
+    # print("===================================================================")
+    # If file do not exist then create it.
+    # if not fileExist:
+    #    FileManager.create_new_file(outputFilePath)
+    #    FileManager.set_file_permission(outputFilePath)
+    # else:
+    # open file
+    #    print()
+    # FileManager.save(data=outputDataModel, path=outputFilePath)
 
     print("Script completed...")

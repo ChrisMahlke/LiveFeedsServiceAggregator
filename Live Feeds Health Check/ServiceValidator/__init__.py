@@ -76,28 +76,51 @@ def validate_items(gis: arcgis.gis.GIS = None, data_model=None) -> dict:
         data_model = {}
 
     def validate_item(current_item):
+        """
+        Validate an item's ID and retrieve its meta-data.  If the item is not accessible and it's already in the
+        previous run then propagate the meta-data from the previous run.
+        :param current_item: The current item ID
+        :return: Dictionary
+        """
+        # the item ID
         item_id = current_item[0]
+        # the item ID params from the config file and the content from the previous run (if it exist)
+        item_content = current_item[1]
+        # initialize the values
+        title = item_content.get("title", "")
+        snippet = item_content.get("snippet", "")
+        service_url = item_content.get("service_url", "")
+        validated_item_dict = {
+            "title": title,
+            "snippet": snippet,
+            "service_url": service_url,
+            "agolItem": None,
+            "itemIsValid": False
+        }
         try:
             agol_item = gis.content.get(item_id)
             if agol_item is None:
-                current_item[1].update({
-                    "itemIsValid": False
-                })
-                print(f"ERROR\t{item_id} is invalid or item is inaccessible")
+                # The item ID is invalid
+                current_item[1].update(validated_item_dict)
+                print(f"{item_id} is invalid.")
         except Exception as e:
-            current_item[1].update({
-                "itemIsValid": False
-            })
-            print(f"ERROR\t{item_id} is having an issue: {e}")
+            # The item ID is valid, however, not accessible
+            current_item[1].update(validated_item_dict)
+            print(f"{item_id} is inaccessible: {e}")
         else:
-            # update the title and snippet in case it has changed in AGOL
-            current_item[1].update({
-                "title": agol_item["title"],
-                "snippet": agol_item["snippet"],
-                "service_url": agol_item["url"],
+            # The item is a valid accessible item in ArcGIS Online
+            # Fetch the item's title and snippet
+            title = agol_item["title"]
+            snippet = agol_item["snippet"]
+            service_url = agol_item["url"]
+            validated_item_dict.update({
+                "title": title,
+                "snippet": snippet,
+                "service_url": service_url,
                 "agolItem": agol_item,
                 "itemIsValid": True
             })
+            current_item[1].update(validated_item_dict)
             print(f"{item_id}")
         finally:
             return current_item[0], current_item[1]
@@ -122,11 +145,11 @@ def validate_services(data_model=None) -> dict:
         """
         item_id = current_item[0]
         item_content = current_item[1]
-        if item_content["itemIsValid"]:
-            service_url = item_content["agolItem"]["url"]
-        else:
-            service_url = item_content["service_url"]
-        response = RequestUtils.check_request(path=service_url,
+        print(f"{item_id}")
+        print(f"retry count threshold: {item_content['default_retry_count']}")
+        print(f"timout threshold: {item_content['default_timeout']}")
+        print(f"{item_content['service_url']}")
+        response = RequestUtils.check_request(path=item_content["service_url"],
                                               params={},
                                               try_json=True,
                                               add_token=True,
@@ -134,6 +157,7 @@ def validate_services(data_model=None) -> dict:
                                               timeout_factor=item_content["default_timeout"],
                                               token=item_content["token"],
                                               id=item_id)
+        print("\n")
         return current_item[0], {**current_item[1], **{"serviceResponse": response}}
 
     return dict(map(validate_service, data_model.items()))
@@ -169,7 +193,7 @@ def validate_layers(data_model=None) -> dict:
             try:
                 for i, layer in enumerate(item_content["agolItem"].layers):
                     if layer.properties["id"] not in exclusion_list_input_results:
-                        print(f"\t{layer.properties['name']}")
+                        print(f" {layer.properties['name']}")
                         layers.append({
                             "id": item_id,
                             "name": layer.properties["name"],
@@ -178,7 +202,7 @@ def validate_layers(data_model=None) -> dict:
                             "url": layer.url
                         })
             except Exception as e:
-                print(f"\tThe item {item_id} is either inaccessible or not valid: {e}")
+                print(f" The item {item_id} is either inaccessible or not valid: {e}")
                 layers.append({
                     "id": item_id,
                     "success": False,
@@ -198,30 +222,43 @@ def validate_layers(data_model=None) -> dict:
         else:
             # item is not valid or not accessible, use the url on file
             if item_content["serviceResponse"]["success"]:
-                # we have a successful response from using the service url on file
+                # check if we received a successful response from using the service url on file
                 response = json.loads(item_content["serviceResponse"]["response"].content.decode('utf-8'))
-                for i, layer in enumerate(response["layers"]):
-                    if layer["id"] not in exclusion_list_input_results:
-                        print(f"\t{layer['name']}")
-                        layers.append({
-                            "id": item_id,
-                            "name": layer["name"],
-                            "success": True,
-                            "token": current_item[1]["token"],
-                            "url": item_content["service_url"] + "/" + str(layer["id"])
-                        })
-                layer_query_params = prepare_layer_query_params(layers)
-                layers_are_valid = check_all_layers(layers)
+                # Check if the response throws and error
+                error = response.get("error")
+                if error is None:
+                    # There was no error returned in the response
+                    for i, layer in enumerate(response["layers"]):
+                        if layer["id"] not in exclusion_list_input_results:
+                            print(f" {layer['name']}")
+                            layers.append({
+                                "id": item_id,
+                                "name": layer["name"],
+                                "success": True,
+                                "token": current_item[1]["token"],
+                                "url": item_content["service_url"] + "/" + str(layer["id"])
+                            })
+                    layer_query_params = prepare_layer_query_params(layers)
+                    layers_are_valid = check_all_layers(layers)
+                else:
+                    # There was an error returned in the reponse
+                    layers.append({
+                        "id": item_id,
+                        "success": False,
+                        "message": f" The item {item_id} service url is having issues: {error['message']}"
+                    })
+                    layer_query_params = prepare_layer_query_params(layers)
+                    layers_are_valid = check_all_layers(layers)
                 return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
                                          **{"layers": layers},
                                          **{"layerQueryParams": layer_query_params}}
             else:
                 # we have a failed response
-                print(f"\tThe item {item_id} not inaccessible or not valid and the service url is not accessible.")
+                print(f" The item {item_id} not inaccessible or not valid and the service url is not accessible.")
                 layers.append({
                     "id": item_id,
                     "success": False,
-                    "message": f"\tThe item {item_id} is either inaccessible or not valid and the service url is not "
+                    "message": f" The item {item_id} is either inaccessible or not valid and the service url is not "
                                f"accessible. "
                 })
                 layer_query_params = prepare_layer_query_params(layers)
@@ -286,3 +323,22 @@ def validate_layers(data_model=None) -> dict:
             return False
 
     return dict(map(validate_service_layers, data_model.items()))
+
+
+def get_retry_count(value=None) -> int:
+    """ Get the total number of retries """
+    retry_count = 0
+    # If the retry count is greater than 0
+    if len(value) > 0:
+        retry_count = value["retryCount"]
+    return retry_count
+
+
+def get_elapsed_time(service_is_valid=None, response=None) -> float:
+    """ Get the elapsed time in seconds """
+    elapsed_time = 0
+    # If the service is valid we can get the elapsed time
+    if service_is_valid:
+        # get elapsed time in seconds
+        elapsed_time = response.elapsed.total_seconds()
+    return elapsed_time
