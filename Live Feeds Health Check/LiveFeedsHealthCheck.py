@@ -171,6 +171,11 @@ if __name__ == "__main__":
                         key: merged_dict
                     })
 
+    # Create a new directory to hold the rss feeds (if it does not exist)
+    print(f"Creating RSS output folder if it does not exist.")
+    rssDirPath = os.path.realpath(ROOT_DIR + r"\rss")
+    FileManager.create_new_folder(rssDirPath)
+
     print("\n===================================================================")
     print(f"Validating item meta-data")
     print("===================================================================")
@@ -241,7 +246,7 @@ if __name__ == "__main__":
                 "elapsed_count": 1
             }, path=response_time_data_file_path)
             # since it's our first entry, the average is the current elapsed time
-            elapsedTimeAverage = elapsed_time
+            elapsed_times_average = elapsed_time
         else:
             # Retrieve the elapsed time DIVIDE by count
             response_time_data = FileManager.get_response_time_data(response_time_data_file_path)
@@ -260,489 +265,110 @@ if __name__ == "__main__":
 
         alfp_data = alfpDict.get(item_id)
         if alfp_data is None:
-            print("Error")
+            print(f"There is no ALF Processor data for item ID: {item_id}")
         else:
             print("Success")
-        # 10 digit Timestamp 'seconds since epoch' containing time of last
-        # Successful Run (and Service update)
-        #feedLastUpdateTimestamp = alfp_data["lastUpdateTimestamp"]
-        # 10 digit Timestamp 'seconds since epoch' containing time of last
-        # Failed run (or Service update failure)
-        # feed_last_failure_timestamp = item["lastFailureTimestamp"]
-        # 10 digit Timestamp 'seconds since epoch' containing time of last
-        # run (having a Success, a Failure, or a No Action flag ('No Data
-        # Updates')
-        #feedLastRunTimestamp = alfp_data["lastRunTimestamp"]
-        # Average number of minutes between each successful run (or Service
-        # update)
-        #avgUpdateIntervalInMins = alfp_data["avgUpdateIntervalMins"]
-        # Average number of minutes between each run
-        #avgFeedIntervalInMins = alfp_data["avgFeedIntervalMins"]
-        #
-        #consecutive_failures_count = alfp_data["consecutiveFailures"]
-        #
-        #consecutive_failures_threshold = int(value["consecutive_failures_threshold"])
-        #
-        #alfp_code = alfp_data["lastStatus"]["code"]
-
-        statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
-
-        if all([agol_is_valid, item_is_valid, service_is_valid, layers_are_valid]):
-            print("\tAGOL, Item, Service checks normal")
-
-            # 001 Check
-            # Check elapsed time between now and the last updated time of the feed
-            lastUpdateTimestampDiff = timestamp - alfp_data["lastUpdateTimestamp"]
-            # Check elapsed time between now and the last run time of the feed
-            lastRunTimestampDiff = timestamp - alfp_data["lastRunTimestamp"]
-
-            # debugging and logging
-            p_currentTimeStamp = TimeUtils.convert_from_utc_to_datetime(timestamp)
-            p_feedLastUpdateTimestamp = TimeUtils.convert_from_utc_to_datetime(alfp_data["lastUpdateTimestamp"])
-            p_lastUpdateTimestampDiff = TimeUtils.convert_from_utc_to_datetime(lastUpdateTimestampDiff)
-            print(f"Run time of script:\t\t{p_currentTimeStamp}")
-            print(f"Last update of Feed:\t\t{p_feedLastUpdateTimestamp}")
-            print(f"Last update timestamp delta:\t{p_lastUpdateTimestampDiff}")
-
-            # If the Difference exceeds the average update interval by an interval of X, flag it
-            lastUpdateTimestampDiffMinutes = lastUpdateTimestampDiff / 60
-            print(f"Last update timestamp delta:\t{lastUpdateTimestampDiffMinutes} seconds")
-            # calculate the threshold
-            avgUpdateIntThreshold = int(value["average_update_interval_factor"]) * alfp_data["avgUpdateIntervalMins"]
-            print(f"Average update interval threshold: {avgUpdateIntThreshold}")
-            if lastUpdateTimestampDiffMinutes > avgUpdateIntThreshold:
-                #value["status"]["code"] = "001"
-                statusCode = StatusManager.get_status_code("001", statusCodesDataModel)
-
-            # 002 Check
-            lastRunTimestampDiffMinutes = lastRunTimestampDiff / 60
-            print(f"Last run timestamp delta:\t{lastRunTimestampDiffMinutes} seconds")
-            # calculate the threshold
-            avgFeedIntThreshold = int(value["average_feed_interval_factor"]) * alfp_data["avgFeedIntervalMins"]
-            print(f"Average Feed Interval threshold: {avgFeedIntThreshold}")
-            if lastRunTimestampDiffMinutes > avgFeedIntThreshold:
-                #item_dict["status"]["code"] = "002"
-                statusCode = StatusManager.get_status_code("002", statusCodesDataModel)
-
-            # 003 Check
-            if alfp_data["lastStatus"]["code"] == 2:
-                if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
-                    #item_dict["status"]["code"] = "003"
-                    statusCode = StatusManager.get_status_code("003", statusCodesDataModel)
-
-            # 004 Check
-            if alfp_data["lastStatus"]["code"] == 3:
-                if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
-                    #item_dict["status"]["code"] = "004"
-                    statusCode = StatusManager.get_status_code("004", statusCodesDataModel)
-
-            # 005 Check
-            if alfp_data["lastStatus"]["code"] == 1:
-                if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
-                    #item_dict["status"]["code"] = "005"
-                    statusCode = StatusManager.get_status_code("005", statusCodesDataModel)
-
-            # 006 Check
-            if alfp_data["lastStatus"]["code"] == -1:
-                #item_dict["status"]["code"] = "006"
-                statusCode = StatusManager.get_status_code("006", statusCodesDataModel)
-
-            # 100
-            # Check retry count
-            if retry_count > int(itemResponse["config"]["default_retry_count"]):
-                #item_dict["status"]["code"] = "100"
-                statusCode = StatusManager.get_status_code("100", statusCodesDataModel)
-
-            # 101
-            # Check elapsed time
-            avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsedTimeAverage)
-            if elapsedTime > avg_elapsed_time_threshold:
-                print(f"\telapsed time threshold: {avg_elapsed_time_threshold}")
-                #item_dict["status"]["code"] = "101"
-                statusCode = StatusManager.get_status_code("101", statusCodesDataModel)
-
-            #statusCode = StatusManager.get_status_code(item_dict["status"]["code"], statusCodesDataModel)
-            LoggingUtils.log_status_code_details(statusCode)
-
-        else:
-            # If we are at this point, then one or more of the Service
-            # states has failed
-            #
-            # The any() function returns True if any item in an iterable
-            # are true, otherwise it returns False.
-            if any([agol_is_valid, item_is_valid, service_is_valid]):
-
-                if service_is_valid:
-                    print(f"Service | Success")
-                    if item_is_valid:
-                        print(f"Item | Success | AGOL must be down, then why is the item accessible?")
-                    else:
-                        # 102
-                        statusCode = StatusManager.get_status_code("102", statusCodesDataModel)
-                        #item_dict["status"]["code"] = "102"
-                        LoggingUtils.log_status_code_details(statusCode)
-
-                    # 201 Check
-                    if layers_are_valid is not True:
-                        statusCode = StatusManager.get_status_code("201", statusCodesDataModel)
-                        #item_dict["status"]["code"] = "201"
-                        LoggingUtils.log_status_code_details(statusCode)
-                else:
-                    # 500
-                    if item_is_valid:
-                        statusCode = StatusManager.get_status_code("500", statusCodesDataModel)
-                        #item_dict["status"]["code"] = "500"
-                        LoggingUtils.log_status_code_details(statusCode)
-                    else:
-                        print(f"Item | Fail")
-                        # If ALL of the Service states are False, we have reached
-                        # a critical failure in the system
-                        statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
-                        #item_dict["status"]["code"] = "501"
-                        LoggingUtils.log_status_code_details(statusCode)
-            else:
-                # If ALL of the Service states are False, we have reached
-                # a critical failure in the system
-                statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
-                #item_dict["status"]["code"] = "501"
-                LoggingUtils.log_status_code_details(statusCode)
-        print()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # Create a new directory to hold the rss feeds (if it does not exist)
-    rssDirPath = os.path.realpath(ROOT_DIR + r"\rss")
-    FileManager.create_new_folder(rssDirPath)
-
-    print("\n=================================================================")
-    print(f"Process input data model")
-    print("===================================================================")
-    outputDataModel = {
-        "statusPreparedOn": timestamp,
-        "items": []
-    }
-
-    for i, ele in enumerate(inputDataModel):
-        itemResponse = ele["itemResponse"]
-        serviceResponse = ele["serviceResponse"]
-        usageResponse = ele["usageResponse"]
-        layerResponse = ele["layerResponse"]
-        alfpResponse = ele["alfpResponse"]
-
-        # If we are signed in to the GIS with a token, AGOL is responding to requests
-        agolIsValid = True
-        # is the item accessible
-        itemIsValid = itemResponse["isItemValid"]["success"]
-        # is the service accessible
-        serviceIsValid = serviceResponse["success"]
-        # layers
-        layers = layerData[i]
-        isLayersValid = ItemHandler.check_layers(layers)
-
-        # ID
-        item_id = itemResponse["id"]
-        # Item title and snippet
-        title = ItemHandler.check_title(input_data=itemResponse, result_set=previousStatusCheckData)
-        snippet = ItemHandler.check_summary(input_data=itemResponse, result_set=previousStatusCheckData)
-        # elapsed time
-        elapsedTime = serviceResponse["elapsedTime"]
-        # retry count
-        retryCount = serviceResponse["retryCount"]
-
-        # Obtain the total elapsed time and counts
-        # response time directory
-        responseTimeDataDir = os.path.realpath(ROOT_DIR + r"\ResponseTimeData")
-        # Create a new directory if it does not exists
-        FileManager.create_new_folder(responseTimeDataDir)
-        # path to output file
-        responseTimeDataFilePath = os.path.join(responseTimeDataDir, item_id + "." + "json")
-        # Check file existence.
-        fileExist = FileManager.check_file_exist_by_pathlib(path=responseTimeDataFilePath)
-        elapsedTimeCount = 1
-        if not fileExist:
-            # If file does not exist then create it.
-            FileManager.create_new_file(responseTimeDataFilePath)
-            FileManager.set_file_permission(responseTimeDataFilePath)
-            FileManager.save(data={
-                "id": item_id,
-                "elapsed_sums": elapsedTime,
-                "elapsed_count": 1
-            }, path=responseTimeDataFilePath)
-            elapsedTimeAverage = elapsedTime / elapsedTimeCount
-        else:
-            # Retrieve the elapsed time DIVIDE by count
-            responseTimeData = FileManager.get_response_time_data(responseTimeDataFilePath)
-            # total counts
-            elapsedTimesCount = responseTimeData["elapsed_count"]
-            # sum of all times
-            elapsedTimesTotal = responseTimeData["elapsed_sums"]
-            # calculated average
-            elapsedTimeAverage = elapsedTimesTotal / elapsedTimesCount
-
-            FileManager.update_response_time_data(path=responseTimeDataFilePath, input_data={
-                "id": item_id,
-                "elapsed_count": elapsedTimesCount + 1,
-                "elapsed_sums": elapsedTimesTotal + elapsedTime
-            })
-
-        if alfpResponse["success"]:
-            # 10 digit Timestamp 'seconds since epoch' containing time of last
-            # Successful Run (and Service update)
-            feedLastUpdateTimestamp = alfpResponse["lastUpdateTimestamp"]
-            # 10 digit Timestamp 'seconds since epoch' containing time of last
-            # Failed run (or Service update failure)
-            # feed_last_failure_timestamp = item["lastFailureTimestamp"]
-            # 10 digit Timestamp 'seconds since epoch' containing time of last
-            # run (having a Success, a Failure, or a No Action flag ('No Data
-            # Updates')
-            feedLastRunTimestamp = alfpResponse["lastRunTimestamp"]
-            # Average number of minutes between each successful run (or Service
-            # update)
-            avgUpdateIntervalInMins = alfpResponse["avgUpdateIntervalMins"]
-            # Average number of minutes between each run
-            avgFeedIntervalInMins = alfpResponse["avgFeedIntervalMins"]
-            #
-            consecutive_failures_count = alfpResponse["consecutiveFailures"]
-            #
-            consecutive_failures_threshold = int(itemResponse["config"]["consecutiveErrorsThreshold"])
-            #
-            alfp_code = alfpResponse["alf_status"]["code"]
-
-            print(f"\n\n{item_id}\t{title}")
-            print(f"\t{item_id}\t{snippet}")
-            print(f"\telapsed time  {elapsedTime}")
-            print(f"\tretry count   {retryCount}")
 
             statusCode = StatusManager.get_status_code("000", statusCodesDataModel)
 
-            item_dict = {
-                "id": item_id,
-                "title": title,
-                "snippet": snippet,
-                "lastUpdateTime": feedLastUpdateTimestamp,
-                "updateRate": avgUpdateIntervalInMins,
-                "featureCount": layerResponse["featureCount"],
-                "usage": {
-                    "trendingCode": serviceResponse["trending"]["code"],
-                    "percentChange": serviceResponse["trending"]["percent_change"],
-                    "usageCounts": serviceResponse["trending"]["counts"]
-                },
-                "status": {
-                    "code": "000"
-                }
-            }
-        else:
-            item_dict = {
-                "id": item_id,
-                "title": title,
-                "snippet": snippet,
-                "lastUpdateTime": 0,
-                "updateRate": 0,
-                "featureCount": layerResponse["featureCount"],
-                "usage": {
-                    "trendingCode": serviceResponse["trending"]["code"],
-                    "percentChange": serviceResponse["trending"]["percent_change"],
-                    "usageCounts": serviceResponse["trending"]["counts"]
-                },
-                "status": {
-                    "code": "000"
-                }
-            }
+            if all([agol_is_valid, item_is_valid, service_is_valid, layers_are_valid]):
+                print("\tAGOL, Item, Service checks normal")
 
-        # The all() function returns True if all items in an iterable are
-        # True, otherwise it returns False.
-        if all([agolIsValid, itemIsValid, serviceIsValid, isLayersValid]):
-            print("\tAGOL, Item, Service checks normal")
+                # 001 Check
+                # Check elapsed time between now and the last updated time of the feed
+                lastUpdateTimestampDiff = timestamp - alfp_data["lastUpdateTimestamp"]
+                # Check elapsed time between now and the last run time of the feed
+                lastRunTimestampDiff = timestamp - alfp_data["lastRunTimestamp"]
 
-            # 001 Check
-            # Check elapsed time between now and the last updated time of the feed
-            lastUpdateTimestampDiff = outputDataModel["statusPreparedOn"] - feedLastUpdateTimestamp
-            lastRunTimestampDiff = outputDataModel["statusPreparedOn"] - feedLastRunTimestamp
+                # If the Difference exceeds the average update interval by an interval of X, flag it
+                lastUpdateTimestampDiffMinutes = lastUpdateTimestampDiff / 60
+                print(f"Last update timestamp delta:\t{lastUpdateTimestampDiffMinutes} seconds")
+                # Average number of minutes between each successful run (or Service update)
+                avgUpdateIntThreshold = int(value["average_update_interval_factor"]) * alfp_data["avgUpdateIntervalMins"]
+                print(f"Average update interval threshold: {avgUpdateIntThreshold}")
+                if lastUpdateTimestampDiffMinutes > avgUpdateIntThreshold:
+                    statusCode = StatusManager.get_status_code("001", statusCodesDataModel)
 
-            # debugging and logging
-            p_currentTimeStamp = TimeUtils.convert_from_utc_to_datetime(outputDataModel['statusPreparedOn'])
-            p_feedLastUpdateTimestamp = TimeUtils.convert_from_utc_to_datetime(feedLastUpdateTimestamp)
-            p_lastUpdateTimestampDiff = TimeUtils.convert_from_utc_to_datetime(lastUpdateTimestampDiff)
-            print(f"Run time of script:\t\t{p_currentTimeStamp}")
-            print(f"Last update of Feed:\t\t{p_feedLastUpdateTimestamp}")
-            print(f"Last update timestamp delta:\t{p_lastUpdateTimestampDiff}")
+                # 002 Check
+                lastRunTimestampDiffMinutes = lastRunTimestampDiff / 60
+                print(f"Last run timestamp delta:\t{lastRunTimestampDiffMinutes} seconds")
+                # calculate the threshold (Average number of minutes between each run)
+                avgFeedIntThreshold = int(value["average_feed_interval_factor"]) * alfp_data["avgFeedIntervalMins"]
+                print(f"Average Feed Interval threshold: {avgFeedIntThreshold}")
+                if lastRunTimestampDiffMinutes > avgFeedIntThreshold:
+                    statusCode = StatusManager.get_status_code("002", statusCodesDataModel)
 
-            # If the Difference exceeds the average update interval by an interval of X, flag it
-            lastUpdateTimestampDiffMinutes = lastUpdateTimestampDiff / 60
-            print(f"Last update timestamp delta:\t{lastUpdateTimestampDiffMinutes} seconds")
-            # calculate the threshold
-            avgUpdateIntThreshold = int(itemResponse["config"]["averageUpdateIntervalFactor"]) * avgUpdateIntervalInMins
-            print(f"Average update interval threshold: {avgUpdateIntThreshold}")
-            if lastUpdateTimestampDiffMinutes > avgUpdateIntThreshold:
-                item_dict["status"]["code"] = "001"
+                # 003 Check
+                if alfp_data["lastStatus"]["code"] == 2:
+                    if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
+                        statusCode = StatusManager.get_status_code("003", statusCodesDataModel)
 
-            # 002 Check
-            lastRunTimestampDiffMinutes = lastRunTimestampDiff / 60
-            print(f"Last run timestamp delta:\t{lastRunTimestampDiffMinutes} seconds")
-            # calculate the threshold
-            avgFeedIntThreshold = int(itemResponse["config"]["averageFeedIntervalFactor"]) * avgFeedIntervalInMins
-            print(f"Average Feed Interval threshold: {avgFeedIntThreshold}")
-            if lastRunTimestampDiffMinutes > avgFeedIntThreshold:
-                item_dict["status"]["code"] = "002"
+                # 004 Check
+                if alfp_data["lastStatus"]["code"] == 3:
+                    if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
+                        statusCode = StatusManager.get_status_code("004", statusCodesDataModel)
 
-            print(f"ALF Processor status code: {alfp_code}")
-            print(f"Consecutive Failures: {consecutive_failures_count}")
+                # 005 Check
+                if alfp_data["lastStatus"]["code"] == 1:
+                    if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
+                        statusCode = StatusManager.get_status_code("005", statusCodesDataModel)
 
-            # 003 Check
-            if alfp_code == 2:
-                if consecutive_failures_count > consecutive_failures_threshold:
-                    item_dict["status"]["code"] = "003"
+                # 006 Check
+                if alfp_data["lastStatus"]["code"] == -1:
+                    statusCode = StatusManager.get_status_code("006", statusCodesDataModel)
 
-            # 004 Check
-            if alfp_code == 3:
-                if consecutive_failures_count > consecutive_failures_threshold:
-                    item_dict["status"]["code"] = "004"
+                # 100
+                # Check retry count
+                if retry_count > int(value["default_retry_count"]):
+                    statusCode = StatusManager.get_status_code("100", statusCodesDataModel)
 
-            # 005 Check 
-            if alfp_code == 1:
-                if consecutive_failures_count > consecutive_failures_threshold:
-                    item_dict["status"]["code"] = "005"
+                # 101
+                # Check elapsed time
+                avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsed_times_average)
+                if elapsedTime > avg_elapsed_time_threshold:
+                    statusCode = StatusManager.get_status_code("101", statusCodesDataModel)
 
-            # 006 Check
-            if alfp_code == -1:
-                item_dict["status"]["code"] = "006"
+                LoggingUtils.log_status_code_details(statusCode)
+            else:
+                # If we are at this point, then one or more of the Service states has failed
+                #
+                # The any() function returns True if any item in an iterable are true, otherwise it returns False.
+                if any([agol_is_valid, item_is_valid, service_is_valid]):
+                    if service_is_valid:
+                        print(f"Service | Success")
+                        if item_is_valid:
+                            print(f"Item | Success | AGOL must be down, then why is the item accessible?")
+                        else:
+                            # 102
+                            statusCode = StatusManager.get_status_code("102", statusCodesDataModel)
+                        # 201 Check
+                        if layers_are_valid is not True:
+                            statusCode = StatusManager.get_status_code("201", statusCodesDataModel)
+                    else:
+                        # 500
+                        if item_is_valid:
+                            statusCode = StatusManager.get_status_code("500", statusCodesDataModel)
+                        else:
+                            print(f"Item | Fail")
+                            # If ALL of the Service states are False, we have reached a critical failure in the system
+                            statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
+                else:
+                    # If ALL of the Service states are False, we have reached a critical failure in the system
+                    statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
 
-            # 100
-            # Check retry count
-            if "retryCount" in retryCount:
-                if retryCount["retryCount"] > int(itemResponse["config"]["default_retry_count"]):
-                    item_dict["status"]["code"] = "100"
-
-            # 101
-            # Check elapsed time
-            avg_elapsed_time_threshold = float(itemResponse["config"]["averageElapsedTimeFactor"]) * float(
-                elapsedTimeAverage)
-            if elapsedTime > avg_elapsed_time_threshold:
-                print(f"\telapsed time threshold: {avg_elapsed_time_threshold}")
-                item_dict["status"]["code"] = "101"
-
-            statusCode = StatusManager.get_status_code(item_dict["status"]["code"], statusCodesDataModel)
             LoggingUtils.log_status_code_details(statusCode)
 
-        else:
-            # If we are at this point, then one or more of the Service 
-            # states has failed
-            #
-            # The any() function returns True if any item in an iterable
-            # are true, otherwise it returns False.
-            if any([agolIsValid, itemIsValid, serviceIsValid]):
+            #print("\n=================================================================")
+            #print("Saving results")
+            #print(f"Output file path: {outputFilePath}")
+            #print("===================================================================")
+            # If file do not exist then create it.
+            #if not fileExist:
+            #    FileManager.create_new_file(outputFilePath)
+            #    FileManager.set_file_permission(outputFilePath)
+            #else:
+                # open file
+            #    print()
+            #FileManager.save(data=outputDataModel, path=outputFilePath)
 
-                if serviceIsValid:
-                    print(f"Service | Success")
-                    if itemIsValid:
-                        print(f"Item | Success | AGOL must be down, then why is the item accessible?")
-                    else:
-                        # 102
-                        statusCode = StatusManager.get_status_code("102", statusCodesDataModel)
-                        item_dict["status"]["code"] = "102"
-                        LoggingUtils.log_status_code_details(statusCode)
-
-                    # 201 Check
-                    if isLayersValid is not True:
-                        statusCode = StatusManager.get_status_code("201", statusCodesDataModel)
-                        item_dict["status"]["code"] = "201"
-                        LoggingUtils.log_status_code_details(statusCode)
-                else:
-                    # 500
-                    if itemIsValid:
-                        statusCode = StatusManager.get_status_code("500", statusCodesDataModel)
-                        item_dict["status"]["code"] = "500"
-                        LoggingUtils.log_status_code_details(statusCode)
-                    else:
-                        print(f"Item | Fail")
-                        # If ALL of the Service states are False, we have reached
-                        # a critical failure in the system
-                        statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
-                        item_dict["status"]["code"] = "501"
-                        LoggingUtils.log_status_code_details(statusCode)
-            else:
-                # If ALL of the Service states are False, we have reached
-                # a critical failure in the system
-                statusCode = StatusManager.get_status_code("501", statusCodesDataModel)
-                item_dict["status"]["code"] = "501"
-                LoggingUtils.log_status_code_details(statusCode)
-
-        # append to output data model
-        outputDataModel["items"].append(item_dict)
-
-        print(f"Process RSS Feed")
-        # TODO Clean!
-        # path to RSS output file
-        rssFilePath = os.path.join(rssDirPath, item_id + "." + "rss")
-        # Check if the file already exist
-        rssFileExist = FileManager.check_file_exist_by_pathlib(path=rssFilePath)
-        if rssFileExist:
-            # If the file exist, check the status
-            previousStatus = FileManager.get_status_from_feed(rssFilePath)
-            if previousStatus == statusCode["Description of Condition"]:
-                print(f"RSS FEED status: {statusCode['Description of Condition']}")
-            else:
-                # If the new status is different than what is on file, update the feed
-                FileManager.create_new_file(rssFilePath)
-                FileManager.set_file_permission(rssFilePath)
-                feed = FeedGenerator.Feed(rss="2.0",
-                                          channel="",
-                                          channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                          channelLink="https://www.arcgis.com",
-                                          channelDescription=snippet,
-                                          webmaster="livingatlas_admins@esri.com",
-                                          ttl="",
-                                          pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                          item="",
-                                          itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                          itemLink="https://www.esri.com",
-                                          itemDescription=statusCode["Description of Condition"])
-                dataSerializer = FeedGenerator.DataSerializer()
-                elementTree = dataSerializer.serialize(feed, "XML")
-                elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
-        else:
-            # The RSS file does not already exists, create a new RSS file
-            feed = FeedGenerator.Feed(rss="2.0",
-                                      channel="",
-                                      channelTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                      channelLink="https://www.arcgis.com",
-                                      channelDescription=snippet,
-                                      webmaster="livingatlas_admins@esri.com",
-                                      ttl="",
-                                      pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                      item="",
-                                      itemTitle=title + " - ArcGIS Living Atlas of the World, Esri",
-                                      itemLink="https://www.esri.com",
-                                      itemDescription=statusCode["Description of Condition"])
-            dataSerializer = FeedGenerator.DataSerializer()
-            elementTree = dataSerializer.serialize(feed, "XML")
-            elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
-
-    print("\n=================================================================")
-    print("Saving results")
-    print(f"Output file path: {outputFilePath}")
-    print("===================================================================")
-    # If file do not exist then create it.
-    if not fileExist:
-        FileManager.create_new_file(outputFilePath)
-        FileManager.set_file_permission(outputFilePath)
-    else:
-        # open file
-        print()
-    FileManager.save(data=outputDataModel, path=outputFilePath)
+    print("Script completed...")
