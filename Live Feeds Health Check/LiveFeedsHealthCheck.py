@@ -33,11 +33,8 @@ try:
     import os
 
     import FileManager as FileManager
-    import ItemHandler as ItemHandler
     import LoggingUtils as LoggingUtils
-    import ModelUtils as ModelUtils
     import QueryEngine as QueryEngine
-    import RequestUtils as RequestUtils
     import FeedGenerator as FeedGenerator
     import ServiceValidator as ServiceValidator
     import StatusManager as StatusManager
@@ -46,7 +43,6 @@ try:
 
     from ConfigManager import ConfigManager
     from UserUtils import User
-    from collections import defaultdict
 except ImportError as e:
     print(f"Import Error: {e}")
 
@@ -284,7 +280,8 @@ if __name__ == "__main__":
                 lastUpdateTimestampDiffMinutes = lastUpdateTimestampDiff / 60
                 print(f"Last update timestamp delta:\t{lastUpdateTimestampDiffMinutes} seconds")
                 # Average number of minutes between each successful run (or Service update)
-                avgUpdateIntThreshold = int(value["average_update_interval_factor"]) * alfp_data["avgUpdateIntervalMins"]
+                avgUpdateIntThreshold = int(value["average_update_interval_factor"]) * alfp_data[
+                    "avgUpdateIntervalMins"]
                 print(f"Average update interval threshold: {avgUpdateIntThreshold}")
                 if lastUpdateTimestampDiffMinutes > avgUpdateIntThreshold:
                     statusCode = StatusManager.get_status_code("001", statusCodesDataModel)
@@ -325,7 +322,7 @@ if __name__ == "__main__":
                 # 101
                 # Check elapsed time
                 avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsed_times_average)
-                if elapsedTime > avg_elapsed_time_threshold:
+                if elapsed_time > avg_elapsed_time_threshold:
                     statusCode = StatusManager.get_status_code("101", statusCodesDataModel)
 
                 LoggingUtils.log_status_code_details(statusCode)
@@ -358,17 +355,17 @@ if __name__ == "__main__":
 
             LoggingUtils.log_status_code_details(statusCode)
 
-            #print("\n=================================================================")
-            #print("Saving results")
-            #print(f"Output file path: {outputFilePath}")
-            #print("===================================================================")
+            # print("\n=================================================================")
+            # print("Saving results")
+            # print(f"Output file path: {outputFilePath}")
+            # print("===================================================================")
             # If file do not exist then create it.
-            #if not fileExist:
+            # if not fileExist:
             #    FileManager.create_new_file(outputFilePath)
             #    FileManager.set_file_permission(outputFilePath)
-            #else:
-                # open file
+            # else:
+            # open file
             #    print()
-            #FileManager.save(data=outputDataModel, path=outputFilePath)
+            # FileManager.save(data=outputDataModel, path=outputFilePath)
 
     print("Script completed...")
