@@ -354,7 +354,43 @@ if __name__ == "__main__":
 
                 LoggingUtils.log_status_code_details(item_id, statusCode)
 
-            # update/add status code
+            print("\n=================================================================")
+            print(f"Process RSS Feed")
+            print("===================================================================")
+            # Initialize Feed Generator
+            feed = FeedGenerator.Feed(rss="2.0",
+                                      channel="",
+                                      channelTitle=value["title"] + " - ArcGIS Living Atlas of the World, Esri",
+                                      channelLink="https://www.arcgis.com",
+                                      channelDescription=value["snippet"],
+                                      webmaster="livingatlas_admins@esri.com",
+                                      ttl="",
+                                      pubDate=timeUtilsResponse["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
+                                      item="",
+                                      itemTitle=value["title"] + " - ArcGIS Living Atlas of the World, Esri",
+                                      itemLink="https://www.esri.com",
+                                      itemDescription=statusCode["statusDetails"]["Description of Condition"])
+            dataSerializer = FeedGenerator.DataSerializer()
+            elementTree = dataSerializer.serialize(feed, "XML")
+            # path to RSS output file
+            rssFilePath = os.path.join(rssDirPath, item_id + "." + "rss")
+            # Check if the file already exist
+            rssFileExist = FileManager.check_file_exist_by_pathlib(path=rssFilePath)
+            if rssFileExist:
+                # If the file exist, check the status
+                previousStatus = FileManager.get_status_from_feed(rssFilePath)
+                if previousStatus == statusCode["statusDetails"]["Description of Condition"]:
+                    print(f"RSS FEED status: {statusCode['statusDetails']['Description of Condition']}")
+                else:
+                    # If the new status is different than what is on file, update the feed
+                    FileManager.create_new_file(rssFilePath)
+                    FileManager.set_file_permission(rssFilePath)
+                    elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
+            else:
+                # The RSS file does not already exists, create a new RSS file
+                elementTree.write(rssFilePath, encoding="UTF-8", xml_declaration=True)
+
+            # update/add status code in the data model
             value["status"] = statusCode
 
     print("\n=================================================================")
