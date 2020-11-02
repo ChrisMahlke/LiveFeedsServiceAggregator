@@ -90,7 +90,10 @@ def get_feature_counts(data_model=None) -> dict:
                     if validated_layer["success"]:
                         # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
                         count_dict = json.loads(validated_layer["response"].content.decode('utf-8'))
-                        current_item_feature_count += count_dict["count"]
+                        try:
+                            current_item_feature_count += count_dict["count"]
+                        except KeyError as e:
+                            print(f"There was an error with retrieving the count for the item {current_item[0]}")
         else:
             # The item is not valid or inaccessible, use the cached feature count
             if "featureCount" in item_content:

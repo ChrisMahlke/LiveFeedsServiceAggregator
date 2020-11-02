@@ -122,7 +122,7 @@ def main():
                 input_item["id"]: {**input_item, **{"token": gis._con.token}}
             })
 
-    # Read in the status codes
+    # Load status codes
     print("\nLoading status codes configuration file")
     status_code_config_path = os.path.realpath(root_dir + r"\statusCodes.json")
     status_code_json_exist = FileManager.check_file_exist_by_pathlib(path=status_code_config_path)
@@ -130,6 +130,14 @@ def main():
         raise InputFileNotFoundError(status_code_config_path)
     else:
         status_codes_data_model = FileManager.open_file(path=status_code_config_path)
+
+    # Load comments
+    comments_path = os.path.realpath(root_dir + r"\comments.json")
+    comments_path_exist = FileManager.check_file_exist_by_pathlib(path=comments_path)
+    if comments_path_exist is False:
+        raise InputFileNotFoundError(comments_path)
+    else:
+        comments_data_model = FileManager.open_file(path=comments_path)
 
     # retrieve the alf statuses
     print("\nRetrieving and Processing Active Live Feed Processed files")
@@ -390,7 +398,10 @@ def main():
                 element_tree.write(rss_file_path, encoding="UTF-8", xml_declaration=True)
 
             # update/add status code in the data model
-            value["status"] = status_code
+            value.update({
+                "status": status_code,
+                "comments": comments_data_model.get(item_id, [])
+            })
 
     print("\n=================================================================")
     print("Saving results")
