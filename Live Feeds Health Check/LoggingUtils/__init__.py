@@ -26,11 +26,13 @@ def log_item_fail(item):
     print(f"ERROR\t{item['id']}")
 
 
-def log_status_code_details(status):
-    print("\t----- Status -----")
-    print(f"\tService State: {status['Service State']}")
-    print(f"\tFeed State: {status['Feed State']}")
-    print(f"\tDescription of Condition: {status['Description of Condition']}")
-    print(f"\tStatus: {status['Status']}")
-    print(f"\tComment: {status['Comment']}")
-    print(f"\tNotes: {status['Definition/Notes']}")
+def log_status_code_details(item_id, status):
+    print("\n----- Status -----")
+    print(f"{item_id}")
+    print(f"Code: {status['code']}")
+    print(f"Service State: {status['statusDetails']['Service State']}")
+    print(f"Feed State: {status['statusDetails']['Feed State']}")
+    print(f"Description of Condition: {status['statusDetails']['Description of Condition']}")
+    print(f"Status: {status['statusDetails']['Status']}")
+    print(f"Comment: {status['statusDetails']['Comment']}")
+    print(f"Notes: {status['statusDetails']['Definition/Notes']}\n")

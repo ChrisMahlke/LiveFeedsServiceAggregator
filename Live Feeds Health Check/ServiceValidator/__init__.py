@@ -323,22 +323,3 @@ def validate_layers(data_model=None) -> dict:
             return False
 
     return dict(map(validate_service_layers, data_model.items()))
-
-
-def get_retry_count(value=None) -> int:
-    """ Get the total number of retries """
-    retry_count = 0
-    # If the retry count is greater than 0
-    if len(value) > 0:
-        retry_count = value["retryCount"]
-    return retry_count
-
-
-def get_elapsed_time(service_is_valid=None, response=None) -> float:
-    """ Get the elapsed time in seconds """
-    elapsed_time = 0
-    # If the service is valid we can get the elapsed time
-    if service_is_valid:
-        # get elapsed time in seconds
-        elapsed_time = response.elapsed.total_seconds()
-    return elapsed_time

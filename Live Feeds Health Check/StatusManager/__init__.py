@@ -9,4 +9,7 @@ def get_status_code(status_code_key: str = "", input_config=None) -> dict:
     # Legacy code from when the status file was an ini file
     if input_config is None:
         input_config = {}
-    return input_config.get(status_code_key)
+    return {
+        "code": status_code_key,
+        "statusDetails": input_config.get(status_code_key)
+    }

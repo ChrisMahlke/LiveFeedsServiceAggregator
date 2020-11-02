@@ -20,10 +20,23 @@ def get_usage_details(data_model=None) -> dict:
         """
         item_id = current_item[0]
         item_content = current_item[1]
-
+        print(f"{item_id}")
         try:
             agol_item = item_content["agolItem"]
-            usage = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
+            if agol_item is None:
+                print(f"ERROR: Unable to retrieve usage details on: {item_id}.")
+                response = {
+                    "usage": {
+                        "data": []
+                    },
+                    "itemHasUsageDetails": {
+                        "success": False,
+                        "error": f"ERROR: Unable to retrieve usage details on: {item_id}."
+                    }
+                }
+                return current_item[0], {**current_item[1], **{"usageResponse": response}}
+            else:
+                usage = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
         except (IndexError, KeyError, TypeError) as e:
             print(f"ERROR: Unable to retrieve usage details on: {item_id}. {e}")
             response = {
@@ -105,6 +118,25 @@ def get_feature_counts(data_model=None) -> dict:
         return response
 
     return dict(map(get_feature_count, data_model.items()))
+
+
+def get_retry_count(value=None) -> int:
+    """ Get the total number of retries """
+    retry_count = 0
+    # If the retry count is greater than 0
+    if len(value) > 0:
+        retry_count = value["retryCount"]
+    return retry_count
+
+
+def get_elapsed_time(service_is_valid=None, response=None) -> float:
+    """ Get the elapsed time in seconds """
+    elapsed_time = 0
+    # If the service is valid we can get the elapsed time
+    if service_is_valid:
+        # get elapsed time in seconds
+        elapsed_time = response.elapsed.total_seconds()
+    return elapsed_time
 
 
 def process_alfp_response(alfp_response=None) -> dict:

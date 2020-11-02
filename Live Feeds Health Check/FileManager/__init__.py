@@ -11,17 +11,8 @@ def check_file_exist_by_os_path(path: str = ""):
     # If this file object exist.
     if os.path.exists(path):
         ret = True
-        print(f"{path} exist.")
-        # If this is a file.
-        if os.path.isfile(path):
-            print(" and it is a file.")
-        # This is a directory.    
-        else:
-            print(" and it is a directory.")
     else:
         ret = False
-        print(f"{path} do not exist.")
-
     return ret
 
 
@@ -31,16 +22,6 @@ def check_file_exist_by_pathlib(path: str = ""):
     pl = pathlib.Path(path)
     # Check whether the path lib exist or not.
     ret = pl.exists()
-    if ret:
-        print(f"{path} exist.")
-    else:
-        print(f"{path} does not exist.")
-
-    if pl.is_file():
-        print(f"{path} is a file.")
-
-    if pl.is_dir():
-        print(f"{path} is a directory.")
     return ret
 
 
