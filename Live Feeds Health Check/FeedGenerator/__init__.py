@@ -69,10 +69,10 @@ def _serialize_to_xml(feed):
     _create_element(feed.channelDescription, channel_element, "description")
     # web master
     _create_element(feed.webmaster, channel_element, "webMaster")
+    # pub date
+    _create_element(feed.pubDate, channel_element, "lastBuildDate")
     # ttl
     _create_element(feed.ttl, channel_element, "ttl")
-    # ttl
-    _create_element(feed.pubDate, channel_element, "pubDate")
     # item
     item_element = _create_element(feed.item, channel_element, "item")
     # item title
@@ -81,6 +81,8 @@ def _serialize_to_xml(feed):
     _create_element(feed.itemLink, item_element, "link")
     # item status
     _create_element(feed.itemDescription, item_element, "description")
+    # pubDate
+    _create_element(feed.pubDate, item_element, "pubDate")
 
     tree = Et.ElementTree(rss_element)
     return tree

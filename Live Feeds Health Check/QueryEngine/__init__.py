@@ -90,10 +90,11 @@ def get_feature_counts(data_model=None) -> dict:
                     if validated_layer["success"]:
                         # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
                         count_dict = json.loads(validated_layer["response"].content.decode('utf-8'))
-                        try:
+                        if "count" in count_dict:
                             current_item_feature_count += count_dict["count"]
-                        except KeyError as e:
-                            print(f"There was an error with retrieving the count for the item {current_item[0]}")
+                            print(f"Success\t{current_item[0]}\t{layer['layerName']}")
+                        else:
+                            print(f"Error\t{current_item[0]}\t{layer['layerName']}")
         else:
             # The item is not valid or inaccessible, use the cached feature count
             if "featureCount" in item_content:
@@ -197,7 +198,7 @@ def check_alfp_url(input_data=None) -> dict:
 def prepare_alfp_query_params(input_data=None) -> dict:
     if input_data is None:
         input_data = {}
-    item_id = input_data["id"]
+    item_id = input_data[0]
     return {
         "id": item_id,
         "url": f"https://livefeedsdev.s3.amazonaws.com/Heartbeat/{item_id}.json",
