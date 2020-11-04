@@ -180,11 +180,6 @@ def validate_layers(data_model=None) -> dict:
         item_id = current_item[0]
         item_content = current_item[1]
         print(f"{item_id}")
-        # TODO ???
-        exclusion_list_input = current_item[1]["exclusion"].split(",")
-        exclusion_list_input_results = []
-        if isinstance(exclusion_list_input[0], str) and len(exclusion_list_input[0]) > 0:
-            exclusion_list_input_results = list(map(int, exclusion_list_input))
 
         layers = []
 
@@ -192,15 +187,15 @@ def validate_layers(data_model=None) -> dict:
             # item is valid
             try:
                 for i, layer in enumerate(item_content["agolItem"].layers):
-                    if layer.properties["id"] not in exclusion_list_input_results:
-                        print(f" {layer.properties['name']}")
-                        layers.append({
-                            "id": item_id,
-                            "name": layer.properties["name"],
-                            "success": True,
-                            "token": item_content["token"],
-                            "url": layer.url
-                        })
+                    print(f" {layer.properties['name']}")
+                    layers.append({
+                        "id": item_id,
+                        "layerId": layer.properties["id"],
+                        "name": layer.properties["name"],
+                        "success": True,
+                        "token": item_content["token"],
+                        "url": layer.url
+                    })
             except Exception as e:
                 print(f" The item {item_id} is either inaccessible or not valid: {e}")
                 layers.append({
@@ -229,19 +224,19 @@ def validate_layers(data_model=None) -> dict:
                 if error is None:
                     # There was no error returned in the response
                     for i, layer in enumerate(response["layers"]):
-                        if layer["id"] not in exclusion_list_input_results:
-                            print(f" {layer['name']}")
-                            layers.append({
-                                "id": item_id,
-                                "name": layer["name"],
-                                "success": True,
-                                "token": current_item[1]["token"],
-                                "url": item_content["service_url"] + "/" + str(layer["id"])
-                            })
+                        print(f" {layer['name']}")
+                        layers.append({
+                            "id": item_id,
+                            "layerId": layer.properties["id"],
+                            "name": layer["name"],
+                            "success": True,
+                            "token": current_item[1]["token"],
+                            "url": item_content["service_url"] + "/" + str(layer["id"])
+                        })
                     layer_query_params = prepare_layer_query_params(layers)
                     layers_are_valid = check_all_layers(layers)
                 else:
-                    # There was an error returned in the reponse
+                    # There was an error returned in the response
                     layers.append({
                         "id": item_id,
                         "success": False,
@@ -279,10 +274,12 @@ def validate_layers(data_model=None) -> dict:
         for layer in layers:
             item_id = layer["id"]
             if layer["success"]:
+                layer_id = layer["layerId"]
                 layer_name = layer["name"]
                 layer_url = layer["url"]
                 layer_data.append({
                     "id": item_id,
+                    "layerId": layer_id,
                     "layerName": layer_name,
                     "url": layer_url + "/query",
                     "try_json": True,

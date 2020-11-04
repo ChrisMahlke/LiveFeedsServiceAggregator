@@ -1,5 +1,5 @@
 {
-  "statusPreparedOn": 1604522172,
+  "statusPreparedOn": 1604524907,
   "items": [
     {
       "id": "a6134ae01aad44c499d12feec782b386",
@@ -17,7 +17,7 @@
       ],
       "lastUpdateTime": 1603996260,
       "updateRate": 10,
-      "featureCount": 4031,
+      "featureCount": 11750,
       "usage": {
         "trendingCode": 0,
         "percentChange": 0,
@@ -39,7 +39,7 @@
       ],
       "lastUpdateTime": 1603994130,
       "updateRate": 107,
-      "featureCount": 400,
+      "featureCount": 204,
       "usage": {
         "trendingCode": 0,
         "percentChange": 0,
