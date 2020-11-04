@@ -82,10 +82,22 @@ def main():
     print(f"\nRunning version: {version.version_str}")
 
     print("\n=================================================================")
+    print(f"Loading ini file")
+    print("=================================================================")
+    # The root directory of the script
+    root_dir = os.path.dirname(os.path.abspath(__file__))
+    print(f"Project Root Directory: {root_dir}\n")
+
+    # Load config ini file
+    print("Loading input items from configuration file\n")
+    config_ini_manager = ConfigManager(root=root_dir, file_name="config.ini")
+    input_items = config_ini_manager.get_config_data(config_type="items")
+
+    print("\n=================================================================")
     print(f"Authenticate GIS profile")
     print("=================================================================")
     # TODO: Not the best way at all to get the profile property from the config file
-    gis_profile = "cmahlke_developer"
+    gis_profile = input_items[0]["profile"]
     # initialize GIS object
     gis = arcgis.GIS(profile=gis_profile)
     # initialize User object
@@ -100,16 +112,8 @@ def main():
         user_sys.greeting()
 
     print("\n=================================================================")
-    print(f"Setting up project and checking folders and directories")
+    print(f"Prepare input data model")
     print("=================================================================")
-    # The root directory of the script
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    print(f"Project Root Directory: {root_dir}\n")
-
-    # Load config ini file
-    print("\nLoading input items from configuration file")
-    config_ini_manager = ConfigManager(root=root_dir, file_name="config.ini")
-    input_items = config_ini_manager.get_config_data(config_type="items")
     item_count = len(input_items)
     data_model_dict = {}
     if item_count < 1:
@@ -121,6 +125,9 @@ def main():
                 input_item["id"]: {**input_item, **{"token": gis._con.token}}
             })
 
+    print("\n=================================================================")
+    print(f"Setting up project and checking folders and directories")
+    print("=================================================================")
     # Load status codes
     print("\nLoading status codes configuration file")
     # TODO Move filename to config
@@ -237,13 +244,19 @@ def main():
         service_is_valid = value["serviceResponse"]["success"]
         layers_are_valid = value["allLayersAreValid"]
 
+        print(f"{item_id}")
+        print(f"ArcGIS Online valid: {agol_is_valid}")
+        print(f"Item valid: {item_is_valid}")
+        print(f"Service valid: {service_is_valid}")
+        print(f"All layers valid: {layers_are_valid}\n")
+
         # Process Retry Count
         retry_count = QueryEngine.get_retry_count(value["serviceResponse"]["retryCount"])
-        print(f"Retry Count\n{item_id}\t{retry_count}")
+        print(f"Retry Count: {retry_count}")
 
         # Process Elapsed Time
         elapsed_time = QueryEngine.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
-        print(f"Elapsed Time\n{item_id}\t{elapsed_time}")
+        print(f"Elapsed Time: {elapsed_time}\n")
 
         # Obtain the total elapsed time and counts
         # path to output file
@@ -251,15 +264,19 @@ def main():
         # Check file existence.
         response_time_data_file_path_exist = FileManager.check_file_exist_by_pathlib(path=response_time_data_file_path)
 
+        exclude_save = TimeUtils.is_now_excluded(value["exclude_specific_dates"], value["exclude_days"], value["exclude_time"], timestamp)
+        print(f"Exclude response time data from save: {exclude_save}")
+
         if not response_time_data_file_path_exist:
             # If file does not exist then create it.
             FileManager.create_new_file(response_time_data_file_path)
             FileManager.set_file_permission(response_time_data_file_path)
-            FileManager.save(data={
-                "id": item_id,
-                "elapsed_sums": elapsed_time,
-                "elapsed_count": 1
-            }, path=response_time_data_file_path)
+            if not exclude_save:
+                FileManager.save(data={
+                    "id": item_id,
+                    "elapsed_sums": elapsed_time,
+                    "elapsed_count": 1
+                }, path=response_time_data_file_path)
             # since it's our first entry, the average is the current elapsed time
             elapsed_times_average = elapsed_time
         else:
@@ -267,16 +284,20 @@ def main():
             response_time_data = FileManager.get_response_time_data(response_time_data_file_path)
             # total counts
             elapsed_times_count = response_time_data["elapsed_count"]
+            print(f"Elapsed count: {elapsed_times_count}")
             # sum of all times
             elapsed_times_sum = response_time_data["elapsed_sums"]
+            print(f"Elapsed sum: {elapsed_times_sum}")
             # calculated average
             elapsed_times_average = elapsed_times_sum / elapsed_times_count
-
-            FileManager.update_response_time_data(path=response_time_data_file_path, input_data={
-                "id": item_id,
-                "elapsed_count": elapsed_times_count + 1,
-                "elapsed_sums": elapsed_times_sum + elapsed_time
-            })
+            if not exclude_save:
+                # update the response time data file
+                FileManager.update_response_time_data(path=response_time_data_file_path, input_data={
+                    "id": item_id,
+                    "elapsed_count": elapsed_times_count + 1,
+                    "elapsed_sums": elapsed_times_sum + elapsed_time
+                })
+        print(f"Elapsed average: {elapsed_times_average}")
 
         # retrieve alfp details
         alfp_data = alfp_dict.get(item_id)
@@ -429,13 +450,13 @@ def main():
     # Pretty print dictionary
 
     # If file do not exist then create it.
-    # if not fileExist:
-    #    FileManager.create_new_file(outputFilePath)
-    #    FileManager.set_file_permission(outputFilePath)
-    # else:
-    # open file
-    #    print()
-    # FileManager.save(data=outputDataModel, path=outputFilePath)
+    if not file_exist:
+        FileManager.create_new_file(output_file_path)
+        FileManager.set_file_permission(output_file_path)
+    else:
+        # open file
+        print()
+    FileManager.save(data=output_file, path=output_file_path)
 
     print("Script completed...")
 

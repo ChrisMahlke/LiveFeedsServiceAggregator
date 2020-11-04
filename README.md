@@ -58,6 +58,8 @@ When using `requests`, especially in a production application environment, it’
 	
 		- `id` The unique ID for this item
 		
+		- `comments` Admin comments related to the status and/or service
+		
 		- `title` The title of the item. This is the name that is displayed to users and by which they refer to the item. Every item must have a title.
 		
 		- `snippet` A short summary description of the item.

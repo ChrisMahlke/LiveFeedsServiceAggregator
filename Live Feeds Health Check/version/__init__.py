@@ -1,6 +1,6 @@
 """ Version of script as a represented as tuple """
 
-version = (1, 0, 0)
+version = (1, 1, 0)
 
 # Version represented as string
 version_str = ".".join([str(x) for x in version])
