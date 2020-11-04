@@ -52,7 +52,7 @@ When using `requests`, especially in a production application environment, it’
 
 Please refer to the [Configuration](https://github.com/ChrisMahlke/LiveFeedsServiceAggregator/blob/main/Live%20Feeds%20Health%20Check/config.ini "Configuration") file for specific config options and example usage
 
-### Valid
+### Validation
 
 Please refer to the documentation found [here](https://github.com/ChrisMahlke/LiveFeedsServiceAggregator/tree/main/Live%20Feeds%20Health%20Check/ServiceValidator).
 
