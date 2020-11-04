@@ -35,7 +35,6 @@ try:
     import FileManager as FileManager
     import LoggingUtils as LoggingUtils
     import QueryEngine as QueryEngine
-    import FeedGenerator as FeedGenerator
     import ServiceValidator as ServiceValidator
     import StatusManager as StatusManager
     import TimeUtils as TimeUtils
@@ -124,6 +123,7 @@ def main():
 
     # Load status codes
     print("\nLoading status codes configuration file")
+    # TODO Move filename to config
     status_code_config_path = os.path.realpath(root_dir + r"\statusCodes.json")
     status_code_json_exist = FileManager.check_file_exist_by_pathlib(path=status_code_config_path)
     if status_code_json_exist is False:
@@ -132,6 +132,7 @@ def main():
         status_codes_data_model = FileManager.open_file(path=status_code_config_path)
 
     # Load comments
+    # TODO Move filename to config
     comments_path = os.path.realpath(root_dir + r"\comments.json")
     comments_path_exist = FileManager.check_file_exist_by_pathlib(path=comments_path)
     if comments_path_exist is False:
@@ -156,10 +157,12 @@ def main():
 
     # Read in the previous status output file
     print("\nLoading output from previous run")
+    # TODO Move folder name to config
     output_status_dir_path = os.path.realpath(root_dir + r"\output")
     # Create a new directory if it does not exists
     FileManager.create_new_folder(output_status_dir_path)
     # path to output file
+    # TODO Move filename to config
     output_file_path = os.path.realpath(output_status_dir_path + r"\status.json")
     # Check file existence
     file_exist = FileManager.check_file_exist_by_pathlib(path=output_file_path)
@@ -177,14 +180,23 @@ def main():
                         key: merged_dict
                     })
 
+    # Historical "elapsed times" file directory
+    # response time directory
+    # TODO Move folder name to config
+    response_time_data_dir = os.path.realpath(root_dir + r"\ResponseTimeData")
+    # Create a new directory if it does not exists
+    FileManager.create_new_folder(response_time_data_dir)
+
     # Create a new directory to hold the rss feeds (if it does not exist)
     print(f"Creating RSS output folder if it does not exist.")
+    # TODO Move folder name to config
     rss_dir_path = os.path.realpath(root_dir + r"\rss")
     FileManager.create_new_folder(rss_dir_path)
     # Load RSS template
+    # TODO Move filename to config
     rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
 
-    print("\n=================================================================")
+    print("\n===================================================================")
     print(f"Current data and time")
     print("===================================================================")
     time_utils_response = TimeUtils.get_current_time_and_date()
@@ -227,15 +239,13 @@ def main():
 
         # Process Retry Count
         retry_count = QueryEngine.get_retry_count(value["serviceResponse"]["retryCount"])
+        print(f"Retry Count\n{item_id}\t{retry_count}")
 
         # Process Elapsed Time
         elapsed_time = QueryEngine.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
+        print(f"Elapsed Time\n{item_id}\t{elapsed_time}")
 
         # Obtain the total elapsed time and counts
-        # response time directory
-        response_time_data_dir = os.path.realpath(root_dir + r"\ResponseTimeData")
-        # Create a new directory if it does not exists
-        FileManager.create_new_folder(response_time_data_dir)
         # path to output file
         response_time_data_file_path = os.path.join(response_time_data_dir, item_id + "." + "json")
         # Check file existence.
