@@ -48,6 +48,9 @@ Notes:
 
 When using `requests`, especially in a production application environment, it’s important to consider performance implications. Features like *timeout control*, *sessions*, and *retry* limits can help you keep your application running smoothly.
 
+### Configuration
+
+Please refer to the [Configuration](https://github.com/ChrisMahlke/LiveFeedsServiceAggregator/blob/main/Live%20Feeds%20Health%20Check/config.ini "Configuration") file for specific config options and example usage
 
 
 ### Response
