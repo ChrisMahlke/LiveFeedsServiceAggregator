@@ -34,7 +34,7 @@ In general, we follow the "fork-and-pull" Git workflow.
 - Is the service (item URL) within the Live Feed valid and returning a response
 
   - Was there a timeout when attempting to get a response from the service
-  - How many (if any) retires did it take to receive a response
+  - How many (if any) retries did it take to receive a response
   - Was the maximum number of retries exceeded
 
 - Check if the service's usage statistics can be retrieved
@@ -52,6 +52,9 @@ When using `requests`, especially in a production application environment, it’
 
 Please refer to the [Configuration](https://github.com/ChrisMahlke/LiveFeedsServiceAggregator/blob/main/Live%20Feeds%20Health%20Check/config.ini "Configuration") file for specific config options and example usage
 
+### Valid
+
+Please refer to the documentation found [here](https://github.com/ChrisMahlke/LiveFeedsServiceAggregator/tree/main/Live%20Feeds%20Health%20Check/ServiceValidator).
 
 ### Response
 
