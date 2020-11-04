@@ -181,6 +181,8 @@ def main():
     print(f"Creating RSS output folder if it does not exist.")
     rss_dir_path = os.path.realpath(root_dir + r"\rss")
     FileManager.create_new_folder(rss_dir_path)
+    # Load RSS template
+    rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
 
     print("\n=================================================================")
     print(f"Current data and time")
@@ -216,7 +218,6 @@ def main():
     print("\n=================================================================")
     print(f"Analyze and process data")
     print("===================================================================")
-    #for key, value in data_model_dict.items():
     for key, value in data_model_dict.items():
         item_id = key
         agol_is_valid = True
@@ -360,49 +361,34 @@ def main():
 
             LoggingUtils.log_status_code_details(item_id, status_code)
 
+        # update/add status code in the data model
+        value.update({
+            "comments": comments_data_model.get(item_id, []),
+            "lastBuildTime": time_utils_response["datetimeObj"].strftime("%a, %d %b %Y %H:%M:%S +0000"),
+            "status": status_code,
+            "timestamp": timestamp
+        })
+
         print("\n=================================================================")
         print(f"Process RSS Feed")
         print("===================================================================")
-        # Initialize Feed Generator
-        feed = FeedGenerator.Feed(rss="2.0",
-                                  channel="",
-                                  channelTitle=value["title"] + value["rss_channel_title"],
-                                  channelLink=value["rss_channel_link"],
-                                  channelDescription=value["snippet"],
-                                  webmaster=value["rss_webmaster"],
-                                  lastBuildDate=time_utils_response["datetimeObj"].strftime("%m/%d/%Y, %H:%M:%S"),
-                                  ttl=int(value["rss_ttl"]),
-                                  item="",
-                                  itemTitle=value["title"] + value["rss_item_title"],
-                                  itemLink="https://www.esri.com",
-                                  itemDescription=status_code["statusDetails"]["Description of Condition"],
-                                  pubDate=0)
-        data_serializer = FeedGenerator.DataSerializer()
-        element_tree = data_serializer.serialize(feed, "XML")
-
         # path to RSS output file
-        rss_file_path = os.path.join(rss_dir_path, item_id + "." + "rss")
+        rss_file_path = os.path.join(rss_dir_path, item_id + "." + "xml")
         # Check if the file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
         if rss_file_exist:
             # If the file exist, check the status
             previous_status = FileManager.get_status_from_feed(rss_file_path)
-            if previous_status == status_code["statusDetails"]["Description of Condition"]:
-                print(f"RSS FEED status: {status_code['statusDetails']['Description of Condition']}")
+            if previous_status == status_code["statusDetails"]["Comment"]:
+                print(f"RSS FEED status: {status_code['statusDetails']['Comment']}")
             else:
                 # If the new status is different than what is on file, update the feed
                 FileManager.create_new_file(rss_file_path)
                 FileManager.set_file_permission(rss_file_path)
-                element_tree.write(rss_file_path, encoding="UTF-8", xml_declaration=True)
+                FileManager.dict_to_xml(rss_template_path, value, rss_file_path)
         else:
             # The RSS file does not already exists, create a new RSS file
-            element_tree.write(rss_file_path, encoding="UTF-8", xml_declaration=True)
-
-        # update/add status code in the data model
-        value.update({
-            "status": status_code,
-            "comments": comments_data_model.get(item_id, [])
-        })
+            FileManager.dict_to_xml(rss_template_path, value, rss_file_path)
 
     print("\n=================================================================")
     print("Saving results")
@@ -430,6 +416,8 @@ def main():
                 "code": value["status"]["code"]
             }
         })
+    # Pretty print dictionary
+
     # If file do not exist then create it.
     # if not fileExist:
     #    FileManager.create_new_file(outputFilePath)

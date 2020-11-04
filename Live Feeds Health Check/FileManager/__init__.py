@@ -4,6 +4,7 @@ import os
 import pathlib
 import stat
 import xml.etree.ElementTree as Et
+import TimeUtils as TimeUtils
 
 
 def check_file_exist_by_os_path(path: str = ""):
@@ -73,4 +74,26 @@ def get_status_from_feed(filename):
     """ Retrieve the status of the service """
     xml_doc = Et.parse(filename)
     element = xml_doc.find(".//channel/item/description")
-    return element.text
+    children = element.findall("h2")
+    for child in children:
+        if child.attrib["attr"] == "status-details":
+            return child.text
+
+
+def dict_to_xml(template=None, input_dict=None, output_file_path=None):
+    admin_comments = ""
+    sorted_comments = sorted(input_dict["comments"], key=lambda k: k["timestamp"], reverse=True)
+    for sorted_comment in sorted_comments:
+        comment = sorted_comment["comment"]
+        comment_timestamp = TimeUtils.convert_from_utc_to_datetime(sorted_comment["timestamp"]).strftime(
+            "%a, %d %b %Y %H:%M:%S")
+        admin_comments += f"<li>Posted: {comment_timestamp}<ul><li>{comment}</li></ul></li>"
+    input_dict.update({
+        "adminComments": admin_comments
+    })
+    with open(template, "r") as file:
+        data = file.read().replace("\n", "")
+        output_file_contents = data.format_map(input_dict)
+
+    with open(output_file_path, "w+") as file:
+        file.write(output_file_contents)
