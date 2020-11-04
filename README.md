@@ -105,9 +105,7 @@ When using `requests`, especially in a production application environment, it’
 }
 ```
 
-### Maintainers
-
-[pauldodd]() - **Paul Dodd** (author)
+### Maintainer(s)
 
 [chrismahlke](https://github.com/ChrisMahlke) - **Chris Mahlke** (author)
 
