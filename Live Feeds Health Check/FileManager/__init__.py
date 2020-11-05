@@ -1,4 +1,5 @@
 """ Utility methods for working with files and directories """
+import html
 import json
 import os
 import pathlib
@@ -58,12 +59,21 @@ def open_file(path: str = "") -> dict:
 
 
 def get_response_time_data(path: str = "") -> dict:
+    """
+    :param path:
+    :return:
+    """
     with open(path) as json_file:
         data = json.load(json_file)
     return data
 
 
 def update_response_time_data(path: str = "", input_data=None):
+    """
+    :param path:
+    :param input_data:
+    :return:
+    """
     if input_data is None:
         input_data = {}
     with open(path, "w") as out_file:
@@ -81,15 +91,25 @@ def get_status_from_feed(filename):
 
 
 def dict_to_xml(template=None, input_dict=None, output_file_path=None):
+    """
+    Hydrate an input XML template with an input dictionary and save to disk
+    :param template: An XML template
+    :param input_dict: Input dictionary of data
+    :param output_file_path: Output file path
+    :return: None
+    """
+    admin_comments_header = "<h4>" + input_dict["rss_comments_header"] + "</h4>"
     admin_comments = ""
     sorted_comments = sorted(input_dict["comments"], key=lambda k: k["timestamp"], reverse=True)
     for sorted_comment in sorted_comments:
         comment = sorted_comment["comment"]
         comment_timestamp = TimeUtils.convert_from_utc_to_datetime(sorted_comment["timestamp"]).strftime(
             "%a, %d %b %Y %H:%M:%S")
-        admin_comments += f"<li>Posted: {comment_timestamp}<ul><li>{comment}</li></ul></li>"
+        admin_comments += "<li>" + f"Posted: {comment_timestamp} | <b>{comment}</b>" + "</li>"
+
+    comments_section = admin_comments_header + admin_comments
     input_dict.update({
-        "adminComments": admin_comments
+        "adminComments": html.escape(comments_section)
     })
     with open(template, "r") as file:
         data = file.read().replace("\n", "")

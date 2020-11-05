@@ -301,6 +301,49 @@ def main():
 
         # retrieve alfp details
         alfp_data = alfp_dict.get(item_id)
+
+        if alfp_data is not None:
+            # 10 digit Timestamp 'seconds since epoch' containing time of last
+            # Successful Run (and Service update)
+            value.update({
+                "lastUpdateTimestamp": alfp_data.get("lastUpdateTimestamp", 0)
+            })
+            # 10 digit Timestamp 'seconds since epoch' containing time of last
+            # Failed run (or Service update failure)
+            # feed_last_failure_timestamp = item["lastFailureTimestamp"]
+            # 10 digit Timestamp 'seconds since epoch' containing time of last
+            # run (having a Success, a Failure, or a No Action flag ('No Data
+            # Updates')
+            value.update({
+                "lastRunTimestamp": alfp_data.get("lastRunTimestamp", 0)
+            })
+            # Average number of minutes between each successful run (or Service
+            # update)
+            value.update({
+                "avgUpdateIntervalMins": alfp_data.get("avgUpdateIntervalMins", 0)
+            })
+            # Average number of minutes between each run
+            value.update({
+                "avgFeedIntervalMins": alfp_data.get("avgFeedIntervalMins", 0)
+            })
+            #
+            value.update({
+                "consecutiveFailures": alfp_data.get("consecutiveFailures", 0)
+            })
+            #
+            value.update({
+                "alfpLastStatus": alfp_data["lastStatus"]["code"]
+            })
+        else:
+            value.update({
+                "lastUpdateTimestamp": 0,
+                "lastRunTimestamp": 0,
+                "avgUpdateIntervalMins": 0,
+                "avgFeedIntervalMins": 0,
+                "consecutiveFailures": 0,
+                "alfpLastStatus": 0
+            })
+
         # initialize the status code
         status_code = StatusManager.get_status_code("000", status_codes_data_model)
 
@@ -309,15 +352,15 @@ def main():
 
             # 001 Check
             # Check elapsed time between now and the last updated time of the feed
-            last_update_timestamp_diff = timestamp - alfp_data.get("lastUpdateTimestamp", timestamp)
+            last_update_timestamp_diff = timestamp - value.get("lastUpdateTimestamp", timestamp)
             # Check elapsed time between now and the last run time of the feed
-            last_run_timestamp_diff = timestamp - alfp_data["lastRunTimestamp"]
+            last_run_timestamp_diff = timestamp - value["lastRunTimestamp"]
 
             # If the Difference exceeds the average update interval by an interval of X, flag it
             last_update_timestamp_diff_minutes = last_update_timestamp_diff / 60
             print(f"Last update timestamp delta:\t{last_update_timestamp_diff_minutes} seconds")
             # Average number of minutes between each successful run (or Service update)
-            avg_update_int_threshold = int(value["average_update_interval_factor"]) * alfp_data[
+            avg_update_int_threshold = int(value["average_update_interval_factor"]) * value[
                 "avgUpdateIntervalMins"]
             print(f"Average update interval threshold: {avg_update_int_threshold}")
             if last_update_timestamp_diff_minutes > avg_update_int_threshold:
@@ -327,28 +370,28 @@ def main():
             last_run_timestamp_diff_minutes = last_run_timestamp_diff / 60
             print(f"Last run timestamp delta:\t{last_run_timestamp_diff_minutes} seconds")
             # calculate the threshold (Average number of minutes between each run)
-            avg_feed_int_threshold = int(value["average_feed_interval_factor"]) * alfp_data["avgFeedIntervalMins"]
+            avg_feed_int_threshold = int(value["average_feed_interval_factor"]) * value["avgFeedIntervalMins"]
             print(f"Average Feed Interval threshold: {avg_feed_int_threshold}")
             if last_run_timestamp_diff_minutes > avg_feed_int_threshold:
                 status_code = StatusManager.get_status_code("002", status_codes_data_model)
 
             # 003 Check
-            if alfp_data["lastStatus"]["code"] == 2:
-                if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
+            if value["alfpLastStatus"] == 2:
+                if value["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
                     status_code = StatusManager.get_status_code("003", status_codes_data_model)
 
             # 004 Check
-            if alfp_data["lastStatus"]["code"] == 3:
-                if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
+            if value["alfpLastStatus"] == 3:
+                if value["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
                     status_code = StatusManager.get_status_code("004", status_codes_data_model)
 
             # 005 Check
-            if alfp_data["lastStatus"]["code"] == 1:
-                if alfp_data["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
+            if value["alfpLastStatus"] == 1:
+                if value["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
                     status_code = StatusManager.get_status_code("005", status_codes_data_model)
 
             # 006 Check
-            if alfp_data["lastStatus"]["code"] == -1:
+            if value["alfpLastStatus"] == -1:
                 status_code = StatusManager.get_status_code("006", status_codes_data_model)
 
             # 100
@@ -404,7 +447,7 @@ def main():
         print(f"Process RSS Feed")
         print("===================================================================")
         # path to RSS output file
-        rss_file_path = os.path.join(rss_dir_path, item_id + "." + "xml")
+        rss_file_path = os.path.join(rss_dir_path, item_id + "." + value["rss_file_extension"])
         # Check if the file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
         if rss_file_exist:
@@ -437,12 +480,10 @@ def main():
             "title": value.get("title", value.get("missing_item_title")),
             "snippet": value.get("snippet", value.get("missing_item_snippet")),
             "comments": value.get("comments", ""),
-            "lastUpdateTime": value.get("lastUpdateTime", 0),
-            "updateRate": value.get("updateRate", 0),
+            "lastUpdateTime": value.get("lastUpdateTimestamp", 0),
+            "updateRate": value.get("avgUpdateIntervalMins", 0),
             "featureCount": value.get("featureCount", 0),
-            "usage": value.get("usage", {
-                "data": []
-            }),
+            "usage": value.get("usage"),
             "status": {
                 "code": value["status"]["code"]
             }
@@ -450,6 +491,7 @@ def main():
     # Pretty print dictionary
 
     # If file do not exist then create it.
+    # TODO Not correct
     if not file_exist:
         FileManager.create_new_file(output_file_path)
         FileManager.set_file_permission(output_file_path)

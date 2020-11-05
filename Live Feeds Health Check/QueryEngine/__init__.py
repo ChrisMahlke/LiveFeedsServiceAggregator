@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import math
 import RequestUtils as RequestUtils
 
 
@@ -12,6 +13,59 @@ def get_usage_details(data_model=None) -> dict:
     if data_model is None:
         data_model = {}
 
+    PERCENT_UPPER_BOUND = 5
+    PERCENT_LOWER_BOUND = -5
+
+    USAGE_TRENDING_CODES = [
+        {
+            "code": 0,
+            "description": "No Change"
+        },
+        {
+            "code": 1,
+            "description": "Up"
+        },
+        {
+            "code": -1,
+            "description": "Down"
+        }
+    ]
+
+    def get_trending(last_hour_count: int = 0, last_n_hours_count: int = 0, last_n_hour_average: int = 0) -> dict:
+        """
+        Returns a dictionary indicating the trending values
+        :param last_hour_count: The number of requests in the last hour
+        :param last_n_hours_count: The number of requests over the last n hours
+        :param last_n_hour_average: The average number of requests over the last n hours
+        :return: Dictionary
+        """
+        # Increase = New Number - Original Number
+        # %increase = Increase ÷ Original Number × 100
+        percent_change = 0
+        increase = last_hour_count - last_n_hour_average
+        if last_n_hour_average > 0:
+            percent_change = (increase / last_n_hour_average) * 100
+
+        print(f"Trending data")
+        print(f"Last hour count: {last_hour_count}")
+        print(f"Last n hour(s) count: {last_n_hours_count}")
+        print(f"Last n hour average: {last_n_hour_average}")
+        print(f"{last_hour_count} - {last_n_hour_average} = {increase}")
+        print(f"Percent Change: ({increase}/{last_n_hour_average} x 100) = {percent_change}")
+
+        tc = USAGE_TRENDING_CODES[0]["code"]
+        if PERCENT_LOWER_BOUND <= percent_change <= PERCENT_UPPER_BOUND:
+            tc = USAGE_TRENDING_CODES[0]["code"]
+        elif percent_change > PERCENT_UPPER_BOUND:
+            tc = USAGE_TRENDING_CODES[1]["code"]
+        elif percent_change < PERCENT_LOWER_BOUND:
+            tc = USAGE_TRENDING_CODES[2]["code"]
+        return {
+            "trendingCode": tc,
+            "percentChange": percent_change,
+            "usageCounts": [last_hour_count, last_n_hour_average]
+        }
+
     def get_usage_detail(current_item):
         """
         Get the usage detail for a single item
@@ -21,42 +75,40 @@ def get_usage_details(data_model=None) -> dict:
         item_id = current_item[0]
         item_content = current_item[1]
         print(f"{item_id}")
+        response = {
+            "usage": {
+                "trendingCode": 0,
+                "percentChange": 0,
+                "usageCounts": [0, 0]
+            }
+        }
         try:
             agol_item = item_content["agolItem"]
-            if agol_item is None:
-                print(f"ERROR: Unable to retrieve usage details on: {item_id}.")
-                response = {
-                    "usage": {
-                        "data": []
-                    },
-                    "itemHasUsageDetails": {
-                        "success": False,
-                        "error": f"ERROR: Unable to retrieve usage details on: {item_id}."
-                    }
-                }
-                return current_item[0], {**current_item[1], **{"usageResponse": response}}
+            if agol_item is not None:
+                usage_data = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
+                if len(usage_data["data"]) > 0:
+                    # last hour count (we grab the last full hour)
+                    last_hour_count = int(usage_data["data"][0]["num"][-2][1])
+                    # TODO: Move to config
+                    # last n hours (currently 6 hours, exclude the last hour)
+                    last_n_hours = usage_data["data"][0]["num"][-7:-1]
+                    # last n hour count
+                    last_n_hours_count = 0
+                    # sum up the counts in each of the last n hours
+                    for hr in last_n_hours:
+                        last_n_hours_count = last_n_hours_count + int(hr[1])
+                    # get the average over the last n hours
+                    last_n_hours_average = math.trunc(last_n_hours_count / 6)
+                    # determine the trending code
+                    response = get_trending(last_hour_count, last_n_hours_count, last_n_hours_average)
             else:
-                usage = agol_item.usage(date_range=item_content["usage_data_range"], as_df=False)
+                print(f"ERROR: Unable to retrieve usage details on: {item_id}.")
+                return current_item[0], {**current_item[1], **{"usage": response}}
         except (IndexError, KeyError, TypeError) as e:
             print(f"ERROR: Unable to retrieve usage details on: {item_id}. {e}")
-            response = {
-                "usage": {
-                    "data": []
-                },
-                "itemHasUsageDetails": {
-                    "success": False,
-                    "error": f"ERROR: Unable to retrieve usage details on: {item_id}. {e}"
-                }
-            }
-            return current_item[0], {**current_item[1], **{"usageResponse": response}}
+            return current_item[0], {**current_item[1], **{"usage": response}}
         else:
-            response = {
-                "usage": usage,
-                "itemHasUsageDetails": {
-                    "success": True
-                }
-            }
-            return current_item[0], {**current_item[1], **{"usageResponse": response}}
+            return current_item[0], {**current_item[1], **{"usage": response}}
 
     return dict(map(get_usage_detail, data_model.items()))
 

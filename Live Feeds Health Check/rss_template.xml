@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
     <channel>
-    <title>{title}</title>
+    <title>{title} {rss_channel_title}</title>
     <link>{rss_channel_link}</link>
     <description>{snippet}</description>
     <category>{rss_channel_category}</category>
@@ -14,10 +14,7 @@
         <description>
             <h2 attr="status">Current Status: {status[statusDetails][Status]}</h2>
             <h2 attr="comment">Status Details: {status[statusDetails][Comment]}</h2>
-            <h4>Current Administrator Comments</h4>
-            <ul>
-                <b>{adminComments}</b>
-            </ul>
+            <ul>{adminComments}</ul>
             <a href="{rss_living_atlas_link}">{rss_living_atlas_link_label}</a>
             <a href="{rss_item_agol_url}{id}">{rss_item_agol_url_label}</a>
         </description>
