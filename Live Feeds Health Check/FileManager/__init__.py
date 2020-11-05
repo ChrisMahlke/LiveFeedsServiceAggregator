@@ -100,14 +100,15 @@ def dict_to_xml(template=None, input_dict=None, output_file_path=None):
     """
     admin_comments_header = "<h4>" + input_dict["rss_comments_header"] + "</h4>"
     admin_comments = ""
+    comments_section = ""
     sorted_comments = sorted(input_dict["comments"], key=lambda k: k["timestamp"], reverse=True)
-    for sorted_comment in sorted_comments:
-        comment = sorted_comment["comment"]
-        comment_timestamp = TimeUtils.convert_from_utc_to_datetime(sorted_comment["timestamp"]).strftime(
-            "%a, %d %b %Y %H:%M:%S")
-        admin_comments += "<li>" + f"Posted: {comment_timestamp} | <b>{comment}</b>" + "</li>"
-
-    comments_section = admin_comments_header + admin_comments
+    if len(sorted_comments) > 0:
+        for sorted_comment in sorted_comments:
+            comment = sorted_comment["comment"]
+            comment_timestamp = TimeUtils.convert_from_utc_to_datetime(sorted_comment["timestamp"]).strftime(
+                "%a, %d %b %Y %H:%M:%S")
+            admin_comments += "<li>" + f"Posted: {comment_timestamp} | <b>{comment}</b>" + "</li>"
+        comments_section = admin_comments_header + admin_comments
     input_dict.update({
         "adminComments": html.escape(comments_section)
     })
