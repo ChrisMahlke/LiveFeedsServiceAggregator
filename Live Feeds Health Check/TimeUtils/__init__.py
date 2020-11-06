@@ -40,59 +40,72 @@ def get_current_time_and_date():
 
 
 def convert_from_utc_to_datetime(utc_timestamp):
-    """ Return the local date corresponding to the POSIX timestamp """
+    """
+    Return the local date corresponding to the POSIX timestamp
+    :param utc_timestamp:
+    :return:
+    """
     return datetime.fromtimestamp(utc_timestamp)
 
 
-def is_now_excluded(excluded_dates, excluded_days=None, excluded_time_ranges=None, ct=None):
-    """ Check if the current time is excluded from the run """
-    exclude = False
-    # iterate through the excluded dates (if any)
-    if len(excluded_dates) > 0:
+def is_now_excluded(excluded_time_ranges=None, excluded_days=None, excluded_dates=None, ct=None):
+    """
+    Compare the current timestamp of the run to any or all of the input exclusion parameters.
+
+    :param excluded_time_ranges: A comma separated list of string representing time rangers in the format of
+    hh:mm AM/PM - hh:mm AM/PM
+    :param excluded_days: A comma separated list of strings each representing a day of the week in integer format
+    (e.g. 0,1,3)
+    :param excluded_dates: A comma separated list of strings, each representing a specific mm/dd/yyyy
+    :param ct: The current timestamp this script is run
+
+    :return: A boolean value indicating whether or not the current timestamp is within the range of ANY of the input
+    time parameters
+    """
+
+    # check if the current time range is excluded
+    if excluded_time_ranges:
+        excluded_time_ranges_list = excluded_time_ranges.split(",")
+        if excluded_time_ranges_list:
+            time_now = datetime.strptime(datetime.strftime(datetime.now(), "%I:%M%p"), "%I:%M%p")
+            for excluded_time_range in excluded_time_ranges_list:
+                ts, te = excluded_time_range.split(" - ")
+                time_start = datetime.strptime(ts, "%I:%M%p")
+                time_end = datetime.strptime(te, "%I:%M%p")
+
+                if _is_now_in_time_range(time_start, time_end, time_now):
+                    return True
+
+    # iterate through the days of the week to determine if today is excluded
+    today = _get_day_of_week(ct)
+    if excluded_days:
+        # get a list of the excluded days
+        excluded_days_list = excluded_days.split(",")
+        # check if there are any values in the list
+        if excluded_days_list:
+            # iterate through the list
+            for excluded_day in excluded_days_list:
+                if int(today) == int(excluded_day):
+                    return True
+
+    # iterate through the excluded dates (if any) and check to see if today is to be excluded
+    # if today is excluded then we return True
+    if excluded_dates:
         excluded_dates_list = excluded_dates.split(",")
         for excluded_date in excluded_dates_list:
             excluded_date_string = datetime.strptime(excluded_date, "%m/%d/%Y")
             if (datetime.today() - excluded_date_string).days == 0:
                 return True
 
-    # iterate through the days of the week to determine if today is excluded
-    today = _get_day_of_week(ct)
-    if len(excluded_days) > 0:
-        # get a list of the excluded days
-        excluded_days_list = excluded_days.split(",")
-        # check if there are any values in the list
-        if len(excluded_days_list) > 0:
-            # iterate through the list
-            for excluded_day in excluded_days_list:
-                if int(today) == int(excluded_day):
-                    return True
-
-    # check if the current time range is excluded
-    if len(excluded_time_ranges) > 0:
-        excluded_time_ranges_list = excluded_time_ranges.split(",")
-        if len(excluded_time_ranges_list) > 0:
-            for excluded_time_range in excluded_time_ranges_list:
-                # TODO
-                time_now = datetime.strftime(datetime.now(), "%I:%M%p")
-                tn = datetime.strptime(time_now, "%I:%M%p")
-
-                time_start = excluded_time_range
-                ts = datetime.strptime(time_start.split(" - ")[0], "%I:%M%p")
-
-                time_end = excluded_time_range
-                te = datetime.strptime(time_end.split(" - ")[1], "%I:%M%p")
-
-                if _is_now_in_time_range(ts, te, tn):
-                    return True
-    # if we reach this point, we are not excluding this timeframe
-    return exclude
+    return False
 
 
 def _get_day_of_week(utc_timestamp=None):
     """
     Return the day of the week
     :param utc_timestamp:
-    :return:
+    :return: String representation of the day of the week where Sunday is the
+    first day "0" and Saturday is the last day "6".
     """
     return datetime.fromtimestamp(utc_timestamp).strftime("%w")
 

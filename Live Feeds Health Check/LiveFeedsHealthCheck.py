@@ -264,7 +264,10 @@ def main():
         # Check file existence.
         response_time_data_file_path_exist = FileManager.check_file_exist_by_pathlib(path=response_time_data_file_path)
 
-        exclude_save = TimeUtils.is_now_excluded(value["exclude_specific_dates"], value["exclude_days"], value["exclude_time"], timestamp)
+        exclude_save = TimeUtils.is_now_excluded(value["exclude_time_ranges"],
+                                                 value["exclude_days"],
+                                                 value["exclude_specific_dates"],
+                                                 timestamp)
         print(f"Exclude response time data from save: {exclude_save}")
 
         if not response_time_data_file_path_exist:
@@ -443,9 +446,7 @@ def main():
             "timestamp": timestamp
         })
 
-        print("\n=================================================================")
         print(f"Process RSS Feed")
-        print("===================================================================")
         # path to RSS output file
         rss_file_path = os.path.join(rss_dir_path, item_id + "." + value["rss_file_extension"])
         # Check if the file already exist
