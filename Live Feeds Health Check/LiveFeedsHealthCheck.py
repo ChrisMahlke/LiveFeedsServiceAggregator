@@ -174,11 +174,13 @@ def main():
     # Check file existence
     file_exist = FileManager.check_file_exist_by_pathlib(path=output_file_path)
     if file_exist:
+        # Previous status run output file
+        previous_status_output = FileManager.open_file(output_file_path)["items"]
         # iterate through the items in the config file
         for key, value in data_model_dict.items():
             print(f"{key}")
             # iterate through the items in the status file
-            for ele in FileManager.open_file(output_file_path)["items"]:
+            for ele in previous_status_output:
                 status_file_key = ele["id"]
                 # if the item in the config file is also in the previous run, merge the output from the previous run
                 if key == status_file_key:
@@ -452,12 +454,10 @@ def main():
         # Check if the file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
         if rss_file_exist:
-            # If the file exist, check the status
-            previous_status = FileManager.get_status_from_feed(rss_file_path)
-            if previous_status == status_code["statusDetails"]["Comment"]:
-                print(f"RSS FEED status: {status_code['statusDetails']['Comment']}")
-            else:
-                # If the new status is different than what is on file, update the feed
+            # If the file exist, check the status/comments between the item's previous status/code comment, and the
+            # current status/code comment
+            update_current_feed = StatusManager.update_rss_feed(previous_status_output, value, status_codes_data_model)
+            if update_current_feed:
                 FileManager.create_new_file(rss_file_path)
                 FileManager.set_file_permission(rss_file_path)
                 FileManager.dict_to_xml(rss_template_path, value, rss_file_path)

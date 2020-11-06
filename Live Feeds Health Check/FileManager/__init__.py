@@ -118,3 +118,4 @@ def dict_to_xml(template=None, input_dict=None, output_file_path=None):
 
     with open(output_file_path, "w+") as file:
         file.write(output_file_contents)
+
