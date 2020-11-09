@@ -112,7 +112,7 @@ def main():
         user_sys.greeting()
 
     print("\n=================================================================")
-    print(f"Prepare input data model")
+    print(f"Hydrating input data model from config file parameters")
     print("=================================================================")
     item_count = len(input_items)
     data_model_dict = {}
@@ -129,23 +129,25 @@ def main():
     print(f"Setting up project and checking folders and directories")
     print("=================================================================")
     # Load status codes
-    print("\nLoading status codes configuration file")
+    print("Loading status codes configuration file")
     # TODO Move filename to config
     status_code_config_path = os.path.realpath(root_dir + r"\statusCodes.json")
     status_code_json_exist = FileManager.check_file_exist_by_pathlib(path=status_code_config_path)
     if status_code_json_exist is False:
+        # TODO: At this point we really cannot move forward
         raise InputFileNotFoundError(status_code_config_path)
     else:
         status_codes_data_model = FileManager.open_file(path=status_code_config_path)
 
     # Load comments
     # TODO Move filename to config
-    comments_path = os.path.realpath(root_dir + r"\comments.json")
-    comments_path_exist = FileManager.check_file_exist_by_pathlib(path=comments_path)
-    if comments_path_exist is False:
-        raise InputFileNotFoundError(comments_path)
+    admin_comments_file_path = os.path.realpath(root_dir + r"\comments.json")
+    admin_comments_file_exist = FileManager.check_file_exist_by_pathlib(path=admin_comments_file_path)
+    if admin_comments_file_exist is False:
+        # TODO: At this point we really cannot move forward
+        raise InputFileNotFoundError(admin_comments_file_path)
     else:
-        comments_data_model = FileManager.open_file(path=comments_path)
+        admin_comments_data_model = FileManager.open_file(path=admin_comments_file_path)
 
     # retrieve the alf statuses
     print("\nRetrieving and Processing Active Live Feed Processed files")
@@ -154,6 +156,7 @@ def main():
     alfp_content = list(map(QueryEngine.process_alfp_response, alf_processor_response))
     alfp_dict = {}
     for content in alfp_content:
+        # check if there is alfp content was successfully retrieved
         if content["success"]:
             unique_item_key = content["id"]
             alfp_dict.update({
@@ -441,8 +444,12 @@ def main():
             LoggingUtils.log_status_code_details(item_id, status_code)
 
         # update/add status code in the data model
+        # Add the Admin comments (if any)
+        # Add the last build time
+        # Add the status code
+        # Add the current run time of the script
         value.update({
-            "comments": comments_data_model.get(item_id, []),
+            "comments": admin_comments_data_model.get(item_id, []),
             "lastBuildTime": time_utils_response["datetimeObj"].strftime("%a, %d %b %Y %H:%M:%S +0000"),
             "status": status_code,
             "timestamp": timestamp

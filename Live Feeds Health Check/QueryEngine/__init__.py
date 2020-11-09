@@ -133,32 +133,36 @@ def get_feature_counts(data_model=None) -> dict:
         :param current_item:
         :return:
         """
+        item_id = current_item[0]
+        print(f"{item_id}")
         item_content = current_item[1]
         layer_query_params = item_content["layerQueryParams"]
         # reset the total feature count for this service
         current_item_feature_count = 0
         # We check if the service is accessible, not the item
         if item_content["serviceResponse"]["success"]:
-            # TODO ???
             exclusion_list_input = item_content["exclusion"].split(",")
             exclusion_list_input_results = []
             if isinstance(exclusion_list_input[0], str) and len(exclusion_list_input[0]) > 0 and len(exclusion_list_input) > 0:
                 exclusion_list_input_results = list(map(int, exclusion_list_input))
 
             for layer in layer_query_params:
-                if layer["layerId"] not in exclusion_list_input_results:
-                    # Query the list of layers of the current item in the iteration
-                    # and return the feature counts
-                    validated_layer = check_layer_url(layer)
-                    if validated_layer is not None:
-                        if validated_layer["success"]:
-                            # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
-                            count_dict = json.loads(validated_layer["response"].content.decode('utf-8'))
-                            if "count" in count_dict:
-                                current_item_feature_count += count_dict["count"]
-                                print(f"Success\t{current_item[0]}\t{layer['layerName']}")
-                            else:
-                                print(f"Error\t{current_item[0]}\t{layer['layerName']}")
+                if "layerId" in layer:
+                    if layer["layerId"] not in exclusion_list_input_results:
+                        # Query the list of layers of the current item in the iteration
+                        # and return the feature counts
+                        validated_layer = check_layer_url(layer)
+                        if validated_layer is not None:
+                            if validated_layer["success"]:
+                                # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
+                                count_dict = json.loads(validated_layer["response"].content.decode('utf-8'))
+                                if "count" in count_dict:
+                                    current_item_feature_count += count_dict["count"]
+                                    print(f"Success\t{current_item[0]}\t{layer['layerName']}")
+                                else:
+                                    print(f"Error\t{current_item[0]}\t{layer['layerName']}")
+                else:
+                    print(f"{layer}")
         else:
             # The item is not valid or inaccessible, use the cached feature count
             if "featureCount" in item_content:
