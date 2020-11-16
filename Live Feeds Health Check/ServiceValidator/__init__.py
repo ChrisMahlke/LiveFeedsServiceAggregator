@@ -200,6 +200,7 @@ def validate_layers(data_model=None) -> dict:
                 print(f" The item {item_id} is either inaccessible or not valid: {e}")
                 layers.append({
                     "id": item_id,
+                    "layerId": "",
                     "success": False,
                     "message": e
                 })
@@ -295,6 +296,7 @@ def validate_layers(data_model=None) -> dict:
             else:
                 layer_data.append({
                     "id": item_id,
+                    "layerId": "",
                     "success": False
                 })
         return layer_data
