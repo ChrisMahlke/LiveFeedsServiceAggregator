@@ -147,6 +147,7 @@ def get_feature_counts(data_model=None) -> dict:
                 exclusion_list_input_results = list(map(int, exclusion_list_input))
 
             for layer in layer_query_params:
+                print(f"Check if layerId key exists in {layer}")
                 if "layerId" in layer:
                     if layer["layerId"] not in exclusion_list_input_results:
                         # Query the list of layers of the current item in the iteration
