@@ -145,14 +145,18 @@ def validate_services(data_model=None) -> dict:
         """
         item_id = current_item[0]
         item_content = current_item[1]
-        print(f"{item_id}")
+        item = item_content['agolItem']
+        type_keywords = item['typeKeywords']
+        require_token = requires_token("Requires Subscription", type_keywords)
+        print(f"{item_id}\t{item_content['title']}")
         print(f"retry count threshold: {item_content['default_retry_count']}")
         print(f"timout threshold: {item_content['default_timeout']}")
-        print(f"{item_content['service_url']}")
+        print(f"service url: {item_content['service_url']}")
+        print(f"requires token: {require_token}")
         response = RequestUtils.check_request(path=item_content["service_url"],
                                               params={},
                                               try_json=True,
-                                              add_token=True,
+                                              add_token=require_token,
                                               retry_factor=item_content["default_retry_count"],
                                               timeout_factor=item_content["default_timeout"],
                                               token=item_content["token"],
@@ -322,3 +326,13 @@ def validate_layers(data_model=None) -> dict:
             return False
 
     return dict(map(validate_service_layers, data_model.items()))
+
+
+def requires_token(x, ls) -> bool:
+    """
+    :param x: We ae checking for the string 'Requires Subscription'
+    :param ls: An item's type keywords
+    :return: bool
+    """
+    return x in ls
+

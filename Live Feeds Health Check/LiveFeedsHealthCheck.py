@@ -79,6 +79,7 @@ class InputFileNotFoundError(Exception):
 
 
 def main():
+    # Script version number
     print(f"\nRunning version: {version.version_str}")
 
     print("\n=================================================================")
@@ -260,6 +261,7 @@ def main():
         print(f"Retry Count: {retry_count}")
 
         # Process Elapsed Time
+        # TODO Define "Elapsed Time" dor documentation
         elapsed_time = QueryEngine.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
         print(f"Elapsed Time: {elapsed_time}\n")
 

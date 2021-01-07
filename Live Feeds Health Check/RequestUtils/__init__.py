@@ -97,6 +97,7 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     try:
         session = requests.Session()
         current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id)
+        print(f"URL: {url}")
         response = current_session.get(url, timeout=timeout)
     except requests.exceptions.HTTPError as http_error:
         response_dict["error_message"].append(ERROR_CODES["HTTPError"])
