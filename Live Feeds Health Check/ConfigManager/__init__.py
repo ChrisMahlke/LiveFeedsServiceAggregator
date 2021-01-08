@@ -8,6 +8,10 @@ class ConfigManager:
     """
 
     def __init__(self, root, file_name):
+        """
+        :param root: The root directory of the script
+        :param file_name: The file name
+        """
         # project root
         self.root = root
         # ini file name
@@ -18,7 +22,11 @@ class ConfigManager:
         self.parser = configparser.SafeConfigParser()
 
     def get_config_data(self, config_type):
-        """ """
+        """
+        Retrieve the data from the ini file sections
+        :param config_type:
+        :return: Data model with data from the ini file
+        """
         sections = self._get_sections_from_ini_file()
         # Prepare the script's input data model from the config file
         if config_type == "items":
@@ -28,7 +36,9 @@ class ConfigManager:
         return input_data_model
 
     def _get_sections_from_ini_file(self):
-        """ """
+        """
+        :return: The ini file sections
+        """
         # read in config file
         self.parser.read(self.path)
         # read in sections

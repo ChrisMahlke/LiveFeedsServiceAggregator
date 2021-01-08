@@ -95,9 +95,11 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     response_dict.setdefault("retryCount", {})
 
     try:
+        print(f"URL: {url}")
+        # The Session object allows you to persist certain parameters across requests.
+        # It also persists cookies across all requests made from the Session instance
         session = requests.Session()
         current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id)
-        print(f"URL: {url}")
         response = current_session.get(url, timeout=timeout)
     except requests.exceptions.HTTPError as http_error:
         response_dict["error_message"].append(ERROR_CODES["HTTPError"])

@@ -91,7 +91,13 @@ def main():
 
     # Load config ini file
     print("Loading input items from configuration file\n")
+    # Routines for handling the loading and parsing of the config ini file
+    #
+    # A configuration file consists of sections, lead by a "[section]" header,
+    # and followed by "name: value" entries, with continuations and such in
+    # the style of RFC 822.
     config_ini_manager = ConfigManager(root=root_dir, file_name="config.ini")
+    # Items we will analyze
     input_items = config_ini_manager.get_config_data(config_type="items")
 
     print("\n=================================================================")
@@ -106,8 +112,10 @@ def main():
     if user is None:
         print("You are not signed in")
         # TODO: Exit script gracefully and notify Admin(?)
+        # TODO: If user is not signed in we cannot retrieve the statistics
     else:
-        # get the installation properties and print to stdout
+        # Eye candy
+        # Get the installation properties and print to stdout
         install_info = arcpy.GetInstallInfo()
         user_sys = User(user=user, install_info=install_info)
         user_sys.greeting()
@@ -115,11 +123,14 @@ def main():
     print("\n=================================================================")
     print(f"Hydrating input data model from config file parameters")
     print("=================================================================")
-    item_count = len(input_items)
+    # Data model
     data_model_dict = {}
+    # Number of items we are working with (derived from the config ini)
+    item_count = len(input_items)
     if item_count < 1:
         raise ItemCountNotInRangeError(item_count)
     else:
+        print(f"There are {item_count} items")
         for input_item in input_items:
             print(f"{input_item['id']}")
             data_model_dict.update({
@@ -214,6 +225,7 @@ def main():
     print("===================================================================")
     time_utils_response = TimeUtils.get_current_time_and_date()
     timestamp = time_utils_response["timestamp"]
+    print(f"{time_utils_response['datetimeObj']}")
 
     print("\n===================================================================")
     print(f"Validating item's unique key and meta-data")
@@ -261,7 +273,7 @@ def main():
         print(f"Retry Count: {retry_count}")
 
         # Process Elapsed Time
-        # TODO Define "Elapsed Time" dor documentation
+        # TODO Define "Elapsed Time" and documentation
         elapsed_time = QueryEngine.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
         print(f"Elapsed Time: {elapsed_time}\n")
 

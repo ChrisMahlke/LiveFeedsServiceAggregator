@@ -97,6 +97,7 @@ def validate_items(gis: arcgis.gis.GIS = None, data_model=None) -> dict:
             "agolItem": None,
             "itemIsValid": False
         }
+        print(f"{item_id}\t{title}")
         try:
             agol_item = gis.content.get(item_id)
             if agol_item is None:
@@ -121,7 +122,6 @@ def validate_items(gis: arcgis.gis.GIS = None, data_model=None) -> dict:
                 "itemIsValid": True
             })
             current_item[1].update(validated_item_dict)
-            print(f"{item_id}")
         finally:
             return current_item[0], current_item[1]
 
@@ -147,7 +147,7 @@ def validate_services(data_model=None) -> dict:
         item_content = current_item[1]
         item = item_content['agolItem']
         type_keywords = item['typeKeywords']
-        require_token = requires_token("Requires Subscription", type_keywords)
+        require_token = _requires_token("Requires Subscription", type_keywords)
         print(f"{item_id}\t{item_content['title']}")
         print(f"retry count threshold: {item_content['default_retry_count']}")
         print(f"timout threshold: {item_content['default_timeout']}")
@@ -328,7 +328,7 @@ def validate_layers(data_model=None) -> dict:
     return dict(map(validate_service_layers, data_model.items()))
 
 
-def requires_token(x, ls) -> bool:
+def _requires_token(x, ls) -> bool:
     """
     :param x: We ae checking for the string 'Requires Subscription'
     :param ls: An item's type keywords

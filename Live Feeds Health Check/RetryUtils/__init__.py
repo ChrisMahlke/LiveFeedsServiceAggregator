@@ -80,6 +80,11 @@ class RetrySession(TimeoutSession):
 
 
 class CallbackRetry(Retry):
+    """
+    Subclass Retry
+    Each retry attempt will create a new Retry object with updated values, so
+    they can be safely reused.
+    """
     def __init__(self, *args, **kwargs):
         self._callback = kwargs.pop('callback', None)
         self._id = kwargs.pop('id', None)
@@ -154,9 +159,24 @@ def retry(
 
     # Retry too in non-idempotent methods like POST
     kwargs.setdefault("method_whitelist", False)
-    #
-    retries = CallbackRetry(total=retries, status_forcelist=[408, 500, 502, 503, 504], callback=retry_callback,
-                            id=item_id, counter=0)
+    # Subclass Retry
+    retries = CallbackRetry(total=retries,
+                            status_forcelist=[408, 500, 502, 503, 504],
+                            callback=retry_callback,
+                            id=item_id,
+                            counter=0)
     for prefix in prefixes:
+        # The second parameter of mount accepts a Transport Adaptor object.
+        # Transport adapters provide a mechanism to define interaction methods for an “HTTP” service. They allow you to
+        # fully mock a web service to fit your needs.
+        #
+        # And the HTTP Adapter provides a general-case interface for Requests sessions to contact HTTP and HTTPS urls by
+        # implementing the Transport Adapter interface
+        #
+        # NOTE: max_retries is the maximum number of retries each connection should attempt. This applies only to failed
+        # DNS lookups, socket connections and connection timeouts, never to requests where data has made it to the
+        # server. By default, Requests does not retry failed connections. For more granular control over the conditions
+        # under which we retry a request, I import urllib3’s Retry class and pass that instead (as recommended by the
+        # documentation for the HTTPAdapter).
         session.mount(prefix, HTTPAdapter(max_retries=retries))
     return session
