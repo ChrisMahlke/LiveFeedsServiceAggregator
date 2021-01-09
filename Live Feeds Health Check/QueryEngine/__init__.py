@@ -1,3 +1,22 @@
+"""
+Obtain usage statistics
+---------------------------
+- Requirements for check
+Item must be accessible
+
+- Results
+Success -   Obtain usage statistics
+Error   -   Use usage statistics from previous run (do not over-write data model)
+
+Obtain feature counts
+---------------------------
+- Requirements for check
+Service and Layers must be accessible
+
+- Results
+Success -   Obtain feature counts
+Error   -   Use feature counts from previous run (do not over-write data model)
+"""
 import concurrent.futures
 import json
 import math
@@ -134,11 +153,12 @@ def get_feature_counts(data_model=None) -> dict:
         :return:
         """
         item_id = current_item[0]
-        print(f"{item_id}")
         item_content = current_item[1]
         layer_query_params = item_content["layerQueryParams"]
         # reset the total feature count for this service
         current_item_feature_count = 0
+        #
+        elapsed_times = []
         # We check if the service is accessible, not the item
         if item_content["serviceResponse"]["success"]:
             exclusion_list_input = item_content["exclusion"].split(",")
@@ -147,7 +167,6 @@ def get_feature_counts(data_model=None) -> dict:
                 exclusion_list_input_results = list(map(int, exclusion_list_input))
 
             for layer in layer_query_params:
-                print(f"Check if layerId key exists in {layer}")
                 if "layerId" in layer:
                     if layer["layerId"] not in exclusion_list_input_results:
                         # Query the list of layers of the current item in the iteration
@@ -155,20 +174,30 @@ def get_feature_counts(data_model=None) -> dict:
                         validated_layer = check_layer_url(layer)
                         if validated_layer is not None:
                             if validated_layer["success"]:
-                                # print(f"Elapsed time: {validated_layer['response']['response'].elapsed}")
                                 count_dict = json.loads(validated_layer["response"].content.decode('utf-8'))
                                 if "count" in count_dict:
                                     current_item_feature_count += count_dict["count"]
                                     print(f"Success\t{current_item[0]}\t{layer['layerName']}")
+                                    print(f"Elapsed time: {validated_layer['response'].elapsed.total_seconds()}")
+                                    elapsed_times.append({
+                                        "item": current_item[0],
+                                        "elapsedTime": validated_layer['response'].elapsed.total_seconds(),
+                                        "layerName": layer['layerName']
+                                    })
                                 else:
                                     print(f"Error\t{current_item[0]}\t{layer['layerName']}")
-                else:
-                    print(f"{layer}")
+                            else:
+                                # TODO Return elapsed time and error message
+                                print(f"")
         else:
-            # The item is not valid or inaccessible, use the cached feature count
+            # The service is not valid or inaccessible, use the cached feature count
             if "featureCount" in item_content:
                 current_item_feature_count = item_content["featureCount"]
-        return current_item[0], {**current_item[1], **{"featureCount": current_item_feature_count}}
+        return current_item[0], {
+            **current_item[1],
+            **{"featureCount": current_item_feature_count},
+            **{"serviceLayersElapsedTimes": elapsed_times}
+        }
 
     def check_layer_url(layer=None) -> dict:
         """ Check that the Item's url is valid """
@@ -203,7 +232,18 @@ def get_retry_count(value=None) -> int:
 
 
 def get_elapsed_time(service_is_valid=None, response=None) -> float:
-    """ Get the elapsed time in seconds """
+    """
+    Get the elapsed time in seconds.
+
+    The amount of time elapsed between sending the request and the arrival of the response (as a timedelta). This
+    property specifically measures the time taken between sending the first byte of the request and finishing parsing
+    the headers. It is therefore unaffected by consuming the response content or the value of the stream keyword
+    argument.
+
+    :param service_is_valid: If the service is not valid, return 0 (which is impossible)
+    :param response: The response object
+    :return: The response time in seconds
+    """
     elapsed_time = 0
     # If the service is valid we can get the elapsed time
     if service_is_valid:
@@ -213,7 +253,11 @@ def get_elapsed_time(service_is_valid=None, response=None) -> float:
 
 
 def process_alfp_response(alfp_response=None) -> dict:
-    """ """
+    """
+
+    :param alfp_response:
+    :return:
+    """
     if alfp_response is None:
         alfp_response = []
     if alfp_response["response"]["success"]:
@@ -237,7 +281,11 @@ def process_alfp_response(alfp_response=None) -> dict:
 
 
 def get_alfp_content(input_items=None) -> list:
-    """ """
+    """
+
+    :param input_items:
+    :return:
+    """
     if input_items is None:
         input_items = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(input_items)) as executor:
@@ -247,7 +295,11 @@ def get_alfp_content(input_items=None) -> list:
 
 
 def check_alfp_url(input_data=None) -> dict:
-    """ """
+    """
+
+    :param input_data:
+    :return:
+    """
     if input_data is None:
         input_data = {}
     response = RequestUtils.check_request(path=input_data["url"],

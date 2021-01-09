@@ -220,41 +220,41 @@ def main():
     # TODO Move filename to config
     rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
 
-    print("\n===================================================================")
+    print("\n=================================================================")
     print(f"Current data and time")
-    print("===================================================================")
+    print("=================================================================")
     time_utils_response = TimeUtils.get_current_time_and_date()
     timestamp = time_utils_response["timestamp"]
     print(f"{time_utils_response['datetimeObj']}")
 
-    print("\n===================================================================")
+    print("\n=================================================================")
     print(f"Validating item's unique key and meta-data")
-    print("===================================================================")
+    print("=================================================================")
     data_model_dict = ServiceValidator.validate_items(gis=gis, data_model=data_model_dict)
 
-    print("\n===================================================================")
+    print("\n=================================================================")
     print(f"Validating services")
-    print("===================================================================")
+    print("=================================================================")
     data_model_dict = ServiceValidator.validate_services(data_model=data_model_dict)
 
-    print("\n===================================================================")
+    print("\n=================================================================")
     print(f"Validating layers")
-    print("===================================================================")
+    print("=================================================================")
     data_model_dict = ServiceValidator.validate_layers(data_model=data_model_dict)
 
-    print("\n===================================================================")
+    print("\n=================================================================")
     print(f"Retrieve usage statistics")
-    print("===================================================================")
+    print("=================================================================")
     data_model_dict = QueryEngine.get_usage_details(data_model=data_model_dict)
 
-    print("\n===================================================================")
+    print("\n=================================================================")
     print(f"Retrieve feature counts")
-    print("===================================================================")
+    print("=================================================================")
     data_model_dict = QueryEngine.get_feature_counts(data_model=data_model_dict)
 
     print("\n=================================================================")
     print(f"Analyze and process data")
-    print("===================================================================")
+    print("=================================================================")
     for key, value in data_model_dict.items():
         item_id = key
         agol_is_valid = True
@@ -262,20 +262,19 @@ def main():
         service_is_valid = value["serviceResponse"]["success"]
         layers_are_valid = value["allLayersAreValid"]
 
-        print(f"{item_id}")
-        print(f"ArcGIS Online valid: {agol_is_valid}")
+        print(f"{item_id}\t{value['title']}")
+        print(f"ArcGIS Online accessible: {agol_is_valid}")
         print(f"Item valid: {item_is_valid}")
         print(f"Service valid: {service_is_valid}")
-        print(f"All layers valid: {layers_are_valid}\n")
+        print(f"All layers valid: {layers_are_valid}")
 
         # Process Retry Count
         retry_count = QueryEngine.get_retry_count(value["serviceResponse"]["retryCount"])
         print(f"Retry Count: {retry_count}")
 
-        # Process Elapsed Time
-        # TODO Define "Elapsed Time" and documentation
+        # Process Elapsed Time of the query to the service (not the layers)
         elapsed_time = QueryEngine.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
-        print(f"Elapsed Time: {elapsed_time}\n")
+        print(f"Elapsed Time: {elapsed_time}")
 
         # Obtain the total elapsed time and counts
         # path to output file

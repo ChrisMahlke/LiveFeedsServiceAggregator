@@ -40,23 +40,6 @@ Service url on the item or on file must be accessible
 Success -   Obtain feature counts
 Error   -   Use feature counts from previous run (do not over-write data model)
 
-Validate usage statistics
----------------------------
-- Requirements for check
-Item must be accessible
-
-- Results
-Success -   Obtain usage statistics
-Error   -   Use usage statistics from previous run (do not over-write data model)
-
-Obtain feature counts
----------------------------
-- Requirements for check
-Service and Layers must be accessible
-
-- Results
-Success -   Obtain feature counts
-Error   -   Use feature counts from previous run (do not over-write data model)
 """
 import arcgis
 import json
@@ -183,10 +166,13 @@ def validate_layers(data_model=None) -> dict:
         """
         item_id = current_item[0]
         item_content = current_item[1]
-        print(f"{item_id}")
+        item_title = item_content['title']
+        print(f"{item_id}\t{item_title}")
 
         layers = []
 
+        # Check if the item is valid.  An item is considered valid only if we can access the item in AGOL so that we can
+        # access the item's layers.  Otherwise, we need to access the service and retrieve the layers.
         if item_content["itemIsValid"]:
             # item is valid
             try:
@@ -208,17 +194,20 @@ def validate_layers(data_model=None) -> dict:
                     "success": False,
                     "message": e
                 })
-                layer_query_params = prepare_layer_query_params(layers)
-                layers_are_valid = check_all_layers(layers)
+                layer_query_params = _prepare_layer_query_params(layers)
+                layers_are_valid = _check_all_layers(layers)
                 return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
                                          **{"layers": layers},
                                          **{"layerQueryParams": layer_query_params}}
             else:
-                layer_query_params = prepare_layer_query_params(layers)
-                layers_are_valid = check_all_layers(layers)
-                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
-                                         **{"layers": layers},
-                                         **{"layerQueryParams": layer_query_params}}
+                layer_query_params = _prepare_layer_query_params(layers)
+                layers_are_valid = _check_all_layers(layers)
+                return current_item[0], {
+                    **current_item[1],
+                    **{"allLayersAreValid": layers_are_valid},
+                    **{"layers": layers},
+                    **{"layerQueryParams": layer_query_params}
+                }
         else:
             # item is not valid or not accessible, use the url on file
             if item_content["serviceResponse"]["success"]:
@@ -238,8 +227,8 @@ def validate_layers(data_model=None) -> dict:
                             "token": current_item[1]["token"],
                             "url": item_content["service_url"] + "/" + str(layer["id"])
                         })
-                    layer_query_params = prepare_layer_query_params(layers)
-                    layers_are_valid = check_all_layers(layers)
+                    layer_query_params = _prepare_layer_query_params(layers)
+                    layers_are_valid = _check_all_layers(layers)
                 else:
                     # There was an error returned in the response
                     layers.append({
@@ -247,8 +236,8 @@ def validate_layers(data_model=None) -> dict:
                         "success": False,
                         "message": f" The item {item_id} service url is having issues: {error['message']}"
                     })
-                    layer_query_params = prepare_layer_query_params(layers)
-                    layers_are_valid = check_all_layers(layers)
+                    layer_query_params = _prepare_layer_query_params(layers)
+                    layers_are_valid = _check_all_layers(layers)
                 return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
                                          **{"layers": layers},
                                          **{"layerQueryParams": layer_query_params}}
@@ -261,13 +250,13 @@ def validate_layers(data_model=None) -> dict:
                     "message": f" The item {item_id} is either inaccessible or not valid and the service url is not "
                                f"accessible. "
                 })
-                layer_query_params = prepare_layer_query_params(layers)
-                layers_are_valid = check_all_layers(layers)
+                layer_query_params = _prepare_layer_query_params(layers)
+                layers_are_valid = _check_all_layers(layers)
                 return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
                                          **{"layers": layers},
                                          **{"layerQueryParams": layer_query_params}}
 
-    def prepare_layer_query_params(layers):
+    def _prepare_layer_query_params(layers):
         """
         Build the layer query params for each layer
         :param layers:
@@ -305,7 +294,7 @@ def validate_layers(data_model=None) -> dict:
                 })
         return layer_data
 
-    def check_all_layers(layers):
+    def _check_all_layers(layers):
         """
         Returns a True/False if all the layers were a success or not
         :param layers: All layer query results
