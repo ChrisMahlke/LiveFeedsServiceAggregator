@@ -280,6 +280,7 @@ def main():
         service_elapsed_time = QueryEngine.get_service_elapsed_time(service_is_valid, service_response["response"])
         print(f"Service Elapsed Time: {service_elapsed_time}")
         # Retrieve the average elapsed time of layers for the current service (layers only)
+        print(f"Layers Elapsed times (individual)")
         layers_elapsed_time = QueryEngine.get_layers_average_elapsed_time(layers_elapsed_times=value['serviceLayersElapsedTimes'])
         print(f"Layers Elapsed Time (average): {layers_elapsed_time}")
         # Sum up the elapsed time for the service and the layers
