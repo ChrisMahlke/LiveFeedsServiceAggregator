@@ -259,22 +259,33 @@ def main():
         item_id = key
         agol_is_valid = True
         item_is_valid = value["itemIsValid"]
-        service_is_valid = value["serviceResponse"]["success"]
+        service_response = value["serviceResponse"]
+        service_is_valid = service_response["success"]
         layers_are_valid = value["allLayersAreValid"]
 
         print(f"{item_id}\t{value['title']}")
         print(f"ArcGIS Online accessible: {agol_is_valid}")
         print(f"Item valid: {item_is_valid}")
         print(f"Service valid: {service_is_valid}")
-        print(f"All layers valid: {layers_are_valid}")
+        print(f"All layers valid: {layers_are_valid}\n")
 
+        print("-------- RETRY COUNT ---------")
         # Process Retry Count
-        retry_count = QueryEngine.get_retry_count(value["serviceResponse"]["retryCount"])
-        print(f"Retry Count: {retry_count}")
+        service_retry_count = QueryEngine.get_retry_count(service_response["retryCount"])
+        print(f"Service Retry Count: {service_retry_count}")
+        print("------------------------------\n")
 
-        # Process Elapsed Time of the query to the service (not the layers)
-        elapsed_time = QueryEngine.get_elapsed_time(service_is_valid, value["serviceResponse"]["response"])
-        print(f"Elapsed Time: {elapsed_time}")
+        print("-------- ELAPSED TIME --------")
+        # Retrieve the elapsed time of the query to the service (not the layers)
+        service_elapsed_time = QueryEngine.get_service_elapsed_time(service_is_valid, service_response["response"])
+        print(f"Service Elapsed Time: {service_elapsed_time}")
+        # Retrieve the average elapsed time of layers for the current service (layers only)
+        layers_elapsed_time = QueryEngine.get_layers_average_elapsed_time(layers_elapsed_times=value['serviceLayersElapsedTimes'])
+        print(f"Layers Elapsed Time (average): {layers_elapsed_time}")
+        # Sum up the elapsed time for the service and the layers
+        total_elapsed_time = service_elapsed_time + layers_elapsed_time
+        print(f"Total Elapsed Time {total_elapsed_time}")
+        print("------------------------------\n\n")
 
         # Obtain the total elapsed time and counts
         # path to output file
@@ -295,11 +306,11 @@ def main():
             if not exclude_save:
                 FileManager.save(data={
                     "id": item_id,
-                    "elapsed_sums": elapsed_time,
+                    "elapsed_sums": total_elapsed_time,
                     "elapsed_count": 1
                 }, path=response_time_data_file_path)
             # since it's our first entry, the average is the current elapsed time
-            elapsed_times_average = elapsed_time
+            elapsed_times_average = total_elapsed_time
         else:
             # Retrieve the elapsed time DIVIDE by count
             response_time_data = FileManager.get_response_time_data(response_time_data_file_path)
@@ -316,7 +327,7 @@ def main():
                 FileManager.update_response_time_data(path=response_time_data_file_path, input_data={
                     "id": item_id,
                     "elapsed_count": elapsed_times_count + 1,
-                    "elapsed_sums": elapsed_times_sum + elapsed_time
+                    "elapsed_sums": elapsed_times_sum + total_elapsed_time
                 })
         print(f"Elapsed average: {elapsed_times_average}")
 
@@ -417,13 +428,13 @@ def main():
 
             # 100
             # Check retry count
-            if retry_count > int(value["default_retry_count"]):
+            if service_retry_count > int(value["default_retry_count"]):
                 status_code = StatusManager.get_status_code("100", status_codes_data_model)
 
             # 101
             # Check elapsed time
             avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsed_times_average)
-            if elapsed_time > avg_elapsed_time_threshold:
+            if total_elapsed_time > avg_elapsed_time_threshold:
                 status_code = StatusManager.get_status_code("101", status_codes_data_model)
 
             LoggingUtils.log_status_code_details(item_id, status_code)

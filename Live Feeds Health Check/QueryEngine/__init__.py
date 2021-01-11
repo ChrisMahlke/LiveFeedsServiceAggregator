@@ -231,7 +231,7 @@ def get_retry_count(value=None) -> int:
     return retry_count
 
 
-def get_elapsed_time(service_is_valid=None, response=None) -> float:
+def get_service_elapsed_time(service_is_valid=None, response=None) -> float:
     """
     Get the elapsed time in seconds.
 
@@ -250,6 +250,26 @@ def get_elapsed_time(service_is_valid=None, response=None) -> float:
         # get elapsed time in seconds
         elapsed_time = response.elapsed.total_seconds()
     return elapsed_time
+
+
+def get_layers_average_elapsed_time(layers_elapsed_times=None) -> float:
+    """
+    Sum up the elapsed times of all the layers in the service.
+
+    :param layers_elapsed_times: A dict containing the elapsed times and layer names for a service
+    :return: The average (float) of the elapsed times
+    """
+    elapsed_time_average = 0
+    total_elapsed_time = 0
+    num_elapsed_times = len(layers_elapsed_times)
+    if num_elapsed_times > 0:
+        for layers_elapsed_time in layers_elapsed_times:
+            layer_name = layers_elapsed_time['layerName']
+            layer_elapsed_time = layers_elapsed_time['elapsedTime']
+            print(f"\t{layer_name} ({layer_elapsed_time})")
+            total_elapsed_time = total_elapsed_time + layer_elapsed_time
+        elapsed_time_average = total_elapsed_time/num_elapsed_times
+    return elapsed_time_average
 
 
 def process_alfp_response(alfp_response=None) -> dict:

@@ -238,9 +238,12 @@ def validate_layers(data_model=None) -> dict:
                     })
                     layer_query_params = _prepare_layer_query_params(layers)
                     layers_are_valid = _check_all_layers(layers)
-                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
-                                         **{"layers": layers},
-                                         **{"layerQueryParams": layer_query_params}}
+                return current_item[0], {
+                    **current_item[1],
+                    **{"allLayersAreValid": layers_are_valid},
+                    **{"layers": layers},
+                    **{"layerQueryParams": layer_query_params}
+                }
             else:
                 # we have a failed response
                 print(f" The item {item_id} not inaccessible or not valid and the service url is not accessible.")
@@ -252,9 +255,12 @@ def validate_layers(data_model=None) -> dict:
                 })
                 layer_query_params = _prepare_layer_query_params(layers)
                 layers_are_valid = _check_all_layers(layers)
-                return current_item[0], {**current_item[1], **{"allLayersAreValid": layers_are_valid},
-                                         **{"layers": layers},
-                                         **{"layerQueryParams": layer_query_params}}
+                return current_item[0], {
+                    **current_item[1],
+                    **{"allLayersAreValid": layers_are_valid},
+                    **{"layers": layers},
+                    **{"layerQueryParams": layer_query_params}
+                }
 
     def _prepare_layer_query_params(layers):
         """
