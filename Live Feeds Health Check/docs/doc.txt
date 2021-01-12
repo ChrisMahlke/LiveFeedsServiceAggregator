@@ -81,4 +81,22 @@
     - Get the sum of all "included" features in all the feature services in the input data model
 
 6) ANALYZE AND PROCESS DATA
+    Iterate through the data model (a dictionary where the key is the item ID) and process the results. At this points
+    we have all the information (including the response object) we need to write the data to files and update the RSS if
+    necessary.
+
+    Each service has an associated *.json file that is named after the item's item ID.  The file contains the:
+        * item Id
+        * elapsed count
+        * elapsed sums
+
+    - Check if there is the current time the data was acquired should be excluded from writing to the file.  This is set
+      in the config file
+    - Check if this file already exists:
+        File does not exist
+            Set the "elapsed sums" to the total elapsed time
+            Set the "elapsed count" to 1
+        File exist
+            Retrieve the response time data from the existing file
+            Retrieve the total elapsed time and counts from the data model
 

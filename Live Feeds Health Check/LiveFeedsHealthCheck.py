@@ -290,6 +290,10 @@ def main():
 
         # Obtain the total elapsed time and counts
         # path to output file
+        # This file contains the:
+        #   item id
+        #   elapsed time
+        #   elapsed sums
         response_time_data_file_path = os.path.join(response_time_data_dir, item_id + "." + "json")
         # Check file existence.
         response_time_data_file_path_exist = FileManager.check_file_exist_by_pathlib(path=response_time_data_file_path)
@@ -300,6 +304,7 @@ def main():
                                                  timestamp)
         print(f"Exclude response time data from save: {exclude_save}")
 
+        # Does the file exist
         if not response_time_data_file_path_exist:
             # If file does not exist then create it.
             FileManager.create_new_file(response_time_data_file_path)
@@ -314,15 +319,17 @@ def main():
             elapsed_times_average = total_elapsed_time
         else:
             # Retrieve the elapsed time DIVIDE by count
+            print(f"Retrieving response time data from existing json file: {item_id}.json")
             response_time_data = FileManager.get_response_time_data(response_time_data_file_path)
             # total counts
             elapsed_times_count = response_time_data["elapsed_count"]
-            print(f"Elapsed count: {elapsed_times_count}")
+            print(f"Elapsed count (on file before update): {elapsed_times_count}")
             # sum of all times
             elapsed_times_sum = response_time_data["elapsed_sums"]
-            print(f"Elapsed sum: {elapsed_times_sum}")
+            print(f"Elapsed sums (on file before update): {elapsed_times_sum}")
             # calculated average
             elapsed_times_average = elapsed_times_sum / elapsed_times_count
+            print(f"Average from above values: {elapsed_times_average}")
             if not exclude_save:
                 # update the response time data file
                 FileManager.update_response_time_data(path=response_time_data_file_path, input_data={
