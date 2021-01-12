@@ -1,0 +1,84 @@
+1) PROJECT SETUP
+    Loading ini file:
+    The result of this code block is to have a data model that contains the config parameters
+    for each of the items (e.g. Feature Services) we are going to analyze.
+    - Retrieve and parse the config ini file.
+    - Store the content from the ini file in a data model that will be used throughout the lifetime of the script.
+
+    Authenticate GIS profile:
+    Authenticate the user signed-in.
+    This will allow us to obtain a valid token
+
+    Hydrating input data model from config file parameters:
+    Hydrate the data model and prepare its structure (key/values)
+    The item id values from the ini file are used as unique keys
+
+    Setting up project and checking folders and directories
+    - Load status codes configuration file (file is local)
+      statusCodes.json
+    - Load admin comments file (file is local)
+      comments.json
+    - Retrieve and process Active Live Feed Processor (ALFP) content (REST call)
+    - Load output from previous run
+      status.json
+    - Create RSS output folder if it does not exist and load rss template (local xml file)
+
+2) CURRENT DATA AND TIME
+    Return a dict containing the current timestamp and a constructed a datetime from a POSIX timestamp
+
+3) VALIDATION
+    - This step is really building the data model.  What it's validating is if an item is accessible, including its
+      layers.  It is also storing the response object from the query against the service.
+    3a)	ITEM LEVEL
+        - Validate a dict of item IDs from the config ini file (retrieve its meta-data).
+          We are only validating if the item is accessible.  We are not collecting information related to elapsed
+          request time or retry counts.  This step is simply to obtain meta-data and information related to whether or
+          not it requires a subscription.
+        - If the item is not accessible and it's already in the previous run then propagate the meta-data from the
+          previous run.
+        - The REST call uses the gis.content.get(<item id>) method.
+
+        - Requirements for check
+          ArcGIS Online item ID
+        - Results
+            Success -   Item is accessible in ArcGIS Online
+                Obtain meta-data (Title, Snippet)
+                Validate service
+                Validate layers
+                Obtain usage statistics
+                Obtain feature counts
+            Error   -   Item is either Private or Invalid
+                Does not exist
+                Validate service
+                Validate layers
+                Use meta-data from previous run (do not over-write data model)
+                Use usage statistics from previous run (do not over-write data model)
+
+    3b)	SERVICE LEVEL
+        - Make a request and return a dictionary indicating success, failure, and return the response object
+        - Parameters used in this REST call
+        - timeout threshold (default is 5)
+        - retry count/threshold (default is 5)
+        - This is the rety factor
+        - The REST call is made using the Requests module
+
+        - Requirements for check
+          If the item it not accessible, the service url on file (config file) can be used
+        - Results
+            Success -   Record response
+                Run checks against alfp results
+                Validate layers
+            Error   -   Use feature counts from previous run (do not over-write data model)
+
+    3c) LAYER LEVEL
+        - Validates all the layers in one ore more services.  We are only checking if the layers are accessible.  We are
+          not recoding the response time of the query to the layers.
+
+4) RETRIEVE USAGE STATISTICS
+    - Retrieve the item's usage statistics
+
+5) RETRIVE FEATURE COUNTS
+    - Get the sum of all "included" features in all the feature services in the input data model
+
+6) ANALYZE AND PROCESS DATA
+
