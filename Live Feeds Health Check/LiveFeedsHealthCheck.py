@@ -384,6 +384,7 @@ def main():
             print("AGOL, Item, Service checks normal")
 
             # 001 Check
+            print("\nCHECKING     001")
             # Check elapsed time between now and the last updated time of the feed
             last_update_timestamp_diff = timestamp - value.get("lastUpdateTimestamp", timestamp)
             # Check elapsed time between now and the last run time of the feed
@@ -393,12 +394,12 @@ def main():
             last_update_timestamp_diff_minutes = last_update_timestamp_diff / 60
             print(f"Last update timestamp delta:\t{last_update_timestamp_diff_minutes} seconds")
             # Average number of minutes between each successful run (or Service update)
-            avg_update_int_threshold = int(value["average_update_interval_factor"]) * value[
-                "avgUpdateIntervalMins"]
+            avg_update_int_threshold = int(value["average_update_interval_factor"]) * value["avgUpdateIntervalMins"]
             print(f"Average update interval threshold: {avg_update_int_threshold}")
             if last_update_timestamp_diff_minutes > avg_update_int_threshold:
                 status_code = StatusManager.get_status_code("001", status_codes_data_model)
 
+            print("\nCHECKING     002")
             # 002 Check
             last_run_timestamp_diff_minutes = last_run_timestamp_diff / 60
             print(f"Last run timestamp delta:\t{last_run_timestamp_diff_minutes} seconds")
@@ -408,30 +409,36 @@ def main():
             if last_run_timestamp_diff_minutes > avg_feed_int_threshold:
                 status_code = StatusManager.get_status_code("002", status_codes_data_model)
 
+            print("\nCHECKING     003")
             # 003 Check
             if value["alfpLastStatus"] == 2:
                 if value["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
                     status_code = StatusManager.get_status_code("003", status_codes_data_model)
 
+            print("\nCHECKING     004")
             # 004 Check
             if value["alfpLastStatus"] == 3:
                 if value["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
                     status_code = StatusManager.get_status_code("004", status_codes_data_model)
 
+            print("\nCHECKING     005")
             # 005 Check
             if value["alfpLastStatus"] == 1:
                 if value["consecutiveFailures"] > int(value["consecutive_failures_threshold"]):
                     status_code = StatusManager.get_status_code("005", status_codes_data_model)
 
+            print("\nCHECKING     006")
             # 006 Check
             if value["alfpLastStatus"] == -1:
                 status_code = StatusManager.get_status_code("006", status_codes_data_model)
 
+            print("\nCHECKING     100")
             # 100
             # Check retry count
             if service_retry_count > int(value["default_retry_count"]):
                 status_code = StatusManager.get_status_code("100", status_codes_data_model)
 
+            print("\nCHECKING     101")
             # 101
             # Check elapsed time
             avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsed_times_average)
@@ -440,6 +447,7 @@ def main():
 
             LoggingUtils.log_status_code_details(item_id, status_code)
         else:
+            print("\nCHECKING     102, 201, 500, 501")
             # If we are at this point, then one or more of the Service states has failed
             #
             # The any() function returns True if any item in an iterable are true, otherwise it returns False.
@@ -480,7 +488,7 @@ def main():
             "timestamp": timestamp
         })
 
-        print(f"Process RSS Feed")
+        print(f"\nProcess RSS Feed")
         # path to RSS output file
         rss_file_path = os.path.join(rss_dir_path, item_id + "." + value["rss_file_extension"])
         # Check if the file already exist

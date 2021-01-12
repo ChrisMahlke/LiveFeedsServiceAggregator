@@ -163,7 +163,9 @@ def get_feature_counts(data_model=None) -> dict:
         if item_content["serviceResponse"]["success"]:
             exclusion_list_input = item_content["exclusion"].split(",")
             exclusion_list_input_results = []
-            if isinstance(exclusion_list_input[0], str) and len(exclusion_list_input[0]) > 0 and len(exclusion_list_input) > 0:
+            if isinstance(exclusion_list_input[0], str) and \
+                    len(exclusion_list_input[0]) > 0 and \
+                    len(exclusion_list_input) > 0:
                 exclusion_list_input_results = list(map(int, exclusion_list_input))
 
             for layer in layer_query_params:

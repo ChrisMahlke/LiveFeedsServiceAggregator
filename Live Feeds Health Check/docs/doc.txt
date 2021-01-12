@@ -59,7 +59,7 @@
         - Parameters used in this REST call
         - timeout threshold (default is 5)
         - retry count/threshold (default is 5)
-        - This is the rety factor
+        - This is the retry factor
         - The REST call is made using the Requests module
 
         - Requirements for check
@@ -77,7 +77,7 @@
 4) RETRIEVE USAGE STATISTICS
     - Retrieve the item's usage statistics
 
-5) RETRIVE FEATURE COUNTS
+5) RETRIEVE FEATURE COUNTS
     - Get the sum of all "included" features in all the feature services in the input data model
 
 6) ANALYZE AND PROCESS DATA

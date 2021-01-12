@@ -36,7 +36,7 @@ ERROR_CODES = {
 
 def _format_url(url):
     """
-    Format a url's protocol
+    Format a urls protocol
     :param url:
     :return:
     """
@@ -133,4 +133,3 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
         if DEBUG:
             print(f"URL {response_dict}")
         return response_dict
-
