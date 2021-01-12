@@ -145,7 +145,10 @@ def validate_services(data_model=None) -> dict:
                                               token=item_content["token"],
                                               id=item_id)
         print("\n")
-        return current_item[0], {**current_item[1], **{"serviceResponse": response}}
+        return current_item[0], {
+            **current_item[1],
+            **{"serviceResponse": response}
+        }
 
     return dict(map(validate_service, data_model.items()))
 
@@ -167,7 +170,12 @@ def validate_layers(data_model=None) -> dict:
         item_id = current_item[0]
         item_content = current_item[1]
         item_title = item_content['title']
+        item = item_content['agolItem']
+        type_keywords = item['typeKeywords']
+        require_token = _requires_token("Requires Subscription", type_keywords)
+
         print(f"{item_id}\t{item_title}")
+        print(f"requires token: {require_token}")
 
         layers = []
 
@@ -181,6 +189,7 @@ def validate_layers(data_model=None) -> dict:
                     layers.append({
                         "id": item_id,
                         "layerId": layer.properties["id"],
+                        "addToken": require_token,
                         "name": layer.properties["name"],
                         "success": True,
                         "token": item_content["token"],
@@ -222,6 +231,7 @@ def validate_layers(data_model=None) -> dict:
                         layers.append({
                             "id": item_id,
                             "layerId": layer.properties["id"],
+                            "addToken": require_token,
                             "name": layer["name"],
                             "success": True,
                             "token": current_item[1]["token"],
@@ -277,13 +287,14 @@ def validate_layers(data_model=None) -> dict:
                 layer_id = layer["layerId"]
                 layer_name = layer["name"]
                 layer_url = layer["url"]
+                layer_add_token = layer["addToken"]
                 layer_data.append({
                     "id": item_id,
                     "layerId": layer_id,
                     "layerName": layer_name,
                     "url": layer_url + "/query",
                     "try_json": True,
-                    "add_token": True,
+                    "add_token": layer_add_token,
                     "params": {
                         'where': '1=1',
                         'returnGeometry': 'false',
