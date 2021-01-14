@@ -283,9 +283,10 @@ def main():
         print(f"Layers Elapsed times (individual)")
         layers_elapsed_time = QueryEngine.get_layers_average_elapsed_time(layers_elapsed_times=value['serviceLayersElapsedTimes'])
         print(f"Layers Elapsed Time (average): {layers_elapsed_time}")
-        # Sum up the elapsed time for the service and the layers
-        total_elapsed_time = service_elapsed_time + layers_elapsed_time
-        print(f"Total Elapsed Time {total_elapsed_time}")
+        # Sum up the elapsed time for the service and the layers divided by 2
+        # We want the total elapsed time of the layers and the FS
+        total_elapsed_time = (service_elapsed_time + layers_elapsed_time)/2
+        print(f"Total Elapsed Time average: {total_elapsed_time}")
         print("------------------------------\n\n")
 
         # Obtain the total elapsed time and counts
