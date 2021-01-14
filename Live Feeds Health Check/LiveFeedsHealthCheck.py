@@ -330,7 +330,6 @@ def main():
             print(f"Elapsed sums (on file before update): {elapsed_times_sum}")
             # calculated average
             elapsed_times_average = elapsed_times_sum / elapsed_times_count
-            print(f"Average from above values: {elapsed_times_average}")
             if not exclude_save:
                 # update the response time data file
                 FileManager.update_response_time_data(path=response_time_data_file_path, input_data={

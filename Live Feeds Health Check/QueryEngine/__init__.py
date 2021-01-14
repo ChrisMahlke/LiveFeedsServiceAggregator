@@ -96,7 +96,7 @@ def get_usage_details(data_model=None) -> dict:
         """
         item_id = current_item[0]
         item_content = current_item[1]
-        print(f"{item_id}")
+        print(f"\n{item_id}")
         response = {
             "trendingCode": 0,
             "percentChange": 0,
@@ -153,6 +153,7 @@ def get_feature_counts(data_model=None) -> dict:
         :return:
         """
         item_id = current_item[0]
+        print(f"\n{item_id}")
         item_content = current_item[1]
         layer_query_params = item_content["layerQueryParams"]
         # reset the total feature count for this service
@@ -190,7 +191,7 @@ def get_feature_counts(data_model=None) -> dict:
                                 "layerName": layer['layerName']
                             })
                         else:
-                            print(f"Error\t{current_item[0]}\t{layer['layerName']}")
+                            print(f"Error\t{current_item[0]}\t{validated_layer}")
                     else:
                         # TODO Return elapsed time and error message
                         print(f"")

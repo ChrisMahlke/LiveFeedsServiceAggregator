@@ -174,7 +174,7 @@ def validate_layers(data_model=None) -> dict:
         type_keywords = item['typeKeywords']
         require_token = _requires_token("Requires Subscription", type_keywords)
 
-        print(f"{item_id}\t{item_title}")
+        print(f"\n{item_id}\t{item_title}")
         print(f"requires token: {require_token}")
 
         layers = []
