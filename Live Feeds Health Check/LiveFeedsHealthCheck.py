@@ -178,47 +178,55 @@ def main():
             print(f"ERROR: No ALFP data on record for {content['id']}")
 
     # Read in the previous status output file
-    print("\nLoading output from previous run")
+    print("\nLoading status output from previous run")
     # TODO Move folder name to config
+    # Directory where the output files are stored
     output_status_dir_path = os.path.realpath(root_dir + r"\output")
     # Create a new directory if it does not exists
     FileManager.create_new_folder(output_status_dir_path)
-    # path to output file
     # TODO Move filename to config
-    output_file_path = os.path.realpath(output_status_dir_path + r"\status.json")
+    # Build the path to status file.
+    status_file = os.path.realpath(output_status_dir_path + r"\status.json")
     # Check file existence
-    file_exist = FileManager.check_file_exist_by_pathlib(path=output_file_path)
+    file_exist = FileManager.check_file_exist_by_pathlib(path=status_file)
     if file_exist:
-        # Previous status run output file
-        previous_status_output = FileManager.open_file(output_file_path)["items"]
+        # The status' of all the items in the previous run
+        previous_status_output = FileManager.open_file(path=status_file)["items"]
         # iterate through the items in the config file
         for key, value in data_model_dict.items():
             print(f"{key}")
-            # iterate through the items in the status file
+            # iterate through the item output in the status file
             for ele in previous_status_output:
+                # item ID
                 status_file_key = ele["id"]
-                # if the item in the config file is also in the previous run, merge the output from the previous run
+                # if the item in the config file is also in the previous run,
+                # merge the output from the previous run to the data model
                 if key == status_file_key:
                     merged_dict = {**ele, **value}
                     data_model_dict.update({
                         key: merged_dict
                     })
+    else:
+        # TODO What if the file does not exist?
+        print(f"")
 
     # Historical "elapsed times" file directory
     # response time directory
     # TODO Move folder name to config
     response_time_data_dir = os.path.realpath(root_dir + r"\ResponseTimeData")
     # Create a new directory if it does not exists
-    FileManager.create_new_folder(response_time_data_dir)
+    FileManager.create_new_folder(file_path=response_time_data_dir)
 
     # Create a new directory to hold the rss feeds (if it does not exist)
     print(f"Creating RSS output folder if it does not exist.")
     # TODO Move folder name to config
     rss_dir_path = os.path.realpath(root_dir + r"\rss")
-    FileManager.create_new_folder(rss_dir_path)
+    FileManager.create_new_folder(file_path=rss_dir_path)
     # Load RSS template
     # TODO Move filename to config
     rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
+    # Load RSS Item template
+    rss_item_template = os.path.realpath(root_dir + r"\rss_item_template.xml")
 
     print("\n=================================================================")
     print(f"Current data and time")
@@ -495,26 +503,30 @@ def main():
             "timestamp": timestamp
         })
 
-        print(f"\nProcess RSS Feed")
-        # path to RSS output file
+        print("\n-------- RSS FEED ---------")
+        # Build the path to RSS output file for the current item.  This file is what the RSS reader reads.
+        # There should be one output file for each service/item being monitored.
         rss_file_path = os.path.join(rss_dir_path, item_id + "." + value["rss_file_extension"])
-        # Check if the file already exist
+        # Check if the output file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
         if rss_file_exist:
             # If the file exist, check the status/comments between the item's previous status/code comment, and the
-            # current status/code comment
-            update_current_feed = StatusManager.update_rss_feed(previous_status_output, value, status_codes_data_model)
-            if update_current_feed:
+            # current status/code comment to determine if the output RSS file should be updated.
+            update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
+                                                                item=value,
+                                                                status_codes_data_model=status_codes_data_model)
+            if True:#update_current_feed:
                 FileManager.create_new_file(rss_file_path)
                 FileManager.set_file_permission(rss_file_path)
-                FileManager.dict_to_xml(rss_template_path, value, rss_file_path)
+                FileManager.dict_to_xml(rss_template_path, rss_item_template, value, rss_file_path)
         else:
             # The RSS file does not already exists, create a new RSS file
-            FileManager.dict_to_xml(rss_template_path, value, rss_file_path)
+            FileManager.dict_to_xml(rss_template_path, rss_item_template, value, rss_file_path)
+        print("------------------------------")
 
     print("\n=================================================================")
     print("Saving results")
-    print(f"Output file path: {output_file_path}")
+    print(f"Output file path: {status_file}")
     print("===================================================================")
     # output file
     output_file = {
@@ -541,12 +553,12 @@ def main():
     # If file do not exist then create it.
     # TODO Not correct
     if not file_exist:
-        FileManager.create_new_file(output_file_path)
-        FileManager.set_file_permission(output_file_path)
+        FileManager.create_new_file(status_file)
+        FileManager.set_file_permission(status_file)
     else:
         # open file
         print()
-    FileManager.save(data=output_file, path=output_file_path)
+    FileManager.save(data=output_file, path=status_file)
 
     print("Script completed...")
 

@@ -20,22 +20,30 @@ def get_status_code(status_code_key: str = "", input_config=None) -> dict:
     }
 
 
-def update_rss_feed(previous_status_output=None, current_status=None, status_codes_data_model=None) -> bool:
+def update_rss_feed(previous_status_output=None, item=None, status_codes_data_model=None) -> bool:
     """
     Determine whether or not we need to update the feed.  The update is based on not the status, but rather the status
-    comment.  An item's status code could have changed, however,
+    comment.  An item's status code could have changed, however.
+
     :param previous_status_output: The output status file from the previous run
-    :param current_status: The current status dict from the current item
+    :param item: The current status dict from the current item
     :param status_codes_data_model: The status codes model to reference in order to obtain the comments
-    :return:
+    :return: Boolean indicating whether or not there was a change in the status
     """
+    # current item ID
+    current_item_id = item["id"]
+    # current status code
+    current_item_status_code = item["status"]["code"]
+    # bool flag used to indicate whether or not there was an update since we last ran the script
     update = False
+    # TODO Should have used a dict with item ID's as the keys
     for previous_status in previous_status_output:
+        # item id on file (from the status file)
         previous_item_id = previous_status["id"]
+        # status code on file
         previous_item_status_code = previous_status["status"]["code"]
-        current_item_id = current_status["id"]
-        current_item_status_code = current_status["status"]["code"]
         if current_item_id == previous_item_id:
+            # compare the status codes from the current run to the previous run
             if current_item_status_code is not previous_item_status_code:
                 # obtain comment from the previous and current status code
                 # if the comments are the same, do not update the rss feed
@@ -47,6 +55,7 @@ def update_rss_feed(previous_status_output=None, current_status=None, status_cod
                 if previous_status_comment == current_status_comment:
                     print(f"Do not update RSS Feed for: {current_item_id}")
                 else:
+                    # If we reach this point, the status has changed since the previous run
                     print(f"Update RSS Feed for: {current_item_id}")
                     # comments are different, update the feed
                     update = True

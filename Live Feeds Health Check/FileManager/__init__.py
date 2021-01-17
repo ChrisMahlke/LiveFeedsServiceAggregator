@@ -34,7 +34,11 @@ def create_new_file(file_path):
 
 
 def create_new_folder(file_path):
-    """ Create a new directory. """
+    """
+    Create a new directory.
+    :param file_path:
+    :return:
+    """
     if not check_file_exist_by_os_path(file_path):
         os.mkdir(file_path)
         print(f"{file_path} has been created.")
@@ -53,6 +57,11 @@ def save(data=None, path: str = "") -> None:
 
 
 def open_file(path: str = "") -> dict:
+    """
+    Open the file and return the data
+    :param path: Path to the file
+    :return: Return the content of the file
+    """
     with open(path) as json_file:
         data = json.load(json_file)
     return data
@@ -90,18 +99,24 @@ def get_status_from_feed(filename):
             return child.text
 
 
-def dict_to_xml(template=None, input_dict=None, output_file_path=None):
+def dict_to_xml(template=None, rss_item_template=None, input_dict=None, output_file_path=None):
     """
     Hydrate an input XML template with an input dictionary and save to disk
     :param template: An XML template
+    :param rss_item_template: The XML template for a single item node
     :param input_dict: Input dictionary of data
     :param output_file_path: Output file path
     :return: None
     """
+    # The RSS comments header (this is set in the config ini file)
     admin_comments_header = "<h4>" + input_dict["rss_comments_header"] + "</h4>"
+    # store the admin comments
     admin_comments = ""
+    # comments section
     comments_section = ""
+    # sort the comments in reverse order by time
     sorted_comments = sorted(input_dict["comments"], key=lambda k: k["timestamp"], reverse=True)
+    # If there are comments, build the section that will be included in the rss output
     if len(sorted_comments) > 0:
         for sorted_comment in sorted_comments:
             comment = sorted_comment["comment"]
@@ -109,13 +124,41 @@ def dict_to_xml(template=None, input_dict=None, output_file_path=None):
                 "%a, %d %b %Y %H:%M:%S")
             admin_comments += "<li>" + f"Posted: {comment_timestamp} | <b>{comment}</b>" + "</li>"
         comments_section = admin_comments_header + admin_comments
+
+    # Hydrate the data model to include the comments
     input_dict.update({
         "adminComments": html.escape(comments_section)
     })
+
+    # TODO
+    # [*]   Create item.xml template
+    # [*]   Remove item node from rss template
+    # [*]   Add placeholder in rss template for items to be added
+    #
+    # [ ]   Two config parameters
+    #       [ ] 1) date range
+    #       [ ] 2) ceiling
+    #
+    # If ...
+    
+    # Open the RSS item template.
+    # Create the item nodes that will ultimately hydrate the main rss template
+    with open(rss_item_template, "r") as file:
+        data = file.read().replace("\n", "")
+        item_template = data.format_map(input_dict)
+
+    # Update the dictionary
+    # rss_items is the placeholder in the main rss_template file
+    input_dict.update({
+        "rss_items": item_template
+    })
+
+    # Open the RSS main template
     with open(template, "r") as file:
         data = file.read().replace("\n", "")
         output_file_contents = data.format_map(input_dict)
 
+    # Over-write to an existing or new file
     with open(output_file_path, "w+") as file:
         file.write(output_file_contents)
 

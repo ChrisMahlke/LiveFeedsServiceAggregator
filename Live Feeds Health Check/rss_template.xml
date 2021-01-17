@@ -1,25 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
     <channel>
-    <title>{title} {rss_channel_title}</title>
-    <link>{rss_channel_link}</link>
-    <description>{snippet}</description>
-    <category>{rss_channel_category}</category>
-    <webMaster>{rss_webmaster}</webMaster>
-    <lastBuildDate>{lastBuildTime}</lastBuildDate>
-    <ttl>{rss_ttl}</ttl>
-    <item>
-        <title>Status: {status[statusDetails][Status]}</title>
-        <link>{rss_item_link}</link>
-        <description>
-            <h2 attr="status">Current Status: {status[statusDetails][Status]}</h2>
-            <h2 attr="comment">Status Details: {status[statusDetails][Comment]}</h2>
-            <ul>{adminComments}</ul>
-            <a href="{rss_living_atlas_link}">{rss_living_atlas_link_label}</a>
-            <a href="{rss_item_agol_url}{id}">{rss_item_agol_url_label}</a>
-        </description>
-        <pubDate>{lastBuildTime}</pubDate>
-        <guid isPermaLink="false">{id}.{timestamp}</guid>
-    </item>
+        <title>{title} {rss_channel_title}</title>
+        <link>{rss_channel_link}</link>
+        <description>{snippet}</description>
+        <category>{rss_channel_category}</category>
+        <webMaster>{rss_webmaster}</webMaster>
+        <lastBuildDate>{lastBuildTime}</lastBuildDate>
+        <ttl>{rss_ttl}</ttl>
+        {rss_items}
     </channel>
 </rss>
