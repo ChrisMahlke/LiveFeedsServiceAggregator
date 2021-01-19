@@ -10,7 +10,7 @@ functions:
 
     * getCurrentTimestamp
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 
 
@@ -100,6 +100,35 @@ def is_now_excluded(excluded_time_ranges=None, excluded_days=None, excluded_date
     return False
 
 
+def is_event_in_time_range(time_to_check=None, time_limit=None) -> bool:
+    """
+    Check the event time to see if it falls within the range
+    :param time_to_check:
+    :param time_limit: Time range in days "ago"
+    :return:
+    """
+    time_now = datetime.now() - timedelta(days=0)
+    target_time = datetime.fromtimestamp(time_to_check)
+    diff = time_now - target_time
+    if diff.days <= int(time_limit):
+        return True
+    return False
+
+
+def _is_now_in_time_range(start_time=None, end_time=None, now_time=None):
+    """
+    Determine if the input time is within (inclusive) of the start and end times
+    :param start_time:
+    :param end_time:
+    :param now_time:
+    :return:
+    """
+    if start_time < end_time:
+        return now_time >= start_time and now_time <= end_time
+    else:  # Over midnight
+        return now_time >= start_time or now_time <= end_time
+
+
 def _get_day_of_week(utc_timestamp=None):
     """
     Return the day of the week
@@ -108,17 +137,3 @@ def _get_day_of_week(utc_timestamp=None):
     first day "0" and Saturday is the last day "6".
     """
     return datetime.fromtimestamp(utc_timestamp).strftime("%w")
-
-
-def _is_now_in_time_range(start_time, end_time, now_time):
-    """
-    Determine if the input time is within (inclusive) of the start and end times
-    :param startTime:
-    :param endTime:
-    :param nowTime:
-    :return:
-    """
-    if start_time < end_time:
-        return now_time >= start_time and now_time <= end_time
-    else:  # Over midnight
-        return now_time >= start_time or now_time <= end_time
