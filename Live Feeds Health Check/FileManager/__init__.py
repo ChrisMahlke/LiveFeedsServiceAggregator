@@ -9,7 +9,12 @@ import TimeUtils as TimeUtils
 
 
 def check_file_exist_by_os_path(path: str = ""):
-    """ Check if the path exist """
+    """
+    Check if the path exist
+
+    :param path:
+    :return:
+    """
     # If this file object exist.
     if os.path.exists(path):
         ret = True
@@ -19,7 +24,12 @@ def check_file_exist_by_os_path(path: str = ""):
 
 
 def check_file_exist_by_pathlib(path: str = ""):
-    """ Check if the file exists """
+    """
+    Check if the file exists
+
+    :param path: Path to file
+    :return: Boolean indicating if the file exist
+    """
     # Create path lib object.
     pl = pathlib.Path(path)
     # Check whether the path lib exist or not.
@@ -28,7 +38,12 @@ def check_file_exist_by_pathlib(path: str = ""):
 
 
 def create_new_file(file_path):
-    """ Create a new file and write some text in it. """
+    """
+    Create a new file and write some text in it.
+
+    :param file_path:
+    :return:
+    """
     file_object = open(file_path, "w")
     print(f"{file_path} has been created.")
 
@@ -140,7 +155,7 @@ def dict_to_xml(template=None, rss_item_template=None, input_dict=None, output_f
     #       [ ] 2) ceiling
     #
     # If ...
-    
+
     # Open the RSS item template.
     # Create the item nodes that will ultimately hydrate the main rss template
     with open(rss_item_template, "r") as file:
