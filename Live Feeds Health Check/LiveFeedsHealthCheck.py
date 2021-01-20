@@ -141,7 +141,6 @@ def main():
     print(f"Setting up project and checking folders and directories")
     print("=================================================================")
     # Load status codes
-    print("Loading status codes configuration file")
     # TODO Move filename to config
     status_code_config_path = os.path.realpath(root_dir + r"\statusCodes.json")
     status_code_json_exist = FileManager.check_file_exist_by_pathlib(path=status_code_config_path)
@@ -152,6 +151,9 @@ def main():
         status_codes_data_model = FileManager.open_file(path=status_code_config_path)
 
     # Load comments
+    print("\n=================================================================")
+    print(f"Checking/Creating comments folder")
+    print("=================================================================")
     # TODO Move filename to config
     admin_comments_file_path = os.path.realpath(root_dir + r"\comments.json")
     admin_comments_file_exist = FileManager.check_file_exist_by_pathlib(path=admin_comments_file_path)
@@ -162,7 +164,9 @@ def main():
         admin_comments_data_model = FileManager.open_file(path=admin_comments_file_path)
 
     # retrieve the alf statuses
-    print("\nRetrieving and Processing Active Live Feed Processed files")
+    print("\n=================================================================")
+    print("Retrieving and Processing Active Live Feed Processed files")
+    print("=================================================================")
     alf_processor_queries = list(map(QueryEngine.prepare_alfp_query_params, data_model_dict.items()))
     alf_processor_response = QueryEngine.get_alfp_content(alf_processor_queries)
     alfp_content = list(map(QueryEngine.process_alfp_response, alf_processor_response))
@@ -178,7 +182,9 @@ def main():
             print(f"ERROR: No ALFP data on record for {content['id']}")
 
     # Read in the previous status output file
-    print("\nLoading status output from previous run")
+    print("\n=================================================================")
+    print("Loading status output from previous run")
+    print("=================================================================")
     # TODO Move folder name to config
     # Directory where the output files are stored
     output_status_dir_path = os.path.realpath(root_dir + r"\output")
@@ -212,13 +218,18 @@ def main():
 
     # Historical "elapsed times" file directory
     # response time directory
+    print("\n=================================================================")
+    print(f"Checking/Creating response time data folder")
+    print("=================================================================")
     # TODO Move folder name to config
     response_time_data_dir = os.path.realpath(root_dir + r"\ResponseTimeData")
     # Create a new directory if it does not exists
     FileManager.create_new_folder(file_path=response_time_data_dir)
 
     # Create a new directory to hold the rss feeds (if it does not exist)
-    print(f"Creating RSS output folder if it does not exist.")
+    print("\n=================================================================")
+    print(f"Checking/Creating RSS output folder and loading RSS template files")
+    print("=================================================================")
     # TODO Move folder name to config
     rss_dir_path = os.path.realpath(root_dir + r"\rss")
     FileManager.create_new_folder(file_path=rss_dir_path)
@@ -230,9 +241,8 @@ def main():
 
     # Event history
     print("\n=================================================================")
-    print(f"Status event history")
+    print(f"Checking/Creating status event history folder")
     print("=================================================================")
-    print("Check if the event history folder exists, if not, create it")
     event_history_dir_path = os.path.realpath(root_dir + r"\event_history")
     FileManager.create_new_folder(file_path=event_history_dir_path)
 
@@ -512,24 +522,59 @@ def main():
         })
 
         print("\n-------- RSS FEED ---------")
+        #   -Check if the 'event_history' folder exists
+        #   -    NO
+        #   -        create 'event_history' folder
+        #
+        #   -Check if we need to apply an update
+        #   -YES
+        #       -Build RSS key/value dict used to apply update
+        #
+        #       -Check if the event_history_<item_id>.json' exist
+        #       -NO
+        #           -create event_history file 'event_history_<item_id>.json'
+        #
+        #       -Open 'event_history_<item_id>.json'
+        #       -Retrieve JSON['history']
+        #           Iterate through events and check date
+        #               Remove if date falls outside range
+        #           Append new event element
+        #
+        #       Iterate through events and check date
+        #           Build <item> element
+        #
+        #       Build RSS
+        #
+        #
+
+        # Check if we need to apply an update
+        #
         # Build the path to RSS output file for the current item.  This file is what the RSS reader reads.
         # There should be one output file for each service/item being monitored.
         rss_file_path = os.path.join(rss_dir_path, item_id + "." + value["rss_file_extension"])
         # Check if the output file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
-        #if rss_file_exist:
-        # If the file exist, check the status/comments between the item's previous status/code comment, and the
-        # current status/code comment to determine if the output RSS file should be updated.
-        update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
-                                                            item=value,
-                                                            status_codes_data_model=status_codes_data_model)
-        if True:#update_current_feed:
-            # update event history file
-            # Build the path to status file.
-            # This file will hold a history of event changes
-            status_history_file = os.path.realpath(event_history_dir_path + r"\status_history" + f"_{item_id}.json")
-            # Check file existence
-            status_history_file_exist = FileManager.check_file_exist_by_pathlib(path=status_history_file)
+        if rss_file_exist:
+            # If the file exist, check the status/comments between the item's previous status/code comment, and the
+            # current status/code comment to determine if the output RSS file should be updated.
+            update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
+                                                                item=value,
+                                                                status_codes_data_model=status_codes_data_model)
+            if update_current_feed:
+                # update event history file
+                # Build the path to status file.
+                # This file will hold a history of event changes
+                status_history_file = os.path.realpath(event_history_dir_path + r"\status_history" + f"_{item_id}.json")
+                # Check file existence
+                status_history_file_exist = FileManager.check_file_exist_by_pathlib(path=status_history_file)
+                if status_history_file_exist:
+                    print(f"Status event history file exist")
+                else:
+                    print(f"Creating status event history file")
+        else:
+            FileManager.dict_to_xml(rss_template_path, rss_item_template, value, rss_file_path)
+
+            """
             if status_history_file_exist:
                 # The events file already exist, append new status to 'history' array
                 #
@@ -552,6 +597,11 @@ def main():
                     # append new status to list
                     history.append({
                         "id": item_id,
+                        "rss_item_link": value.get("rss_item_link", ""),
+                        "rss_item_agol_url_label": value.get("rss_item_agol_url_label", ""),
+                        "rss_living_atlas_link_label": value.get("rss_living_atlas_link_label", ""),
+                        "timestamp": timestamp,
+
                         "title": value.get("title", value.get("missing_item_title")),
                         "snippet": value.get("snippet", value.get("missing_item_snippet")),
                         "comments": value.get("comments", ""),
@@ -571,25 +621,26 @@ def main():
                 # If file does not exist then create it.
                 FileManager.create_new_file(status_history_file)
                 FileManager.set_file_permission(status_history_file)
+                history = [{
+                    "title": value.get("title", value.get("missing_item_title")),
+                    "snippet": value.get("snippet", value.get("missing_item_snippet")),
+                    "comments": value.get("comments", ""),
+                    "lastUpdateTime": value.get("lastUpdateTimestamp", 0),
+                    "updateRate": value.get("avgUpdateIntervalMins", 0),
+                    "featureCount": value.get("featureCount", 0),
+                    "usage": value.get("usage"),
+                    "status": value.get("status")
+                }]
                 FileManager.save(data={
                     "id": item_id,
-                    "history": {
-                        "id": item_id,
-                        "title": value.get("title", value.get("missing_item_title")),
-                        "snippet": value.get("snippet", value.get("missing_item_snippet")),
-                        "comments": value.get("comments", ""),
-                        "lastUpdateTime": value.get("lastUpdateTimestamp", 0),
-                        "updateRate": value.get("avgUpdateIntervalMins", 0),
-                        "featureCount": value.get("featureCount", 0),
-                        "usage": value.get("usage"),
-                        "status": value.get("status")
-                    },
+                    "history": history,
                 }, path=status_history_file)
 
             # update data model and rss output file
             FileManager.create_new_file(rss_file_path)
             FileManager.set_file_permission(rss_file_path)
             FileManager.dict_to_xml(rss_template_path, rss_item_template, value, rss_file_path, status_history_file)
+            """
         #else:
         # The RSS file does not already exists, create a new RSS file
         #    FileManager.dict_to_xml(rss_template_path, rss_item_template, value, rss_file_path, status_history_file)

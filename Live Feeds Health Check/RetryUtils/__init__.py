@@ -1,5 +1,5 @@
 """ """
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional, Tuple, TypeVar, Union
 
 import requests
@@ -89,6 +89,7 @@ class CallbackRetry(Retry):
         self._callback = kwargs.pop('callback', None)
         self._id = kwargs.pop('id', None)
         self._counter = kwargs.pop('counter', None)
+        self._start_time = kwargs.pop('start_time', None)
         super(CallbackRetry, self).__init__(*args, **kwargs)
 
     def new(self, **kw):
@@ -97,20 +98,26 @@ class CallbackRetry(Retry):
         kw['callback'] = self._callback
         kw['id'] = self._id
         kw['counter'] = self._counter
+        kw['start_time'] = self._start_time
         return super(CallbackRetry, self).new(**kw)
 
     def increment(self, method, url, *args, **kwargs):
         self._counter += 1
         if self._callback:
             try:
-                self._callback(url, self._id, self._counter)
+                self._callback(url, self._id, self._counter, self._start_time)
             except Exception:
                 print("Callback raised an exception, ignoring")
         return super(CallbackRetry, self).increment(method, url, *args, **kwargs)
 
 
-def retry_callback(url, item_id, counter):
-    print(f"Callback invoked: {item_id}\t{counter}\t{url}")
+def retry_callback(url, item_id, counter, start_time):
+    print(f"\nCallback invoked: {item_id}\t{counter}\t{url}")
+    ct = datetime.now()
+    ct_timestamp = datetime.timestamp(ct)
+    dt_object = datetime.fromtimestamp(ct_timestamp)
+    print(f"retry_callback: {dt_object}")
+
     retry_output.append({
         "id": item_id,
         "retryCount": counter
@@ -157,6 +164,11 @@ def retry(
 
     session = session or RetrySession()
 
+    ct = datetime.now()
+    ct_timestamp = datetime.timestamp(ct)
+    dt_object = datetime.fromtimestamp(ct_timestamp)
+    print(f"Query time: {dt_object}")
+
     # Retry too in non-idempotent methods like POST
     kwargs.setdefault("method_whitelist", False)
     # Subclass Retry
@@ -164,7 +176,8 @@ def retry(
                             status_forcelist=[408, 500, 502, 503, 504],
                             callback=retry_callback,
                             id=item_id,
-                            counter=0)
+                            counter=0,
+                            start_time=ct)
     for prefix in prefixes:
         # The second parameter of mount accepts a Transport Adaptor object.
         # Transport adapters provide a mechanism to define interaction methods for an “HTTP” service. They allow you to

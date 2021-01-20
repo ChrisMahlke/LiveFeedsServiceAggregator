@@ -114,15 +114,13 @@ def get_status_from_feed(filename):
             return child.text
 
 
-def dict_to_xml(template=None, rss_item_template=None, input_dict=None, output_file_path=None,
-                events_history_file=None):
+def dict_to_xml(rss_template=None, item_template=None, input_dict=None, output_file_path=None):
     """
     Hydrate an input XML template with an input dictionary and save to disk
-    :param template: An XML template
-    :param rss_item_template: The XML template for a single item node
+    :param rss_template: An XML template
+    :param item_template: The XML template for a single item node
     :param input_dict: Input dictionary of data
     :param output_file_path: Output file path
-    :param events_history_file:
     :return: None
     """
     # The RSS comments header (this is set in the config ini file)
@@ -147,17 +145,11 @@ def dict_to_xml(template=None, rss_item_template=None, input_dict=None, output_f
         "adminComments": html.escape(comments_section)
     })
 
-    events_history_json = open_file(path=events_history_file)
-    events_history = events_history_json["history"]
     # Open the RSS item template.
     # Create the item nodes that will ultimately hydrate the main rss template
-    items = ""
-    with open(rss_item_template, "r") as file:
+    with open(item_template, "r") as file:
         data = file.read().replace("\n", "")
-        for event in events_history:
-            #item_template = data.format_map(input_dict)
-            item_template = data.format_map(event)
-            items = items + item_template
+        items = data.format_map(input_dict)
 
     # Update the dictionary
     # rss_items is the placeholder in the main rss_template file
@@ -166,7 +158,7 @@ def dict_to_xml(template=None, rss_item_template=None, input_dict=None, output_f
     })
 
     # Open the RSS main template
-    with open(template, "r") as file:
+    with open(rss_template, "r") as file:
         data = file.read().replace("\n", "")
         output_file_contents = data.format_map(input_dict)
 

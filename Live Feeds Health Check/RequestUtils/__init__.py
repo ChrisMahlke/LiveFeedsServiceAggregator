@@ -95,7 +95,7 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     response_dict.setdefault("retryCount", {})
 
     try:
-        print(f"URL: {url}")
+        print(f"\nChecking URL: {url}")
         # The Session object allows you to persist certain parameters across requests.
         # It also persists cookies across all requests made from the Session instance
         session = requests.Session()
@@ -104,9 +104,9 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     except requests.exceptions.HTTPError as http_error:
         response_dict["error_message"].append(ERROR_CODES["HTTPError"])
         response_dict["error_message"].append(http_error)
-    except requests.exceptions.ConnectionError as connection_error:
-        response_dict["error_message"].append(ERROR_CODES["ConnectionError"])
-        response_dict["error_message"].append(connection_error)
+    #except requests.exceptions.ConnectionError as connection_error:
+    #    response_dict["error_message"].append(ERROR_CODES["ConnectionError"])
+    #    response_dict["error_message"].append(connection_error)
     except requests.exceptions.Timeout as timeout_error:
         response_dict["error_message"].append(ERROR_CODES["Timeout"])
         response_dict["error_message"].append(timeout_error)
@@ -132,4 +132,8 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
         response_dict["retryCount"] = retry_count
         if DEBUG:
             print(f"URL {response_dict}")
+
+        # print error messages that were captured from above
+        if len(response_dict['error_message']) > 0:
+            print(f"ERRORS: {response_dict['error_message']}")
         return response_dict
