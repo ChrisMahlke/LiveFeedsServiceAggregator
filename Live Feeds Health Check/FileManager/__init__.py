@@ -114,13 +114,13 @@ def get_status_from_feed(filename):
             return child.text
 
 
-def dict_to_xml(rss_template=None, item_template=None, input_dict=None, output_file_path=None):
+def init_rss_file(rss_template=None, item_template=None, input_dict=None, rss_file=None):
     """
     Hydrate an input XML template with an input dictionary and save to disk
     :param rss_template: An XML template
     :param item_template: The XML template for a single item node
     :param input_dict: Input dictionary of data
-    :param output_file_path: Output file path
+    :param rss_file: Output file path
     :return: None
     """
     # The RSS comments header (this is set in the config ini file)
@@ -163,6 +163,6 @@ def dict_to_xml(rss_template=None, item_template=None, input_dict=None, output_f
         output_file_contents = data.format_map(input_dict)
 
     # Over-write to an existing or new file
-    with open(output_file_path, "w+") as file:
+    with open(rss_file, "w+") as file:
         file.write(output_file_contents)
 
