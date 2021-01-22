@@ -64,13 +64,13 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
     timeout_factor = kwargs.pop('timeout_factor', False)
     token = kwargs.pop('token', False)
 
-    # default retry count if none is specified
+    # default retry count if none is specified in the config file
     retries = 5
     # retry count
     if retry_factor:
         retries = int(retry_factor)
 
-    # default timeout (in seconds) if none is specified
+    # default timeout (in seconds) if none is specified in the config file
     timeout = 5
     # timeout (in seconds)
     if timeout_factor:
@@ -96,10 +96,13 @@ def check_request(path: str = "", params=None, **kwargs) -> dict:
 
     try:
         print(f"\nChecking URL: {url}")
+        print(f"--- parameters (RequestUtils) ---")
+        print(f"retry: {retries}")
+        print(f"timeout: {timeout}\n")
         # The Session object allows you to persist certain parameters across requests.
         # It also persists cookies across all requests made from the Session instance
         session = requests.Session()
-        current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id)
+        current_session = retry(session, retries=retries, backoff_factor=0.2, id=item_id, timeout=timeout)
         response = current_session.get(url, timeout=timeout)
     except requests.exceptions.HTTPError as http_error:
         response_dict["error_message"].append(ERROR_CODES["HTTPError"])

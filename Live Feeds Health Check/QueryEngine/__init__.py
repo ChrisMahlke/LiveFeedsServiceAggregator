@@ -219,8 +219,8 @@ def get_feature_counts(data_model=None) -> dict:
                                                   params=layer['params'],
                                                   try_json=layer['try_json'],
                                                   add_token=layer['add_token'],
-                                                  retry_factor=5,
-                                                  timeout_factor=5,
+                                                  retry_factor=layer['retryCount'],
+                                                  timeout_factor=layer['timeout'],
                                                   id=layer["id"],
                                                   token=layer['token'])
         return response

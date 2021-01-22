@@ -36,6 +36,7 @@ try:
     import FileManager as FileManager
     import LoggingUtils as LoggingUtils
     import QueryEngine as QueryEngine
+    import RSSManager as RSSManager
     import ServiceValidator as ServiceValidator
     import StatusManager as StatusManager
     import TimeUtils as TimeUtils
@@ -522,7 +523,7 @@ def main():
             "timestamp": timestamp
         })
 
-        print("\n-------- RSS FEED ---------")
+
         #   -Check if the 'event_history' folder exists
         #   -    NO
         #   -        create 'event_history' folder
@@ -548,6 +549,7 @@ def main():
         #
         #
 
+        print("\n-------- RSS FEED ---------")
         # Check if we need to apply an update
         #
         # Build the path to RSS output file for the current item.  This file is what the RSS reader reads.
@@ -556,37 +558,42 @@ def main():
         # Check if the output file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
         if rss_file_exist:
-            print(f"RSS file does exist")
+            print(f"Checking/Updating RSS for {item_id}")
             # If the file exist, check the status/comments between the item's previous status/code comment, and the
-            # current status/code comment to determine if the output RSS file should be updated.
+            # current status/code comment to determine if the existing RSS file should be updated.
             update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
                                                                 item=value,
                                                                 status_codes_data_model=status_codes_data_model)
-            if True:#update_current_feed:
-                # update event history file
-                # Build the path to status file.
+            if update_current_feed:
+                # There is an update
                 # This file will hold a history of event changes
                 status_history_file = os.path.realpath(event_history_dir_path + r"\status_history" + f"_{item_id}.json")
                 # Check file existence
                 status_history_file_exist = FileManager.check_file_exist_by_pathlib(path=status_history_file)
+
                 if status_history_file_exist:
-                    print(f"Events history file does exist")
                     # JSON from events file
                     status_history_json = FileManager.open_file(path=status_history_file)
                     # history element
                     history = status_history_json["history"]
-                    n_events = len(history)
-                    n_max_events = int(value.get("number_of_events_max", 0))
-                    rss_time_range_in_days = value.get("rss_time_range", 0)
+
+                    # number of events in the current item's history file
+                    n_events = RSSManager.get_num_events(history)
                     print(f"Number of events in file: {n_events}")
+                    # maximum number of events permitted to be logged for this item
+                    n_max_events = RSSManager.get_num_events_ceiling(value)
                     print(f"Maximum number of events allowed: {n_max_events}")
+                    # time constraints
+                    rss_time_range_in_days = RSSManager.get_rss_time_constrains(value)
                     print(f"Time constraints: {rss_time_range_in_days}")
                     # is the event in the time range
-                    event_in_time_range = TimeUtils.is_event_in_time_range(value.get("lastUpdateTimestamp", 0),
-                                                                           rss_time_range_in_days)
+                    event_in_time_range = RSSManager.is_event_in_time_range(value.get("lastUpdateTimestamp", 0),
+                                                                            rss_time_range_in_days)
                     print(f"Event falls in range: {event_in_time_range}")
-                    # check the number of events in the file
-                    if True:#(n_events < n_max_events) and event_in_time_range:
+
+                    # Check the number of events in the file
+                    # If it is less than the max permitted and within the time range, update the events file
+                    if (n_events < n_max_events) and event_in_time_range:
                         print(f"Updating events history file")
                         # append new status to list
                         history.append({
@@ -609,37 +616,33 @@ def main():
 
                         # comments
                         comments = ""
+                        items = []
                         # build RSS file
                         for h in history:
-                            # The RSS comments header (this is set in the config ini file)
-                            admin_comments_header = "<h4>" + value["rss_comments_header"] + "</h4>"
                             # store the admin comments
                             admin_comments = ""
                             # comments section
                             comments_section = ""
-                            # sort the comments in reverse order by time
+                            # sort the comments in the comments section in reverse order by time
                             sorted_comments = sorted(h["comments"], key=lambda k: k["timestamp"], reverse=True)
                             # If there are comments, build the section that will be included in the rss output
                             if len(sorted_comments) > 0:
                                 for sorted_comment in sorted_comments:
                                     comment = sorted_comment["comment"]
-                                    comment_timestamp = TimeUtils.convert_from_utc_to_datetime(
-                                        sorted_comment["timestamp"]).strftime(
-                                        "%a, %d %b %Y %H:%M:%S")
+                                    comment_timestamp = TimeUtils.convert_from_utc_to_datetime(sorted_comment["timestamp"]).strftime("%a, %d %b %Y %H:%M:%S")
                                     admin_comments += "<li>" + f"Posted: {comment_timestamp} | <b>{comment}</b>" + "</li>"
-                                comments_section = admin_comments_header + admin_comments
+                                comments_section = "<h4>" + value["rss_comments_header"] + "</h4>" + admin_comments
                             comments = comments + comments_section
-                            print(f"COMMENTS: {comments}")
 
-                        # Hydrate the data model to include the comments
-                        value.update({
-                            "adminComments": html.escape(comments)
-                        })
-                        # Open the RSS item template.
-                        # Create the item nodes that will ultimately hydrate the main rss template
-                        with open(rss_item_template, "r") as file:
-                            data = file.read().replace("\n", "")
-                            items = data.format_map(value)
+                            # Hydrate the data model to include the comments
+                            value.update({
+                                "adminComments": html.escape(comments_section)
+                            })
+                            # Open the RSS item template.
+                            # Create the item nodes that will ultimately hydrate the main rss template
+                            with open(rss_item_template, "r") as file:
+                                data = file.read().replace("\n", "")
+                                items.append(data.format_map(value))
 
                         # Update the dictionary
                         # rss_items is the placeholder in the main rss_template file
@@ -656,8 +659,6 @@ def main():
                         with open(rss_file_path, "w+") as file:
                             file.write(output_file_contents)
                 else:
-                    # create Events history file
-                    print(f"Events history file does not exist")
                     FileManager.create_new_file(status_history_file)
                     FileManager.set_file_permission(status_history_file)
                     FileManager.save(data={
@@ -674,13 +675,15 @@ def main():
                         }],
                     }, path=status_history_file)
             else:
-                print("The current status and the previous status are the same.")
+                print(f"The current status and the previous status are the same.")
+                print(f"No RSS updates.")
+                print(f"Events does not need to be updated")
         else:
             # create RSS file
-            print(f"RSS file does not exist")
+            print(f"Creating RSS file")
             FileManager.init_rss_file(rss_template_path, rss_item_template, value, rss_file_path)
-            # create Events history file
-            print(f"Events history file does not exist")
+            # create events history file
+            print(f"Creating events history file")
             status_history_file = os.path.realpath(event_history_dir_path + r"\status_history" + f"_{item_id}.json")
             FileManager.create_new_file(status_history_file)
             FileManager.set_file_permission(status_history_file)

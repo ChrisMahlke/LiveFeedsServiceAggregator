@@ -60,7 +60,7 @@ class TimeoutSession(requests.Session):
     def request(self, method, url, *args, **kwargs):
         kwargs.setdefault("timeout", self.timeout)
         # output request calls for debugging
-        print(f"request")
+        print(f"TimeoutSession: request: {url}")
         # _patch_send()
         return super().request(method, url, *args, **kwargs)
 
@@ -75,7 +75,6 @@ class RetrySession(TimeoutSession):
 
     def __init__(self, timeout: Union[int, timedelta] = 5):
         super().__init__(timeout)
-        print(f"RetrySession")
         self.hooks["response"] = lambda r, *args, **kwargs: r.raise_for_status()
 
 
@@ -112,11 +111,13 @@ class CallbackRetry(Retry):
 
 
 def retry_callback(url, item_id, counter, start_time):
-    print(f"\nCallback invoked: {item_id}\t{counter}\t{url}")
+    print(f"\n--- Callback invoked {item_id} ---")
+    print(f"url: {url}")
+    print(f"counter: {counter}")
     ct = datetime.now()
     ct_timestamp = datetime.timestamp(ct)
     dt_object = datetime.fromtimestamp(ct_timestamp)
-    print(f"retry_callback: {dt_object}")
+    print(f"{dt_object}\n")
 
     retry_output.append({
         "id": item_id,
@@ -161,6 +162,7 @@ def retry(
         A session object with the retry setup.
     """
     item_id = kwargs.pop("id", False)
+    timeout = kwargs.pop("timeout", False)
 
     session = session or RetrySession()
 
@@ -168,16 +170,19 @@ def retry(
     ct_timestamp = datetime.timestamp(ct)
     dt_object = datetime.fromtimestamp(ct_timestamp)
     print(f"Query time: {dt_object}")
+    print(f"--- parameters (RetryUtils) ---")
+    print(f"retry: {retries}")
+    print(f"timeout: {timeout}\n")
 
     # Retry too in non-idempotent methods like POST
     kwargs.setdefault("method_whitelist", False)
     # Subclass Retry
-    retries = CallbackRetry(total=retries,
-                            status_forcelist=[408, 500, 502, 503, 504],
-                            callback=retry_callback,
-                            id=item_id,
-                            counter=0,
-                            start_time=ct)
+    max_retry_count = CallbackRetry(total=retries,
+                                    status_forcelist=[408, 500, 502, 503, 504],
+                                    callback=retry_callback,
+                                    id=item_id,
+                                    counter=0,
+                                    start_time=ct)
     for prefix in prefixes:
         # The second parameter of mount accepts a Transport Adaptor object.
         # Transport adapters provide a mechanism to define interaction methods for an “HTTP” service. They allow you to
@@ -191,5 +196,5 @@ def retry(
         # server. By default, Requests does not retry failed connections. For more granular control over the conditions
         # under which we retry a request, I import urllib3’s Retry class and pass that instead (as recommended by the
         # documentation for the HTTPAdapter).
-        session.mount(prefix, HTTPAdapter(max_retries=retries))
+        session.mount(prefix, HTTPAdapter(max_retries=max_retry_count))
     return session

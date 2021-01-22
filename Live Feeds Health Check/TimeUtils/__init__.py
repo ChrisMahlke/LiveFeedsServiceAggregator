@@ -100,21 +100,6 @@ def is_now_excluded(excluded_time_ranges=None, excluded_days=None, excluded_date
     return False
 
 
-def is_event_in_time_range(time_to_check=None, time_limit=None) -> bool:
-    """
-    Check the event time to see if it falls within the range
-    :param time_to_check:
-    :param time_limit: Time range in days "ago"
-    :return:
-    """
-    time_now = datetime.now() - timedelta(days=0)
-    target_time = datetime.fromtimestamp(time_to_check)
-    diff = time_now - target_time
-    if diff.days <= int(time_limit):
-        return True
-    return False
-
-
 def _is_now_in_time_range(start_time=None, end_time=None, now_time=None):
     """
     Determine if the input time is within (inclusive) of the start and end times

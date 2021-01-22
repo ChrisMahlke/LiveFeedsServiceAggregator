@@ -132,8 +132,8 @@ def validate_services(data_model=None) -> dict:
         type_keywords = item['typeKeywords']
         require_token = _requires_token("Requires Subscription", type_keywords)
         print(f"{item_id}\t{item_content['title']}")
-        print(f"retry count threshold: {item_content['default_retry_count']}")
-        print(f"timout threshold: {item_content['default_timeout']}")
+        print(f"default retry count threshold: {item_content['default_retry_count']}")
+        print(f"default timeout threshold: {item_content['default_timeout']}")
         print(f"service url: {item_content['service_url']}")
         print(f"requires token: {require_token}")
         response = RequestUtils.check_request(path=item_content["service_url"],
@@ -173,6 +173,8 @@ def validate_layers(data_model=None) -> dict:
         item = item_content['agolItem']
         type_keywords = item['typeKeywords']
         require_token = _requires_token("Requires Subscription", type_keywords)
+        default_timeout = item_content['default_timeout']
+        default_retry_count = item_content['default_retry_count']
 
         print(f"\n{item_id}\t{item_title}")
         print(f"requires token: {require_token}")
@@ -191,7 +193,9 @@ def validate_layers(data_model=None) -> dict:
                         "layerId": layer.properties["id"],
                         "addToken": require_token,
                         "name": layer.properties["name"],
+                        "retryCount": default_retry_count,
                         "success": True,
+                        "timeout": default_timeout,
                         "token": item_content["token"],
                         "url": layer.url
                     })
@@ -233,7 +237,9 @@ def validate_layers(data_model=None) -> dict:
                             "layerId": layer.properties["id"],
                             "addToken": require_token,
                             "name": layer["name"],
+                            "retryCount": default_retry_count,
                             "success": True,
+                            "timeout": default_timeout,
                             "token": current_item[1]["token"],
                             "url": item_content["service_url"] + "/" + str(layer["id"])
                         })
@@ -288,20 +294,24 @@ def validate_layers(data_model=None) -> dict:
                 layer_name = layer["name"]
                 layer_url = layer["url"]
                 layer_add_token = layer["addToken"]
+                layer_retry_count = layer["retryCount"]
+                layer_timeout = layer["timeout"]
                 layer_data.append({
+                    "add_token": layer_add_token,
                     "id": item_id,
                     "layerId": layer_id,
                     "layerName": layer_name,
-                    "url": layer_url + "/query",
-                    "try_json": True,
-                    "add_token": layer_add_token,
                     "params": {
                         'where': '1=1',
                         'returnGeometry': 'false',
                         'returnCountOnly': 'true'
                     },
+                    "retryCount": layer_retry_count,
                     "success": True,
-                    "token": layer["token"]
+                    "timeout": layer_timeout,
+                    "token": layer["token"],
+                    "try_json": True,
+                    "url": layer_url + "/query"
                 })
             else:
                 layer_data.append({
