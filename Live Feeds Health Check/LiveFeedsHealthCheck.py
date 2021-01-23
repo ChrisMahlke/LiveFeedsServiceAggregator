@@ -32,7 +32,7 @@ try:
     import html
     import json
     import os
-
+    import EventsManager as EventsManager
     import FileManager as FileManager
     import LoggingUtils as LoggingUtils
     import QueryEngine as QueryEngine
@@ -41,7 +41,6 @@ try:
     import StatusManager as StatusManager
     import TimeUtils as TimeUtils
     import version as version
-
     from ConfigManager import ConfigManager
     from UserUtils import User
 except ImportError as e:
@@ -235,11 +234,13 @@ def main():
     # TODO Move folder name to config
     rss_dir_path = os.path.realpath(root_dir + r"\rss")
     FileManager.create_new_folder(file_path=rss_dir_path)
+
     # Load RSS template
     # TODO Move filename to config
-    rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
+    #rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
     # Load RSS Item template
-    rss_item_template = os.path.realpath(root_dir + r"\rss_item_template.xml")
+    #rss_item_template = os.path.realpath(root_dir + r"\rss_item_template.xml")
+    rss_manager = RSS(root_dir + r"\rss_template.xml", root_dir + r"\rss_item_template.xml")
 
     # Event history
     print("\n=================================================================")
@@ -549,7 +550,56 @@ def main():
         #
         #
 
-        print("\n-------- RSS FEED ---------")
+        # If the file exist, check the status/comments between the item's previous status/code comment, and the
+        # current status/code comment to determine if the existing RSS file should be updated.
+        update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
+                                                            item=value,
+                                                            status_codes_data_model=status_codes_data_model)
+        # Check if we need to apply an update
+        if update_current_feed:
+            print(f"\nUpdate Required")
+            print(f"---------- Events History --------")
+            # This file will hold a history of event changes
+            current_events_file = os.path.realpath(event_history_dir_path + r"\status_history" + f"_{item_id}.json")
+            # Check file existence
+            status_history_file_exist = FileManager.check_file_exist_by_pathlib(path=current_events_file)
+            if status_history_file_exist:
+                print(f"Checking events file: {current_events_file}")
+                EventsManager.update_events_file(input_data=value, events_file=current_events_file)
+            else:
+                print(f"Creating events file: {current_events_file}")
+                EventsManager.create_history_file(input_data=value, events_file=current_events_file)
+            print(f"----------------------------------")
+
+            print(f"\n---------- RSS Updates -----------")
+            # Build the path to RSS output file for the current item.  This file is what the RSS reader reads.
+            # There should be one output file for each service/item being monitored.
+            rss_file_path = os.path.join(rss_dir_path, item_id + "." + value["rss_file_extension"])
+            # Check if the output file already exist
+            rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
+            if rss_file_exist:
+                # Update the dictionary
+                # rss_items is the placeholder in the main rss_template file
+                value.update({
+                    "rss_items": rss_manager.build_item_nodes(value, current_events_file)
+                })
+
+                rss_manager.update_rss_contents(input_data=value)
+                # Open the RSS main template
+                #with open(self.rss_template_path, "r") as file:
+                #    data = file.read().replace("\n", "")
+                #    output_file_contents = data.format_map(value)
+
+                # Over-write to an existing or new file
+                #with open(rss_file_path, "w+") as file:
+                #    file.write(output_file_contents)
+            print(f"----------------------------------")
+
+
+
+
+        """
+        print(f"\n-------- RSS FEED ----------------")
         # Check if we need to apply an update
         #
         # Build the path to RSS output file for the current item.  This file is what the RSS reader reads.
@@ -558,38 +608,31 @@ def main():
         # Check if the output file already exist
         rss_file_exist = FileManager.check_file_exist_by_pathlib(path=rss_file_path)
         if rss_file_exist:
-            print(f"Checking/Updating RSS for {item_id}")
             # If the file exist, check the status/comments between the item's previous status/code comment, and the
             # current status/code comment to determine if the existing RSS file should be updated.
             update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
                                                                 item=value,
                                                                 status_codes_data_model=status_codes_data_model)
             if update_current_feed:
-                # There is an update
-                # This file will hold a history of event changes
-                status_history_file = os.path.realpath(event_history_dir_path + r"\status_history" + f"_{item_id}.json")
-                # Check file existence
-                status_history_file_exist = FileManager.check_file_exist_by_pathlib(path=status_history_file)
-
                 if status_history_file_exist:
                     # JSON from events file
-                    status_history_json = FileManager.open_file(path=status_history_file)
+                    # status_history_json = FileManager.open_file(path=status_history_file)
                     # history element
-                    history = status_history_json["history"]
+                    # history = status_history_json["history"]
 
                     # number of events in the current item's history file
-                    n_events = RSSManager.get_num_events(history)
-                    print(f"Number of events in file: {n_events}")
+                    #n_events = RSSManager.get_num_events(history)
+                    #print(f"Number of events in file: {n_events}")
                     # maximum number of events permitted to be logged for this item
-                    n_max_events = RSSManager.get_num_events_ceiling(value)
-                    print(f"Maximum number of events allowed: {n_max_events}")
+                    #n_max_events = RSSManager.get_num_events_ceiling(value)
+                    #print(f"Maximum number of events allowed: {n_max_events}")
                     # time constraints
-                    rss_time_range_in_days = RSSManager.get_rss_time_constrains(value)
-                    print(f"Time constraints: {rss_time_range_in_days}")
+                    #rss_time_range_in_days = RSSManager.get_rss_time_constrains(value)
+                    #print(f"Time constraints: {rss_time_range_in_days}")
                     # is the event in the time range
-                    event_in_time_range = RSSManager.is_event_in_time_range(value.get("lastUpdateTimestamp", 0),
-                                                                            rss_time_range_in_days)
-                    print(f"Event falls in range: {event_in_time_range}")
+                    #event_in_time_range = RSSManager.is_event_in_time_range(value.get("lastUpdateTimestamp", 0),
+                    #                                                        rss_time_range_in_days)
+                    #print(f"Event falls in range: {event_in_time_range}")
 
                     # Check the number of events in the file
                     # If it is less than the max permitted and within the time range, update the events file
@@ -677,7 +720,7 @@ def main():
             else:
                 print(f"The current status and the previous status are the same.")
                 print(f"No RSS updates.")
-                print(f"Events does not need to be updated")
+                print(f"No events to be updated")
         else:
             # create RSS file
             print(f"Creating RSS file")
@@ -700,7 +743,8 @@ def main():
                     "status": value.get("status")
                 }],
             }, path=status_history_file)
-        print("---------------------------")
+        print(f"\n--------------------------------")
+        """
 
     print("\n=================================================================")
     print("Saving results")
