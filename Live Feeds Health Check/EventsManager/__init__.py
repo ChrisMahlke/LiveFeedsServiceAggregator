@@ -50,7 +50,13 @@ def update_events_file(input_data=None, events_file=None):
     n_max_events = _get_num_events_ceiling(input_data)
     # time constraints
     rss_time_range_in_days = _get_rss_time_constrains(input_data)
-    # is the event in the time range
+
+    # clean events file first
+    history = _clean_history_file(input_data=input_data,
+                                  events_history=history,
+                                  max_days_ago=rss_time_range_in_days)
+
+    # is the new event in the time range
     event_in_time_range = _is_event_in_time_range(input_data.get("lastUpdateTimestamp", 0),
                                                   rss_time_range_in_days)
 
@@ -81,6 +87,28 @@ def update_events_file(input_data=None, events_file=None):
         FileManager.save(data=status_history_json, path=events_file)
         print(f"Events history file updated")
         print(f"Number of events: {_get_num_events(history)}")
+
+
+def _clean_history_file(input_data=None, events_history=None, max_days_ago=None):
+    # iterate through and remove items that are expired
+    for i, event in enumerate(events_history):
+        if _is_event_in_time_range(event.get("lastUpdateTime", 0), max_days_ago):
+            print("IN RANGE")
+        else:
+            print("NOT IN RANGE")
+            events_history.pop(i)
+
+    # iterate through and remove items on the tail end of the list that fall outside
+    # of the max number of items
+    #
+    # maximum number of events permitted to be logged for this item
+    n_max_events = _get_num_events_ceiling(input_data)
+    for event in events_history:
+        # number of events in the current item's history file
+        n_events = _get_num_events(events_history)
+        if n_events >= n_max_events:
+            events_history.pop()
+    return events_history
 
 
 def _get_num_events(events_history=None):

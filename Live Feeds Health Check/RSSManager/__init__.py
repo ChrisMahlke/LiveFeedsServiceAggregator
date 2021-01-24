@@ -65,7 +65,7 @@ class RSS:
                 items.append(data.format_map(input_data))
 
         return "".join(items)
-        #return items
+
 
     def update_rss_contents(self, input_data=None, rss_file=None):
         """
