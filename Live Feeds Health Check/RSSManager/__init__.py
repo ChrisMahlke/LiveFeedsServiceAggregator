@@ -1,5 +1,6 @@
 """ Utility methods for working with RSS """
 import html
+import os
 import FileManager as FileManager
 import TimeUtils as TimeUtils
 from datetime import datetime, timedelta
@@ -62,19 +63,22 @@ class RSS:
             with open(self.item_template, "r") as file:
                 data = file.read().replace("\n", "")
                 items.append(data.format_map(input_data))
-        return items
 
-    def update_rss_contents(self, input_data=None):
+        return "".join(items)
+        #return items
+
+    def update_rss_contents(self, input_data=None, rss_file=None):
         """
 
         :param input_data:
+        :param rss_file:
         :return:
         """
         # Open the RSS main template
-        with open(self.rss_template_path, "r") as file:
+        with open(self.rss_template, "r") as file:
             data = file.read().replace("\n", "")
             output_file_contents = data.format_map(input_data)
 
         # Over-write to an existing or new file
-        with open(self.rss_file_path, "w+") as file:
+        with open(rss_file, "w+") as file:
             file.write(output_file_contents)

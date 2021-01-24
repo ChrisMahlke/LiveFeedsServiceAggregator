@@ -78,7 +78,7 @@ def update_events_file(input_data=None, events_file=None):
             "history": history
         })
         # write update to file
-        _save(data=status_history_json, path=events_file)
+        FileManager.save(data=status_history_json, path=events_file)
         print(f"Events history file updated")
         print(f"Number of events: {_get_num_events(history)}")
 

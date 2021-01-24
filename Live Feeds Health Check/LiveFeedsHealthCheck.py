@@ -240,7 +240,7 @@ def main():
     #rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
     # Load RSS Item template
     #rss_item_template = os.path.realpath(root_dir + r"\rss_item_template.xml")
-    rss_manager = RSS(root_dir + r"\rss_template.xml", root_dir + r"\rss_item_template.xml")
+    rss_manager = RSSManager.RSS(root_dir + r"\rss_template.xml", root_dir + r"\rss_item_template.xml")
 
     # Event history
     print("\n=================================================================")
@@ -556,7 +556,7 @@ def main():
                                                             item=value,
                                                             status_codes_data_model=status_codes_data_model)
         # Check if we need to apply an update
-        if update_current_feed:
+        if True:
             print(f"\nUpdate Required")
             print(f"---------- Events History --------")
             # This file will hold a history of event changes
@@ -581,18 +581,10 @@ def main():
                 # Update the dictionary
                 # rss_items is the placeholder in the main rss_template file
                 value.update({
-                    "rss_items": rss_manager.build_item_nodes(value, current_events_file)
+                    "rss_items": rss_manager.build_item_nodes(input_data=value, events_file=current_events_file)
                 })
-
-                rss_manager.update_rss_contents(input_data=value)
-                # Open the RSS main template
-                #with open(self.rss_template_path, "r") as file:
-                #    data = file.read().replace("\n", "")
-                #    output_file_contents = data.format_map(value)
-
-                # Over-write to an existing or new file
-                #with open(rss_file_path, "w+") as file:
-                #    file.write(output_file_contents)
+                # Update the RSS output file
+                rss_manager.update_rss_contents(input_data=value, rss_file=rss_file_path)
             print(f"----------------------------------")
 
 
