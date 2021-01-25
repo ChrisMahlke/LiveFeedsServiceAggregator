@@ -55,7 +55,8 @@ class RSS:
 
             # Hydrate the data model to include the comments
             input_data.update({
-                "adminComments": html.escape(comments_section)
+                "adminComments": html.escape(comments_section),
+                "status": event["status"]
             })
 
             # Open the RSS item template.
@@ -63,9 +64,7 @@ class RSS:
             with open(self.item_template, "r") as file:
                 data = file.read().replace("\n", "")
                 items.append(data.format_map(input_data))
-
         return "".join(items)
-
 
     def update_rss_contents(self, input_data=None, rss_file=None):
         """
