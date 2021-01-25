@@ -93,9 +93,9 @@ def _clean_history_file(input_data=None, events_history=None, max_days_ago=None)
     # iterate through and remove items that are expired
     for i, event in enumerate(events_history):
         if _is_event_in_time_range(event.get("lastUpdateTime", 0), max_days_ago):
-            print("IN RANGE")
+            print("")
         else:
-            print("NOT IN RANGE")
+            print(f"Event not in range: {event}")
             events_history.pop(i)
 
     # iterate through and remove items on the tail end of the list that fall outside

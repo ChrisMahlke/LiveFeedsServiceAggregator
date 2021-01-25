@@ -556,7 +556,7 @@ def main():
                                                             item=value,
                                                             status_codes_data_model=status_codes_data_model)
         # Check if we need to apply an update
-        if True:
+        if update_current_feed:
             print(f"\nUpdate Required")
             print(f"---------- Events History --------")
             # This file will hold a history of event changes
