@@ -57,8 +57,8 @@ class RSS:
             input_data.update({
                 "adminComments": html.escape(comments_section),
                 "lastBuildTime": event["lastBuildTime"],
-                "lastRunTimestamp": event["lastRunTimestamp"],
-                "lastUpdateTime": event["lastUpdateTime"],
+                "pubDate": event["pubDate"],
+                "pubEventDate": event["pubEventDate"],
                 "status": event["status"]
             })
 

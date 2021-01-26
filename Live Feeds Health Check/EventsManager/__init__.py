@@ -15,17 +15,21 @@ def create_history_file(input_data=None, events_file=None):
     :param events_file: Output file
     :return:
     """
+    ct = datetime.now()
+    ct_timestamp = datetime.timestamp(ct)
+    dt_object = datetime.fromtimestamp(ct_timestamp)
+
     FileManager.create_new_file(file_path=events_file)
     FileManager.set_file_permission(file_path=events_file)
     FileManager.save(data={
         "id": input_data.get("id", ""),
         "history": [{
+            "pubDate": dt_object.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+            "pubEventDate": input_data.get("timestamp", 0),
             "title": input_data.get("title", input_data.get("missing_item_title")),
             "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
             "comments": input_data.get("comments", ""),
             "lastBuildTime": input_data.get("lastBuildTime", 0),
-            "lastRunTimestamp": input_data.get("lastRunTimestamp", 0),
-            "lastUpdateTime": input_data.get("lastUpdateTimestamp", 0),
             "updateRate": input_data.get("avgUpdateIntervalMins", 0),
             "featureCount": input_data.get("featureCount", 0),
             "usage": input_data.get("usage"),
@@ -42,6 +46,10 @@ def update_events_file(input_data=None, events_file=None):
     :param events_file:
     :return:
     """
+    ct = datetime.now()
+    ct_timestamp = datetime.timestamp(ct)
+    dt_object = datetime.fromtimestamp(ct_timestamp)
+
     # JSON from events file
     status_history_json = FileManager.open_file(path=events_file)
     # history element
@@ -59,45 +67,45 @@ def update_events_file(input_data=None, events_file=None):
                                   max_days_ago=rss_time_range_in_days)
 
     # is the new event in the time range
-    event_in_time_range = _is_event_in_time_range(input_data.get("lastUpdateTimestamp", 0),
-                                                  rss_time_range_in_days)
+    #event_in_time_range = _is_event_in_time_range(input_data.get("pubEventDate", 0),
+    #                                              rss_time_range_in_days)
 
-    if (n_events >= n_max_events) or not event_in_time_range:
+    #if n_events >= n_max_events:
         # number of events in the current item's history file
-        _get_num_events(history)
-        print("Remove the oldest event")
-        print(f"{history[0]}")
-        history.pop(0)
-    else:
-        print("\nUpdating events file")
-        # append new status to list
-        history.append({
-            "title": input_data.get("title", input_data.get("missing_item_title")),
-            "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
-            "comments": input_data.get("comments", ""),
-            "lastBuildTime": input_data.get("lastBuildTime", 0),
-            "lastRunTimestamp": input_data.get("lastRunTimestamp", 0),
-            "lastUpdateTime": input_data.get("lastUpdateTimestamp", 0),
-            "updateRate": input_data.get("avgUpdateIntervalMins", 0),
-            "featureCount": input_data.get("featureCount", 0),
-            "usage": input_data.get("usage"),
-            "status": input_data.get("status")
-        })
-        # update json
-        status_history_json.update({
-            "history": history
-        })
-        # write update to file
-        FileManager.save(data=status_history_json, path=events_file)
-        print(f"Events history file updated")
-        print(f"Number of events: {_get_num_events(history)}")
+    #    _get_num_events(history)
+    #    print("Remove the oldest event")
+    #    print(f"{history[0]}")
+    #    history.pop(0)
+    #else:
+    #print("\nUpdating events file")
+    # append new status to list
+    history.append({
+        "pubDate": dt_object.strftime("%a, %d %b %Y %H:%M:%S +0000"),
+        "pubEventDate": input_data.get("timestamp", 0),
+        "title": input_data.get("title", input_data.get("missing_item_title")),
+        "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
+        "comments": input_data.get("comments", ""),
+        "lastBuildTime": input_data.get("lastBuildTime", 0),
+        "updateRate": input_data.get("avgUpdateIntervalMins", 0),
+        "featureCount": input_data.get("featureCount", 0),
+        "usage": input_data.get("usage"),
+        "status": input_data.get("status")
+    })
+    # update json
+    status_history_json.update({
+        "history": history
+    })
+    # write update to file
+    FileManager.save(data=status_history_json, path=events_file)
+    print(f"Events history file updated")
+    print(f"Number of events: {_get_num_events(history)}")
 
 
 def _clean_history_file(input_data=None, events_history=None, max_days_ago=None):
     # iterate through and remove items that are expired
     for i, event in enumerate(events_history):
-        if _is_event_in_time_range(event.get("lastUpdateTime", 0), max_days_ago):
-            print("")
+        if _is_event_in_time_range(event.get("pubEventDate", 0), max_days_ago):
+            print("Event in range")
         else:
             print(f"Event not in range: {event}")
             events_history.pop(i)

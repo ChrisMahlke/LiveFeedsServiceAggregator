@@ -237,9 +237,6 @@ def main():
 
     # Load RSS template
     # TODO Move filename to config
-    #rss_template_path = os.path.realpath(root_dir + r"\rss_template.xml")
-    # Load RSS Item template
-    #rss_item_template = os.path.realpath(root_dir + r"\rss_item_template.xml")
     rss_manager = RSSManager.RSS(root_dir + r"\rss_template.xml", root_dir + r"\rss_item_template.xml")
 
     # Event history
@@ -373,7 +370,7 @@ def main():
 
         if alfp_data is not None:
             # 10 digit Timestamp 'seconds since epoch' containing time of last
-            # Successful Run (and Service update)
+            # Successful Run (and Service update) when data was changed
             value.update({
                 "lastUpdateTimestamp": alfp_data.get("lastUpdateTimestamp", 0)
             })
@@ -524,39 +521,13 @@ def main():
             "timestamp": timestamp
         })
 
-
-        #   -Check if the 'event_history' folder exists
-        #   -    NO
-        #   -        create 'event_history' folder
-        #
-        #   -Check if we need to apply an update
-        #   -YES
-        #       -Build RSS key/value dict used to apply update
-        #
-        #       -Check if the event_history_<item_id>.json' exist
-        #       -NO
-        #           -create event_history file 'event_history_<item_id>.json'
-        #
-        #       -Open 'event_history_<item_id>.json'
-        #       -Retrieve JSON['history']
-        #           Iterate through events and check date
-        #               Remove if date falls outside range
-        #           Append new event element
-        #
-        #       Iterate through events and check date
-        #           Build <item> element
-        #
-        #       Build RSS
-        #
-        #
-
         # If the file exist, check the status/comments between the item's previous status/code comment, and the
         # current status/code comment to determine if the existing RSS file should be updated.
         update_current_feed = StatusManager.update_rss_feed(previous_status_output=previous_status_output,
                                                             item=value,
                                                             status_codes_data_model=status_codes_data_model)
         # Check if we need to apply an update
-        if True:
+        if update_current_feed:
             print(f"\nUpdate Required")
             print(f"---------- Events History --------")
             # This file will hold a history of event changes

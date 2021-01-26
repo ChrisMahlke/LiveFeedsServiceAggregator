@@ -8,6 +8,6 @@
         <a href="{rss_living_atlas_link}">{rss_living_atlas_link_label}</a>
         <a href="{rss_item_agol_url}{id}">{rss_item_agol_url_label}</a>
     </description>
-    <pubDate>{lastBuildTime}</pubDate>
-    <guid isPermaLink="false">{id}.{lastUpdateTime}</guid>
+    <pubDate>{pubDate}</pubDate>
+    <guid isPermaLink="false">{id}.{pubEventDate}</guid>
 </item>
