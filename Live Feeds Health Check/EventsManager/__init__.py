@@ -20,9 +20,12 @@ def create_history_file(input_data=None, events_file=None):
     FileManager.save(data={
         "id": input_data.get("id", ""),
         "history": [{
+            "timestamp": input_data.get("timestamp", 0),
             "title": input_data.get("title", input_data.get("missing_item_title")),
             "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
             "comments": input_data.get("comments", ""),
+            "lastBuildTime": input_data.get("lastBuildTime", 0),
+            "lastRunTimestamp": input_data.get("lastRunTimestamp", 0),
             "lastUpdateTime": input_data.get("lastUpdateTimestamp", 0),
             "updateRate": input_data.get("avgUpdateIntervalMins", 0),
             "featureCount": input_data.get("featureCount", 0),
@@ -70,9 +73,12 @@ def update_events_file(input_data=None, events_file=None):
         print("\nUpdating events file")
         # append new status to list
         history.append({
+            "timestamp": input_data.get("timestamp", 0),
             "title": input_data.get("title", input_data.get("missing_item_title")),
             "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
             "comments": input_data.get("comments", ""),
+            "lastBuildTime": input_data.get("lastBuildTime", 0),
+            "lastRunTimestamp": input_data.get("lastRunTimestamp", 0),
             "lastUpdateTime": input_data.get("lastUpdateTimestamp", 0),
             "updateRate": input_data.get("avgUpdateIntervalMins", 0),
             "featureCount": input_data.get("featureCount", 0),
@@ -161,4 +167,3 @@ def _is_event_in_time_range(time_to_check=None, time_limit=None) -> bool:
     if diff.days <= int(time_limit):
         return True
     return False
-
