@@ -20,7 +20,6 @@ def create_history_file(input_data=None, events_file=None):
     FileManager.save(data={
         "id": input_data.get("id", ""),
         "history": [{
-            "timestamp": input_data.get("timestamp", 0),
             "title": input_data.get("title", input_data.get("missing_item_title")),
             "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
             "comments": input_data.get("comments", ""),
@@ -73,7 +72,6 @@ def update_events_file(input_data=None, events_file=None):
         print("\nUpdating events file")
         # append new status to list
         history.append({
-            "timestamp": input_data.get("timestamp", 0),
             "title": input_data.get("title", input_data.get("missing_item_title")),
             "snippet": input_data.get("snippet", input_data.get("missing_item_snippet")),
             "comments": input_data.get("comments", ""),

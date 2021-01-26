@@ -56,7 +56,6 @@ class RSS:
             # Hydrate the data model to include the comments
             input_data.update({
                 "adminComments": html.escape(comments_section),
-                "timestamp": event["timestamp"],
                 "lastBuildTime": event["lastBuildTime"],
                 "lastRunTimestamp": event["lastRunTimestamp"],
                 "lastUpdateTime": event["lastUpdateTime"],
