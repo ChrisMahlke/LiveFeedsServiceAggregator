@@ -9,5 +9,5 @@
         <a href="{rss_item_agol_url}{id}">{rss_item_agol_url_label}</a>
     </description>
     <pubDate>{lastBuildTime}</pubDate>
-    <guid isPermaLink="false">{id}.{timestamp}</guid>
+    <guid isPermaLink="false">{id}.{lastUpdateTime}</guid>
 </item>
