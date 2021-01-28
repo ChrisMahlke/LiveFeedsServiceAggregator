@@ -474,7 +474,8 @@ def main():
             print("\nCHECKING     101")
             # 101
             # Check elapsed time
-            avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsed_times_average)
+            # avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"]) * float(elapsed_times_average)
+            avg_elapsed_time_threshold = float(value["average_elapsed_time_factor"])
             if total_elapsed_time > avg_elapsed_time_threshold:
                 status_code = StatusManager.get_status_code("101", status_codes_data_model)
 

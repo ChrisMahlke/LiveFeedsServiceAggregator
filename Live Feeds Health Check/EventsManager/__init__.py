@@ -1,4 +1,24 @@
-""" Utility methods for working with storing events on file """
+"""
+Utility methods for working with storing events on file
+
+timestamp (chris)
+    The current time the script is running
+    Used to check the elapsed time between now and the last updated time of the feed
+	Used to check the elapsed time between now and the last run time of the feed
+
+lastUpdateTimestamp (paul)
+    10 digit Timestamp 'seconds since epoch' containing time of last Successful Run (and Service update)
+	NOT USED in RSS/Events History
+
+lastRunTimestamp (paul)
+    10 digit Timestamp 'seconds since epoch' containing time of last run (having a Success, a Failure, or a No Action flag ('No Data Updates'))
+	NOT USED in RSS/Events History
+
+lastBuildTime (chris)
+    time_utils_response["datetimeObj"].strftime("%a, %d %b %Y %H:%M:%S +0000")
+
+
+"""
 import json
 import os
 import pathlib
