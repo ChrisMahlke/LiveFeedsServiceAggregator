@@ -97,11 +97,8 @@ def get_usage_details(data_model=None) -> dict:
         item_id = current_item[0]
         item_content = current_item[1]
         print(f"\n{item_id}")
-        response = {
-            "trendingCode": 0,
-            "percentChange": 0,
-            "usageCounts": [0, 0]
-        }
+        response = item_content['usage']
+
         try:
             agol_item = item_content["agolItem"]
             if agol_item is not None:

@@ -108,15 +108,15 @@ def main():
     gis_profile = input_items[0]["profile"]
     # initialize GIS object
     gis = arcgis.GIS(profile=gis_profile)
-    # initialize User object
-    user = gis.users.get(gis_profile)
-    if user is None:
-        print("You are not signed in")
-        # TODO: Exit script gracefully and notify Admin(?)
-        # TODO: If user is not signed in we cannot retrieve the statistics
+    #gis = arcgis.GIS()
+    # just check if there is a token to determine if it's a named user or anonymous
+    if gis._con.token is None:
+        print("Anonymous sign-in")
     else:
         # Eye candy
         # Get the installation properties and print to stdout
+        # initialize User object
+        user = gis.users.get(gis_profile)
         install_info = arcpy.GetInstallInfo()
         user_sys = User(user=user, install_info=install_info)
         user_sys.greeting()
