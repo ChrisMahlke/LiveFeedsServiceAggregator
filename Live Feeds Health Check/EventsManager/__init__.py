@@ -122,25 +122,26 @@ def update_events_file(input_data=None, events_file=None):
 
 
 def _clean_history_file(input_data=None, events_history=None, max_days_ago=None):
+    events_in_range = []
     # iterate through and remove items that are expired
     for i, event in enumerate(events_history):
         if _is_event_in_time_range(event.get("pubEventDate", 0), max_days_ago):
             print("Event in range")
+            events_in_range.append(event)
         else:
             print(f"Event not in range: {event}")
-            events_history.pop(i)
 
     # iterate through and remove items on the tail end of the list that fall outside
     # of the max number of items
     #
     # maximum number of events permitted to be logged for this item
     n_max_events = _get_num_events_ceiling(input_data)
-    for event in events_history:
+    for event in events_in_range:
         # number of events in the current item's history file
-        n_events = _get_num_events(events_history)
+        n_events = _get_num_events(events_in_range)
         if n_events >= n_max_events:
-            events_history.pop()
-    return events_history
+            events_in_range.pop()
+    return events_in_range
 
 
 def _get_num_events(events_history=None):
