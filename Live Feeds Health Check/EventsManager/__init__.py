@@ -121,7 +121,7 @@ def update_events_file(input_data=None, events_file=None):
     print(f"Number of events: {_get_num_events(history)}")
 
 
-def _clean_history_file_new(input_data=None, events_history=None, max_days_ago=None):
+def _clean_history_file(input_data=None, events_history=None, max_days_ago=None):
     events_in_range = []
     n_max_events = _get_num_events_ceiling(input_data)
     # iterate through and remove items that are expired or exceed max number alowed
@@ -182,9 +182,18 @@ def _is_event_in_time_range(time_to_check=None, time_limit=None) -> bool:
     :param time_limit: Time range in days "ago"
     :return:
     """
-    time_now = datetime.now() - timedelta(days=0)
-    target_time = datetime.fromtimestamp(time_to_check)
-    diff = time_now - target_time
-    if diff.days <= int(time_limit):
+    time_limit_in_seconds = int(time_limit) * 86400
+    now = datetime.now()
+    event_time = datetime.fromtimestamp(time_to_check)
+    diff = now - event_time
+    diff_in_seconds = diff.total_seconds()
+    if abs(diff_in_seconds) <= time_limit_in_seconds:
         return True
+    print(f"Event out of time range: {time_to_check}")
     return False
+    #time_now = datetime.now() - timedelta(days=0)
+    #target_time = datetime.fromtimestamp(time_to_check)
+    #diff = time_now - target_time
+    #if diff.days <= int(time_limit):
+    #    return True
+    #return False

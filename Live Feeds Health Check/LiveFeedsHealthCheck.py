@@ -597,24 +597,6 @@ def main():
 
     print("Script completed...")
 
-from datetime import datetime, time, timedelta
 
 if __name__ == "__main__":
-    #main()
-    # representing the current UTC time.
-    now = datetime.utcnow()
-    print(f"now\t\t{now}")
-
-    dt_object = datetime.fromtimestamp(1611408903)
-    print(f"dt_object\t{dt_object}")
-
-    diff = now - dt_object
-    print(f"diff: {diff}")
-    hours = (diff.seconds/60)/60
-    print(f"diff: {hours/24}")
-
-    print("\n\n")
-    print(datetime.now())
-    print(datetime.now() - timedelta(days=4))
-    print(dt_object - timedelta(days=4))
-    print(now - timedelta(days=4))
+    main()
