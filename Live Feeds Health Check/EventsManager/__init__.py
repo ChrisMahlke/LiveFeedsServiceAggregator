@@ -182,18 +182,7 @@ def _is_event_in_time_range(time_to_check=None, time_limit=None) -> bool:
     :param time_limit: Time range in days "ago"
     :return:
     """
-    time_limit_in_seconds = int(time_limit) * 86400
-    now = datetime.now()
-    event_time = datetime.fromtimestamp(time_to_check)
-    diff = now - event_time
-    diff_in_seconds = diff.total_seconds()
-    if abs(diff_in_seconds) <= time_limit_in_seconds:
-        return True
-    print(f"Event out of time range: {time_to_check}")
-    return False
-    #time_now = datetime.now() - timedelta(days=0)
-    #target_time = datetime.fromtimestamp(time_to_check)
-    #diff = time_now - target_time
-    #if diff.days <= int(time_limit):
-    #    return True
-    #return False
+    date_limit = datetime.utcnow() - timedelta(days=int(time_limit))
+    if datetime.utcfromtimestamp(time_to_check) < date_limit:
+        return False
+    return True
