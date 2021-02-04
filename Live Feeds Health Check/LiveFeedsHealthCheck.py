@@ -597,6 +597,32 @@ def main():
 
     print("Script completed...")
 
+from datetime import datetime, time, timedelta
+
+def is_time_between(begin_time, end_time, check_time=None):
+    # If check time is not given, default to current UTC time
+    check_time = check_time or datetime.utcnow().time()
+    if begin_time < end_time:
+        return begin_time <= check_time <= end_time
+    else: # crosses midnight
+        return check_time >= begin_time or check_time <= end_time
 
 if __name__ == "__main__":
-    main()
+    #main()
+    # representing the current UTC time.
+    now = datetime.utcnow()
+    print(f"now\t\t{now}")
+
+    dt_object = datetime.fromtimestamp(1611408903)
+    print(f"dt_object\t{dt_object}")
+
+    diff = now - dt_object
+    print(f"diff: {diff}")
+    hours = (diff.seconds/60)/60
+    print(f"diff: {hours/24}")
+
+    print("\n\n")
+    print(datetime.now())
+    print(datetime.now() - timedelta(days=4))
+    print(dt_object - timedelta(days=4))
+    print(now - timedelta(days=4))
