@@ -599,14 +599,6 @@ def main():
 
 from datetime import datetime, time, timedelta
 
-def is_time_between(begin_time, end_time, check_time=None):
-    # If check time is not given, default to current UTC time
-    check_time = check_time or datetime.utcnow().time()
-    if begin_time < end_time:
-        return begin_time <= check_time <= end_time
-    else: # crosses midnight
-        return check_time >= begin_time or check_time <= end_time
-
 if __name__ == "__main__":
     #main()
     # representing the current UTC time.
