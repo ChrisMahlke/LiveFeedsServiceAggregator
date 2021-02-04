@@ -182,7 +182,7 @@ def _is_event_in_time_range(time_to_check=None, time_limit=None) -> bool:
     :param time_limit: Time range in days "ago"
     :return:
     """
-    date_limit = datetime.utcnow() - timedelta(days=int(time_limit))
-    if datetime.utcfromtimestamp(time_to_check) < date_limit:
+    date_limit = datetime.now() - timedelta(days=int(time_limit))
+    if datetime.fromtimestamp(time_to_check) < date_limit:
         return False
     return True
