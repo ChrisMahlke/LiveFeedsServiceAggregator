@@ -1,0 +1,685 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LiveFeedsHealthCheck &#8212; Live Feeds Service Aggregator 1.0.0 documentation</title>
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Live Feeds Service Aggregator 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">LiveFeedsHealthCheck</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for LiveFeedsHealthCheck</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="c1"># Copyright 2020, Esri.  All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is  distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># =============================================================================</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">LiveFeedsHealthCheck</span>
+
+<span class="sd">1) Authenticate GIS profile</span>
+<span class="sd">2) Setup</span>
+<span class="sd">3) Validation and Health check</span>
+<span class="sd">4) Process results</span>
+<span class="sd">5) Create/Update RSS files</span>
+<span class="sd">6) Save output</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">arcgis</span>
+    <span class="kn">import</span> <span class="nn">arcpy</span>
+    <span class="kn">import</span> <span class="nn">html</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">EventsManager</span> <span class="k">as</span> <span class="nn">EventsManager</span>
+    <span class="kn">import</span> <span class="nn">FileManager</span> <span class="k">as</span> <span class="nn">FileManager</span>
+    <span class="kn">import</span> <span class="nn">LoggingUtils</span> <span class="k">as</span> <span class="nn">LoggingUtils</span>
+    <span class="kn">import</span> <span class="nn">QueryEngine</span> <span class="k">as</span> <span class="nn">QueryEngine</span>
+    <span class="kn">import</span> <span class="nn">RSSManager</span> <span class="k">as</span> <span class="nn">RSSManager</span>
+    <span class="kn">import</span> <span class="nn">ServiceValidator</span> <span class="k">as</span> <span class="nn">ServiceValidator</span>
+    <span class="kn">import</span> <span class="nn">StatusManager</span> <span class="k">as</span> <span class="nn">StatusManager</span>
+    <span class="kn">import</span> <span class="nn">TimeUtils</span> <span class="k">as</span> <span class="nn">TimeUtils</span>
+    <span class="kn">import</span> <span class="nn">version</span> <span class="k">as</span> <span class="nn">version</span>
+    <span class="kn">from</span> <span class="nn">ConfigManager</span> <span class="kn">import</span> <span class="n">ConfigManager</span>
+    <span class="kn">from</span> <span class="nn">UserUtils</span> <span class="kn">import</span> <span class="n">User</span>
+<span class="k">except</span> <span class="ne">ImportError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Import Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ItemCountNotInRangeError"><a class="viewcode-back" href="../index.html#LiveFeedsHealthCheck.ItemCountNotInRangeError">[docs]</a><span class="k">class</span> <span class="nc">ItemCountNotInRangeError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised for errors when the input item count is 0</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            item_count -- input item count which caused the error</span>
+<span class="sd">            message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_items</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;No items found!&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_items</span> <span class="o">=</span> <span class="n">num_items</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Item count: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">num_items</span><span class="si">}</span><span class="s2"> </span><span class="se">\n</span><span class="s2">There are not items in the config file!&quot;</span></div>
+
+
+<div class="viewcode-block" id="InputFileNotFoundError"><a class="viewcode-back" href="../index.html#LiveFeedsHealthCheck.InputFileNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">InputFileNotFoundError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Exception raised for errors in the input file is not found.</span>
+
+<span class="sd">        Attributes:</span>
+<span class="sd">            file -- input file</span>
+<span class="sd">            message -- explanation of the error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file</span><span class="p">,</span> <span class="n">message</span><span class="o">=</span><span class="s2">&quot;The file is not found&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_file</span> <span class="o">=</span> <span class="n">input_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">The file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">input_file</span><span class="si">}</span><span class="s2"> was not found or does not exist!&quot;</span></div>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Script version number</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Running version: </span><span class="si">{</span><span class="n">version</span><span class="o">.</span><span class="n">version_str</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading ini file&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># The root directory of the script</span>
+    <span class="n">root_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Project Root Directory: </span><span class="si">{</span><span class="n">root_dir</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Load config ini file</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading input items from configuration file</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># Routines for handling the loading and parsing of the config ini file</span>
+    <span class="c1">#</span>
+    <span class="c1"># A configuration file consists of sections, lead by a &quot;[section]&quot; header,</span>
+    <span class="c1"># and followed by &quot;name: value&quot; entries, with continuations and such in</span>
+    <span class="c1"># the style of RFC 822.</span>
+    <span class="n">config_ini_manager</span> <span class="o">=</span> <span class="n">ConfigManager</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="n">root_dir</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s2">&quot;config.ini&quot;</span><span class="p">)</span>
+    <span class="c1"># Items we will analyze</span>
+    <span class="n">input_items</span> <span class="o">=</span> <span class="n">config_ini_manager</span><span class="o">.</span><span class="n">get_config_data</span><span class="p">(</span><span class="n">config_type</span><span class="o">=</span><span class="s2">&quot;items&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Authenticate GIS profile&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO: Not the best way at all to get the profile property from the config file</span>
+    <span class="n">gis_profile</span> <span class="o">=</span> <span class="n">input_items</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;profile&quot;</span><span class="p">]</span>
+    <span class="c1"># initialize GIS object</span>
+    <span class="n">gis</span> <span class="o">=</span> <span class="n">arcgis</span><span class="o">.</span><span class="n">GIS</span><span class="p">(</span><span class="n">profile</span><span class="o">=</span><span class="n">gis_profile</span><span class="p">)</span>
+    <span class="c1">#gis = arcgis.GIS()</span>
+    <span class="c1"># just check if there is a token to determine if it&#39;s a named user or anonymous</span>
+    <span class="k">if</span> <span class="n">gis</span><span class="o">.</span><span class="n">_con</span><span class="o">.</span><span class="n">token</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Anonymous sign-in&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Eye candy</span>
+        <span class="c1"># Get the installation properties and print to stdout</span>
+        <span class="c1"># initialize User object</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">gis</span><span class="o">.</span><span class="n">users</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">gis_profile</span><span class="p">)</span>
+        <span class="n">install_info</span> <span class="o">=</span> <span class="n">arcpy</span><span class="o">.</span><span class="n">GetInstallInfo</span><span class="p">()</span>
+        <span class="n">user_sys</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">install_info</span><span class="o">=</span><span class="n">install_info</span><span class="p">)</span>
+        <span class="n">user_sys</span><span class="o">.</span><span class="n">greeting</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Hydrating input data model from config file parameters&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># Data model</span>
+    <span class="n">data_model_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Number of items we are working with (derived from the config ini)</span>
+    <span class="n">item_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_items</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">item_count</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">ItemCountNotInRangeError</span><span class="p">(</span><span class="n">item_count</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;There are </span><span class="si">{</span><span class="n">item_count</span><span class="si">}</span><span class="s2"> items&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">input_item</span> <span class="ow">in</span> <span class="n">input_items</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">input_item</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">data_model_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="n">input_item</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]:</span> <span class="p">{</span><span class="o">**</span><span class="n">input_item</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="n">gis</span><span class="o">.</span><span class="n">_con</span><span class="o">.</span><span class="n">token</span><span class="p">}}</span>
+            <span class="p">})</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting up project and checking folders and directories&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># Load status codes</span>
+    <span class="c1"># TODO Move filename to config</span>
+    <span class="n">status_code_config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\statusCodes.json&quot;</span><span class="p">)</span>
+    <span class="n">status_code_json_exist</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">status_code_config_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">status_code_json_exist</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1"># TODO: At this point we really cannot move forward</span>
+        <span class="k">raise</span> <span class="n">InputFileNotFoundError</span><span class="p">(</span><span class="n">status_code_config_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">status_codes_data_model</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">status_code_config_path</span><span class="p">)</span>
+
+    <span class="c1"># Load comments</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking/Creating comments folder&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO Move filename to config</span>
+    <span class="n">admin_comments_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\comments.json&quot;</span><span class="p">)</span>
+    <span class="n">admin_comments_file_exist</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">admin_comments_file_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">admin_comments_file_exist</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1"># TODO: At this point we really cannot move forward</span>
+        <span class="k">raise</span> <span class="n">InputFileNotFoundError</span><span class="p">(</span><span class="n">admin_comments_file_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">admin_comments_data_model</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">admin_comments_file_path</span><span class="p">)</span>
+
+    <span class="c1"># retrieve the alf statuses</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Retrieving and Processing Active Live Feed Processed files&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">alf_processor_queries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">QueryEngine</span><span class="o">.</span><span class="n">prepare_alfp_query_params</span><span class="p">,</span> <span class="n">data_model_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+    <span class="n">alf_processor_response</span> <span class="o">=</span> <span class="n">QueryEngine</span><span class="o">.</span><span class="n">get_alfp_content</span><span class="p">(</span><span class="n">alf_processor_queries</span><span class="p">)</span>
+    <span class="n">alfp_content</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">QueryEngine</span><span class="o">.</span><span class="n">process_alfp_response</span><span class="p">,</span> <span class="n">alf_processor_response</span><span class="p">))</span>
+    <span class="n">alfp_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">content</span> <span class="ow">in</span> <span class="n">alfp_content</span><span class="p">:</span>
+        <span class="c1"># check if there is alfp content was successfully retrieved</span>
+        <span class="k">if</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+            <span class="n">unique_item_key</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="n">alfp_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="n">unique_item_key</span><span class="p">:</span> <span class="n">content</span><span class="p">[</span><span class="s2">&quot;content&quot;</span><span class="p">]</span>
+            <span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ERROR: No ALFP data on record for </span><span class="si">{</span><span class="n">content</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Read in the previous status output file</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading status output from previous run&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO Move folder name to config</span>
+    <span class="c1"># Directory where the output files are stored</span>
+    <span class="n">output_status_dir_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\output&quot;</span><span class="p">)</span>
+    <span class="c1"># Create a new directory if it does not exists</span>
+    <span class="n">FileManager</span><span class="o">.</span><span class="n">create_new_folder</span><span class="p">(</span><span class="n">output_status_dir_path</span><span class="p">)</span>
+    <span class="c1"># TODO Move filename to config</span>
+    <span class="c1"># Build the path to status file.</span>
+    <span class="n">status_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">output_status_dir_path</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\status.json&quot;</span><span class="p">)</span>
+    <span class="c1"># Check file existence</span>
+    <span class="n">file_exist</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">status_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_exist</span><span class="p">:</span>
+        <span class="c1"># The status&#39; of all the items in the previous run</span>
+        <span class="n">previous_status_output</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">status_file</span><span class="p">)[</span><span class="s2">&quot;items&quot;</span><span class="p">]</span>
+        <span class="c1"># iterate through the items in the config file</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_model_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># iterate through the item output in the status file</span>
+            <span class="k">for</span> <span class="n">ele</span> <span class="ow">in</span> <span class="n">previous_status_output</span><span class="p">:</span>
+                <span class="c1"># item ID</span>
+                <span class="n">status_file_key</span> <span class="o">=</span> <span class="n">ele</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+                <span class="c1"># if the item in the config file is also in the previous run,</span>
+                <span class="c1"># merge the output from the previous run to the data model</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">status_file_key</span><span class="p">:</span>
+                    <span class="n">merged_dict</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">ele</span><span class="p">,</span> <span class="o">**</span><span class="n">value</span><span class="p">}</span>
+                    <span class="n">data_model_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                        <span class="n">key</span><span class="p">:</span> <span class="n">merged_dict</span>
+                    <span class="p">})</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># TODO What if the file does not exist?</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Historical &quot;elapsed times&quot; file directory</span>
+    <span class="c1"># response time directory</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking/Creating response time data folder&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO Move folder name to config</span>
+    <span class="n">response_time_data_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\ResponseTimeData&quot;</span><span class="p">)</span>
+    <span class="c1"># Create a new directory if it does not exists</span>
+    <span class="n">FileManager</span><span class="o">.</span><span class="n">create_new_folder</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">response_time_data_dir</span><span class="p">)</span>
+
+    <span class="c1"># Create a new directory to hold the rss feeds (if it does not exist)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking/Creating RSS output folder and loading RSS template files&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># TODO Move folder name to config</span>
+    <span class="n">rss_dir_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\rss&quot;</span><span class="p">)</span>
+    <span class="n">FileManager</span><span class="o">.</span><span class="n">create_new_folder</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">rss_dir_path</span><span class="p">)</span>
+
+    <span class="c1"># Load RSS template</span>
+    <span class="c1"># TODO Move filename to config</span>
+    <span class="n">rss_manager</span> <span class="o">=</span> <span class="n">RSSManager</span><span class="o">.</span><span class="n">RSS</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\rss_template.xml&quot;</span><span class="p">,</span> <span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\rss_item_template.xml&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Event history</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking/Creating status event history folder&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">event_history_dir_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">root_dir</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\event_history&quot;</span><span class="p">)</span>
+    <span class="n">FileManager</span><span class="o">.</span><span class="n">create_new_folder</span><span class="p">(</span><span class="n">file_path</span><span class="o">=</span><span class="n">event_history_dir_path</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Current data and time&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">time_utils_response</span> <span class="o">=</span> <span class="n">TimeUtils</span><span class="o">.</span><span class="n">get_current_time_and_date</span><span class="p">()</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">time_utils_response</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time_utils_response</span><span class="p">[</span><span class="s1">&#39;datetimeObj&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating item&#39;s unique key and meta-data&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">data_model_dict</span> <span class="o">=</span> <span class="n">ServiceValidator</span><span class="o">.</span><span class="n">validate_items</span><span class="p">(</span><span class="n">gis</span><span class="o">=</span><span class="n">gis</span><span class="p">,</span> <span class="n">data_model</span><span class="o">=</span><span class="n">data_model_dict</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating services&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">data_model_dict</span> <span class="o">=</span> <span class="n">ServiceValidator</span><span class="o">.</span><span class="n">validate_services</span><span class="p">(</span><span class="n">data_model</span><span class="o">=</span><span class="n">data_model_dict</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validating layers&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">data_model_dict</span> <span class="o">=</span> <span class="n">ServiceValidator</span><span class="o">.</span><span class="n">validate_layers</span><span class="p">(</span><span class="n">data_model</span><span class="o">=</span><span class="n">data_model_dict</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrieve usage statistics&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">data_model_dict</span> <span class="o">=</span> <span class="n">QueryEngine</span><span class="o">.</span><span class="n">get_usage_details</span><span class="p">(</span><span class="n">data_model</span><span class="o">=</span><span class="n">data_model_dict</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrieve feature counts&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="n">data_model_dict</span> <span class="o">=</span> <span class="n">QueryEngine</span><span class="o">.</span><span class="n">get_feature_counts</span><span class="p">(</span><span class="n">data_model</span><span class="o">=</span><span class="n">data_model_dict</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Analyze and process data&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_model_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">item_id</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="n">agol_is_valid</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">item_is_valid</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;itemIsValid&quot;</span><span class="p">]</span>
+        <span class="n">service_response</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;serviceResponse&quot;</span><span class="p">]</span>
+        <span class="n">service_is_valid</span> <span class="o">=</span> <span class="n">service_response</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]</span>
+        <span class="n">layers_are_valid</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;allLayersAreValid&quot;</span><span class="p">]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ArcGIS Online accessible: </span><span class="si">{</span><span class="n">agol_is_valid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item valid: </span><span class="si">{</span><span class="n">item_is_valid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Service valid: </span><span class="si">{</span><span class="n">service_is_valid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;All layers valid: </span><span class="si">{</span><span class="n">layers_are_valid</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-------- RETRY COUNT ---------&quot;</span><span class="p">)</span>
+        <span class="c1"># Process Retry Count</span>
+        <span class="n">service_retry_count</span> <span class="o">=</span> <span class="n">QueryEngine</span><span class="o">.</span><span class="n">get_retry_count</span><span class="p">(</span><span class="n">service_response</span><span class="p">[</span><span class="s2">&quot;retryCount&quot;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Service Retry Count: </span><span class="si">{</span><span class="n">service_retry_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-------- ELAPSED TIME --------&quot;</span><span class="p">)</span>
+        <span class="c1"># Retrieve the elapsed time of the query to the service (not the layers)</span>
+        <span class="n">service_elapsed_time</span> <span class="o">=</span> <span class="n">QueryEngine</span><span class="o">.</span><span class="n">get_service_elapsed_time</span><span class="p">(</span><span class="n">service_is_valid</span><span class="p">,</span> <span class="n">service_response</span><span class="p">[</span><span class="s2">&quot;response&quot;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Service Elapsed Time: </span><span class="si">{</span><span class="n">service_elapsed_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Retrieve the average elapsed time of layers for the current service (layers only)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layers Elapsed times (individual)&quot;</span><span class="p">)</span>
+        <span class="n">layers_elapsed_time</span> <span class="o">=</span> <span class="n">QueryEngine</span><span class="o">.</span><span class="n">get_layers_average_elapsed_time</span><span class="p">(</span><span class="n">layers_elapsed_times</span><span class="o">=</span><span class="n">value</span><span class="p">[</span><span class="s1">&#39;serviceLayersElapsedTimes&#39;</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Layers Elapsed Time (average): </span><span class="si">{</span><span class="n">layers_elapsed_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="c1"># Sum up the elapsed time for the service and the layers divided by 2</span>
+        <span class="c1"># We want the total elapsed time of the layers and the FS</span>
+        <span class="n">total_elapsed_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">service_elapsed_time</span> <span class="o">+</span> <span class="n">layers_elapsed_time</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total Elapsed Time average: </span><span class="si">{</span><span class="n">total_elapsed_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------------</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Obtain the total elapsed time and counts</span>
+        <span class="c1"># path to output file</span>
+        <span class="c1"># This file contains the:</span>
+        <span class="c1">#   item id</span>
+        <span class="c1">#   elapsed time</span>
+        <span class="c1">#   elapsed sums</span>
+        <span class="n">response_time_data_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">response_time_data_dir</span><span class="p">,</span> <span class="n">item_id</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="s2">&quot;json&quot;</span><span class="p">)</span>
+        <span class="c1"># Check file existence.</span>
+        <span class="n">response_time_data_file_path_exist</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">response_time_data_file_path</span><span class="p">)</span>
+
+        <span class="n">exclude_save</span> <span class="o">=</span> <span class="n">TimeUtils</span><span class="o">.</span><span class="n">is_now_excluded</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;exclude_time_ranges&quot;</span><span class="p">],</span>
+                                                 <span class="n">value</span><span class="p">[</span><span class="s2">&quot;exclude_days&quot;</span><span class="p">],</span>
+                                                 <span class="n">value</span><span class="p">[</span><span class="s2">&quot;exclude_specific_dates&quot;</span><span class="p">],</span>
+                                                 <span class="n">timestamp</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exclude response time data from save: </span><span class="si">{</span><span class="n">exclude_save</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Does the file exist</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">response_time_data_file_path_exist</span><span class="p">:</span>
+            <span class="c1"># If file does not exist then create it.</span>
+            <span class="n">FileManager</span><span class="o">.</span><span class="n">create_new_file</span><span class="p">(</span><span class="n">response_time_data_file_path</span><span class="p">)</span>
+            <span class="n">FileManager</span><span class="o">.</span><span class="n">set_file_permission</span><span class="p">(</span><span class="n">response_time_data_file_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exclude_save</span><span class="p">:</span>
+                <span class="n">FileManager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                    <span class="s2">&quot;elapsed_sums&quot;</span><span class="p">:</span> <span class="n">total_elapsed_time</span><span class="p">,</span>
+                    <span class="s2">&quot;elapsed_count&quot;</span><span class="p">:</span> <span class="mi">1</span>
+                <span class="p">},</span> <span class="n">path</span><span class="o">=</span><span class="n">response_time_data_file_path</span><span class="p">)</span>
+            <span class="c1"># since it&#39;s our first entry, the average is the current elapsed time</span>
+            <span class="n">elapsed_times_average</span> <span class="o">=</span> <span class="n">total_elapsed_time</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Retrieve the elapsed time DIVIDE by count</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Retrieving response time data from existing json file: </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+            <span class="n">response_time_data</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">get_response_time_data</span><span class="p">(</span><span class="n">response_time_data_file_path</span><span class="p">)</span>
+            <span class="c1"># total counts</span>
+            <span class="n">elapsed_times_count</span> <span class="o">=</span> <span class="n">response_time_data</span><span class="p">[</span><span class="s2">&quot;elapsed_count&quot;</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Elapsed count (on file before update): </span><span class="si">{</span><span class="n">elapsed_times_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># sum of all times</span>
+            <span class="n">elapsed_times_sum</span> <span class="o">=</span> <span class="n">response_time_data</span><span class="p">[</span><span class="s2">&quot;elapsed_sums&quot;</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Elapsed sums (on file before update): </span><span class="si">{</span><span class="n">elapsed_times_sum</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># calculated average</span>
+            <span class="n">elapsed_times_average</span> <span class="o">=</span> <span class="n">elapsed_times_sum</span> <span class="o">/</span> <span class="n">elapsed_times_count</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">exclude_save</span><span class="p">:</span>
+                <span class="c1"># update the response time data file</span>
+                <span class="n">FileManager</span><span class="o">.</span><span class="n">update_response_time_data</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">response_time_data_file_path</span><span class="p">,</span> <span class="n">input_data</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                    <span class="s2">&quot;elapsed_count&quot;</span><span class="p">:</span> <span class="n">elapsed_times_count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                    <span class="s2">&quot;elapsed_sums&quot;</span><span class="p">:</span> <span class="n">elapsed_times_sum</span> <span class="o">+</span> <span class="n">total_elapsed_time</span>
+                <span class="p">})</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Elapsed average: </span><span class="si">{</span><span class="n">elapsed_times_average</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># retrieve alfp details</span>
+        <span class="n">alfp_data</span> <span class="o">=</span> <span class="n">alfp_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">alfp_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># 10 digit Timestamp &#39;seconds since epoch&#39; containing time of last</span>
+            <span class="c1"># Successful Run (and Service update) when data was changed</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;lastUpdateTimestamp&quot;</span><span class="p">:</span> <span class="n">alfp_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lastUpdateTimestamp&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="c1"># 10 digit Timestamp &#39;seconds since epoch&#39; containing time of last</span>
+            <span class="c1"># Failed run (or Service update failure)</span>
+            <span class="c1"># feed_last_failure_timestamp = item[&quot;lastFailureTimestamp&quot;]</span>
+            <span class="c1"># 10 digit Timestamp &#39;seconds since epoch&#39; containing time of last</span>
+            <span class="c1"># run (having a Success, a Failure, or a No Action flag (&#39;No Data</span>
+            <span class="c1"># Updates&#39;)</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;lastRunTimestamp&quot;</span><span class="p">:</span> <span class="n">alfp_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lastRunTimestamp&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="c1"># Average number of minutes between each successful run (or Service</span>
+            <span class="c1"># update)</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;avgUpdateIntervalMins&quot;</span><span class="p">:</span> <span class="n">alfp_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;avgUpdateIntervalMins&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="c1"># Average number of minutes between each run</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;avgFeedIntervalMins&quot;</span><span class="p">:</span> <span class="n">alfp_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;avgFeedIntervalMins&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="c1">#</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;consecutiveFailures&quot;</span><span class="p">:</span> <span class="n">alfp_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;consecutiveFailures&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="p">})</span>
+            <span class="c1">#</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;alfpLastStatus&quot;</span><span class="p">:</span> <span class="n">alfp_data</span><span class="p">[</span><span class="s2">&quot;lastStatus&quot;</span><span class="p">][</span><span class="s2">&quot;code&quot;</span><span class="p">]</span>
+            <span class="p">})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;lastUpdateTimestamp&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;lastRunTimestamp&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;avgUpdateIntervalMins&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;avgFeedIntervalMins&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;consecutiveFailures&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="s2">&quot;alfpLastStatus&quot;</span><span class="p">:</span> <span class="mi">0</span>
+            <span class="p">})</span>
+
+        <span class="c1"># initialize the status code</span>
+        <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;000&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">agol_is_valid</span><span class="p">,</span> <span class="n">item_is_valid</span><span class="p">,</span> <span class="n">service_is_valid</span><span class="p">,</span> <span class="n">layers_are_valid</span><span class="p">]):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;AGOL, Item, Service checks normal&quot;</span><span class="p">)</span>
+
+            <span class="c1"># 001 Check</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     001&quot;</span><span class="p">)</span>
+            <span class="c1"># Check elapsed time between now and the last updated time of the feed</span>
+            <span class="n">last_update_timestamp_diff</span> <span class="o">=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lastUpdateTimestamp&quot;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">)</span>
+            <span class="c1"># Check elapsed time between now and the last run time of the feed</span>
+            <span class="n">last_run_timestamp_diff</span> <span class="o">=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;lastRunTimestamp&quot;</span><span class="p">]</span>
+
+            <span class="c1"># If the Difference exceeds the average update interval by an interval of X, flag it</span>
+            <span class="n">last_update_timestamp_diff_minutes</span> <span class="o">=</span> <span class="n">last_update_timestamp_diff</span> <span class="o">/</span> <span class="mi">60</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Last update timestamp delta:</span><span class="se">\t</span><span class="si">{</span><span class="n">last_update_timestamp_diff_minutes</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+            <span class="c1"># Average number of minutes between each successful run (or Service update)</span>
+            <span class="n">avg_update_int_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;average_update_interval_factor&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;avgUpdateIntervalMins&quot;</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average update interval threshold: </span><span class="si">{</span><span class="n">avg_update_int_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">last_update_timestamp_diff_minutes</span> <span class="o">&gt;</span> <span class="n">avg_update_int_threshold</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;001&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     002&quot;</span><span class="p">)</span>
+            <span class="c1"># 002 Check</span>
+            <span class="n">last_run_timestamp_diff_minutes</span> <span class="o">=</span> <span class="n">last_run_timestamp_diff</span> <span class="o">/</span> <span class="mi">60</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Last run timestamp delta:</span><span class="se">\t</span><span class="si">{</span><span class="n">last_run_timestamp_diff_minutes</span><span class="si">}</span><span class="s2"> seconds&quot;</span><span class="p">)</span>
+            <span class="c1"># calculate the threshold (Average number of minutes between each run)</span>
+            <span class="n">avg_feed_int_threshold</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;average_feed_interval_factor&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;avgFeedIntervalMins&quot;</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average Feed Interval threshold: </span><span class="si">{</span><span class="n">avg_feed_int_threshold</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">last_run_timestamp_diff_minutes</span> <span class="o">&gt;</span> <span class="n">avg_feed_int_threshold</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;002&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     003&quot;</span><span class="p">)</span>
+            <span class="c1"># 003 Check</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;alfpLastStatus&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;consecutiveFailures&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;consecutive_failures_threshold&quot;</span><span class="p">]):</span>
+                    <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;003&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     004&quot;</span><span class="p">)</span>
+            <span class="c1"># 004 Check</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;alfpLastStatus&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;consecutiveFailures&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;consecutive_failures_threshold&quot;</span><span class="p">]):</span>
+                    <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;004&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     005&quot;</span><span class="p">)</span>
+            <span class="c1"># 005 Check</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;alfpLastStatus&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;consecutiveFailures&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;consecutive_failures_threshold&quot;</span><span class="p">]):</span>
+                    <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;005&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     006&quot;</span><span class="p">)</span>
+            <span class="c1"># 006 Check</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;alfpLastStatus&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;006&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     100&quot;</span><span class="p">)</span>
+            <span class="c1"># 100</span>
+            <span class="c1"># Check retry count</span>
+            <span class="k">if</span> <span class="n">service_retry_count</span> <span class="o">&gt;</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;default_retry_count&quot;</span><span class="p">]):</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;100&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     101&quot;</span><span class="p">)</span>
+            <span class="c1"># 101</span>
+            <span class="c1"># Check elapsed time</span>
+            <span class="c1"># avg_elapsed_time_threshold = float(value[&quot;average_elapsed_time_factor&quot;]) * float(elapsed_times_average)</span>
+            <span class="n">avg_elapsed_time_threshold</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">[</span><span class="s2">&quot;average_elapsed_time_factor&quot;</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">total_elapsed_time</span> <span class="o">&gt;</span> <span class="n">avg_elapsed_time_threshold</span><span class="p">:</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;101&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="n">LoggingUtils</span><span class="o">.</span><span class="n">log_status_code_details</span><span class="p">(</span><span class="n">item_id</span><span class="p">,</span> <span class="n">status_code</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">CHECKING     102, 201, 500, 501&quot;</span><span class="p">)</span>
+            <span class="c1"># If we are at this point, then one or more of the Service states has failed</span>
+            <span class="c1">#</span>
+            <span class="c1"># The any() function returns True if any item in an iterable are true, otherwise it returns False.</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">agol_is_valid</span><span class="p">,</span> <span class="n">item_is_valid</span><span class="p">,</span> <span class="n">service_is_valid</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">service_is_valid</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Service | Success&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">item_is_valid</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item | Success | AGOL must be down, then why is the item accessible?&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># 102</span>
+                        <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;102&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+                    <span class="c1"># 201 Check</span>
+                    <span class="k">if</span> <span class="n">layers_are_valid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">True</span><span class="p">:</span>
+                        <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;201&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># 500</span>
+                    <span class="k">if</span> <span class="n">item_is_valid</span><span class="p">:</span>
+                        <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;500&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Item | Fail&quot;</span><span class="p">)</span>
+                        <span class="c1"># If ALL of the Service states are False, we have reached a critical failure in the system</span>
+                        <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;501&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># If ALL of the Service states are False, we have reached a critical failure in the system</span>
+                <span class="n">status_code</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">get_status_code</span><span class="p">(</span><span class="s2">&quot;501&quot;</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="p">)</span>
+
+            <span class="n">LoggingUtils</span><span class="o">.</span><span class="n">log_status_code_details</span><span class="p">(</span><span class="n">item_id</span><span class="p">,</span> <span class="n">status_code</span><span class="p">)</span>
+
+        <span class="c1"># update/add status code in the data model</span>
+        <span class="c1"># Add the Admin comments (if any)</span>
+        <span class="c1"># Add the last build time</span>
+        <span class="c1"># Add the status code</span>
+        <span class="c1"># Add the current run time of the script</span>
+        <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s2">&quot;comments&quot;</span><span class="p">:</span> <span class="n">admin_comments_data_model</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item_id</span><span class="p">,</span> <span class="p">[]),</span>
+            <span class="s2">&quot;lastBuildTime&quot;</span><span class="p">:</span> <span class="n">time_utils_response</span><span class="p">[</span><span class="s2">&quot;datetimeObj&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%a</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> %b %Y %H:%M:%S +0000&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">status_code</span><span class="p">,</span>
+            <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">timestamp</span>
+        <span class="p">})</span>
+
+        <span class="c1"># If the file exist, check the status/comments between the item&#39;s previous status/code comment, and the</span>
+        <span class="c1"># current status/code comment to determine if the existing RSS file should be updated.</span>
+        <span class="n">update_current_feed</span> <span class="o">=</span> <span class="n">StatusManager</span><span class="o">.</span><span class="n">update_rss_feed</span><span class="p">(</span><span class="n">previous_status_output</span><span class="o">=</span><span class="n">previous_status_output</span><span class="p">,</span>
+                                                            <span class="n">item</span><span class="o">=</span><span class="n">value</span><span class="p">,</span>
+                                                            <span class="n">status_codes_data_model</span><span class="o">=</span><span class="n">status_codes_data_model</span><span class="p">)</span>
+        <span class="c1"># Check if we need to apply an update</span>
+        <span class="k">if</span> <span class="n">update_current_feed</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Update Required&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;---------- Events History --------&quot;</span><span class="p">)</span>
+            <span class="c1"># This file will hold a history of event changes</span>
+            <span class="n">current_events_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">event_history_dir_path</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;\status_history&quot;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">)</span>
+            <span class="c1"># Check file existence</span>
+            <span class="n">status_history_file_exist</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">current_events_file</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">status_history_file_exist</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Checking events file: </span><span class="si">{</span><span class="n">current_events_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">EventsManager</span><span class="o">.</span><span class="n">update_events_file</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">events_file</span><span class="o">=</span><span class="n">current_events_file</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating events file: </span><span class="si">{</span><span class="n">current_events_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">EventsManager</span><span class="o">.</span><span class="n">create_history_file</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">events_file</span><span class="o">=</span><span class="n">current_events_file</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">---------- RSS Updates -----------&quot;</span><span class="p">)</span>
+            <span class="c1"># Build the path to RSS output file for the current item.  This file is what the RSS reader reads.</span>
+            <span class="c1"># There should be one output file for each service/item being monitored.</span>
+            <span class="n">rss_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rss_dir_path</span><span class="p">,</span> <span class="n">item_id</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;rss_file_extension&quot;</span><span class="p">])</span>
+            <span class="c1"># Check if the output file already exist</span>
+            <span class="n">rss_file_exist</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">rss_file_path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">rss_file_exist</span><span class="p">:</span>
+                <span class="c1"># Update the dictionary</span>
+                <span class="c1"># rss_items is the placeholder in the main rss_template file</span>
+                <span class="n">value</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                    <span class="s2">&quot;rss_items&quot;</span><span class="p">:</span> <span class="n">rss_manager</span><span class="o">.</span><span class="n">build_item_nodes</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">events_file</span><span class="o">=</span><span class="n">current_events_file</span><span class="p">)</span>
+                <span class="p">})</span>
+                <span class="c1"># Update the RSS output file</span>
+                <span class="n">rss_manager</span><span class="o">.</span><span class="n">update_rss_contents</span><span class="p">(</span><span class="n">input_data</span><span class="o">=</span><span class="n">value</span><span class="p">,</span> <span class="n">rss_file</span><span class="o">=</span><span class="n">rss_file_path</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">=================================================================&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Saving results&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Output file path: </span><span class="si">{</span><span class="n">status_file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=================================================================&quot;</span><span class="p">)</span>
+    <span class="c1"># output file</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;statusPreparedOn&quot;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+        <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">[]</span>
+    <span class="p">}</span>
+    <span class="c1"># hydrate output file</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_model_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">output_file</span><span class="p">[</span><span class="s2">&quot;items&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;missing_item_title&quot;</span><span class="p">)),</span>
+            <span class="s2">&quot;snippet&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;snippet&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;missing_item_snippet&quot;</span><span class="p">)),</span>
+            <span class="s2">&quot;comments&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;comments&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;lastUpdateTime&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;lastUpdateTimestamp&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;updateRate&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;avgUpdateIntervalMins&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;featureCount&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;featureCount&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="s2">&quot;usage&quot;</span><span class="p">:</span> <span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;usage&quot;</span><span class="p">),</span>
+            <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">value</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">][</span><span class="s2">&quot;code&quot;</span><span class="p">]</span>
+            <span class="p">}</span>
+        <span class="p">})</span>
+    <span class="c1"># Pretty print dictionary</span>
+
+    <span class="c1"># If file do not exist then create it.</span>
+    <span class="c1"># TODO Not correct</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_exist</span><span class="p">:</span>
+        <span class="n">FileManager</span><span class="o">.</span><span class="n">create_new_file</span><span class="p">(</span><span class="n">status_file</span><span class="p">)</span>
+        <span class="n">FileManager</span><span class="o">.</span><span class="n">set_file_permission</span><span class="p">(</span><span class="n">status_file</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># open file</span>
+        <span class="nb">print</span><span class="p">()</span>
+    <span class="n">FileManager</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">output_file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">status_file</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Script completed...&quot;</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Live Feeds Service Aggregator 1.0.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">LiveFeedsHealthCheck</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Esri.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
+    </div>
+  </body>
+</html>

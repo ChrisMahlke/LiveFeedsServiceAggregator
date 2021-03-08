@@ -28,8 +28,7 @@ from datetime import datetime, timedelta
 
 
 def create_history_file(input_data=None, events_file=None):
-    """
-    Create a new history file and hydrate it.
+    """Create a new history file and hydrate it.
 
     :param input_data: Input data
     :param events_file: Output file
@@ -87,17 +86,17 @@ def update_events_file(input_data=None, events_file=None):
                                   max_days_ago=rss_time_range_in_days)
 
     # is the new event in the time range
-    #event_in_time_range = _is_event_in_time_range(input_data.get("pubEventDate", 0),
+    # event_in_time_range = _is_event_in_time_range(input_data.get("pubEventDate", 0),
     #                                              rss_time_range_in_days)
 
-    #if n_events >= n_max_events:
-        # number of events in the current item's history file
+    # if n_events >= n_max_events:
+    # number of events in the current item's history file
     #    _get_num_events(history)
     #    print("Remove the oldest event")
     #    print(f"{history[0]}")
     #    history.pop(0)
-    #else:
-    #print("\nUpdating events file")
+    # else:
+    # print("\nUpdating events file")
     # append new status to list
     history.append({
         "pubDate": dt_object.strftime("%a, %d %b %Y %H:%M:%S +0000"),
