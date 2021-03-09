@@ -1,0 +1,254 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>StatusManager &mdash; Live Feeds Service Aggregator 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Live Feeds Service Aggregator
+          
+
+          
+            
+            <img src="../_static/living-atlas.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Live Feeds Service Aggregator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>StatusManager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for StatusManager</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; </span>
+<span class="sd">This module is responsible for returning a status code and a set of details</span>
+<span class="sd">related to the status code</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="get_status_code"><a class="viewcode-back" href="../index.html#StatusManager.get_status_code">[docs]</a><span class="k">def</span> <span class="nf">get_status_code</span><span class="p">(</span><span class="n">status_code_key</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">input_config</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the status code and messaging</span>
+<span class="sd">    :param status_code_key:</span>
+<span class="sd">    :param input_config:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Legacy code from when the status file was an ini file</span>
+    <span class="k">if</span> <span class="n">input_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">input_config</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;code&quot;</span><span class="p">:</span> <span class="n">status_code_key</span><span class="p">,</span>
+        <span class="s2">&quot;statusDetails&quot;</span><span class="p">:</span> <span class="n">input_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">status_code_key</span><span class="p">)</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="update_rss_feed"><a class="viewcode-back" href="../index.html#StatusManager.update_rss_feed">[docs]</a><span class="k">def</span> <span class="nf">update_rss_feed</span><span class="p">(</span><span class="n">previous_status_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">status_codes_data_model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Determine whether or not we need to update the feed.  The update is based on not the status, but rather the status</span>
+<span class="sd">    comment.  An item&#39;s status code could have changed, however.</span>
+
+<span class="sd">    :param previous_status_output: The output status file from the previous run</span>
+<span class="sd">    :param item: The current status dict from the current item</span>
+<span class="sd">    :param status_codes_data_model: The status codes model to reference in order to obtain the comments</span>
+<span class="sd">    :return: Boolean indicating whether or not there was a change in the status</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># item ID</span>
+    <span class="n">item_id</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+    <span class="c1"># status code</span>
+    <span class="n">status_code</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">][</span><span class="s2">&quot;code&quot;</span><span class="p">]</span>
+    <span class="c1"># bool flag used to indicate whether or not there was an update since we last ran the script</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="c1"># TODO Should have used a dict with item ID&#39;s as the keys</span>
+    <span class="k">for</span> <span class="n">previous_status</span> <span class="ow">in</span> <span class="n">previous_status_output</span><span class="p">:</span>
+        <span class="c1"># item id on file (from the status file)</span>
+        <span class="n">previous_item_id</span> <span class="o">=</span> <span class="n">previous_status</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+        <span class="c1"># status code on file</span>
+        <span class="n">previous_item_status_code</span> <span class="o">=</span> <span class="n">previous_status</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">][</span><span class="s2">&quot;code&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">item_id</span> <span class="o">==</span> <span class="n">previous_item_id</span><span class="p">:</span>
+            <span class="c1"># compare the status codes from the current run to the previous run</span>
+            <span class="k">if</span> <span class="n">status_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">previous_item_status_code</span><span class="p">:</span>
+                <span class="c1"># obtain comment from the previous and current status code</span>
+                <span class="c1"># if the comments are the same, do not update the rss feed</span>
+                <span class="c1"># if the comments are different, update the feed</span>
+                <span class="n">previous_status_comment</span> <span class="o">=</span> <span class="n">get_status_code</span><span class="p">(</span><span class="n">previous_item_status_code</span><span class="p">,</span>
+                                                          <span class="n">status_codes_data_model</span><span class="p">)[</span><span class="s2">&quot;statusDetails&quot;</span><span class="p">][</span><span class="s2">&quot;Comment&quot;</span><span class="p">]</span>
+                <span class="n">current_status_comment</span> <span class="o">=</span> <span class="n">get_status_code</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span>
+                                                         <span class="n">status_codes_data_model</span><span class="p">)[</span><span class="s2">&quot;statusDetails&quot;</span><span class="p">][</span><span class="s2">&quot;Comment&quot;</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">previous_status_comment</span> <span class="o">==</span> <span class="n">current_status_comment</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Do not update RSS Feed for: </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># If we reach this point, the status has changed since the previous run</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Update RSS Feed for: </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="c1"># comments are different, update the feed</span>
+                    <span class="n">update</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">update</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Esri.
+
+    </p>
+  </div> 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

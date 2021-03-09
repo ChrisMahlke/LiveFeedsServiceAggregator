@@ -1,88 +1,222 @@
 
-<!DOCTYPE html>
 
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Welcome to Live Feeds Service Aggregator’s documentation! &#8212; Live Feeds Service Aggregator 1.0.0 documentation</title>
-    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
-    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Live Feeds Service Aggregator’s documentation! &mdash; Live Feeds Service Aggregator 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
     
-    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/language_data.js"></script>
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">Live Feeds Service Aggregator 1.0.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Welcome to Live Feeds Service Aggregator’s documentation!</a></li> 
-      </ul>
-    </div>  
+</head>
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home"> Live Feeds Service Aggregator
+          
+
+          
             
-  <div class="section" id="welcome-to-live-feeds-service-aggregator-s-documentation">
-<h1>Welcome to Live Feeds Service Aggregator’s documentation!<a class="headerlink" href="#welcome-to-live-feeds-service-aggregator-s-documentation" title="Permalink to this headline">¶</a></h1>
+            <img src="_static/living-atlas.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">Live Feeds Service Aggregator’s documentation!</a></li>
+<li><a class="reference internal" href="#module-ConfigManager">ConfigManager</a></li>
+<li><a class="reference internal" href="#module-FileManager">FileManager</a></li>
+<li><a class="reference internal" href="#module-EventsManager">EventsManager</a></li>
+<li><a class="reference internal" href="#module-LoggingUtils">LoggingUtils</a></li>
+<li><a class="reference internal" href="#module-QueryEngine">QueryEngine</a><ul>
+<li><a class="reference internal" href="#obtain-usage-statistics">Obtain usage statistics</a></li>
+<li><a class="reference internal" href="#obtain-feature-counts">Obtain feature counts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-RequestUtils">RequestUtils</a></li>
+<li><a class="reference internal" href="#module-RetryUtils">RetryUtils</a></li>
+<li><a class="reference internal" href="#module-RSSManager">RSSManager</a></li>
+<li><a class="reference internal" href="#module-ServiceValidator">ServiceValidator</a><ul>
+<li><a class="reference internal" href="#validate-item">Validate item</a></li>
+<li><a class="reference internal" href="#validate-service">Validate service</a></li>
+<li><a class="reference internal" href="#validate-service-layers">Validate service layers</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-StatusManager">StatusManager</a></li>
+<li><a class="reference internal" href="#module-TimeUtils">TimeUtils</a></li>
+<li><a class="reference internal" href="#module-UserUtils">UserUtils</a></li>
+<li><a class="reference internal" href="#module-version">version</a></li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Live Feeds Service Aggregator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Live Feeds Service Aggregator’s documentation!</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="live-feeds-service-aggregator-s-documentation">
+<h1>Live Feeds Service Aggregator’s documentation!<a class="headerlink" href="#live-feeds-service-aggregator-s-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-EventsManager"></span><p>Utility methods for working with storing events on file</p>
-<dl>
-<dt>timestamp (chris)</dt><dd><p>The current time the script is running
-Used to check the elapsed time between now and the last updated time of the feed</p>
-<blockquote>
-<div><p>Used to check the elapsed time between now and the last run time of the feed</p>
-</div></blockquote>
-</dd>
-<dt>lastUpdateTimestamp (paul)</dt><dd><dl class="simple">
-<dt>10 digit Timestamp ‘seconds since epoch’ containing time of last Successful Run (and Service update)</dt><dd><p>NOT USED in RSS/Events History</p>
-</dd>
-</dl>
-</dd>
-<dt>lastRunTimestamp (paul)</dt><dd><dl class="simple">
-<dt>10 digit Timestamp ‘seconds since epoch’ containing time of last run (having a Success, a Failure, or a No Action flag (‘No Data Updates’))</dt><dd><p>NOT USED in RSS/Events History</p>
-</dd>
-</dl>
-</dd>
-<dt>lastBuildTime (chris)</dt><dd><p>time_utils_response[“datetimeObj”].strftime(“%a, %d %b %Y %H:%M:%S +0000”)</p>
-</dd>
-</dl>
-<dl class="py function">
-<dt id="EventsManager._get_num_events">
-<code class="sig-prename descclassname">EventsManager.</code><code class="sig-name descname">_get_num_events</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">events_history</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#_get_num_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager._get_num_events" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the total number of events stored in the events history file.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>events_history</strong> – The history json object</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The number of events in the file</p>
-</dd>
-</dl>
+</div>
+<div class="section" id="module-ConfigManager">
+<span id="configmanager"></span><h1>ConfigManager<a class="headerlink" href="#module-ConfigManager" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="ConfigManager.ConfigManager">
+<em class="property">class </em><code class="sig-name descname">ConfigManager</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ConfigManager.html#ConfigManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ConfigManager.ConfigManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Routines for handling the loading and parsing of the config ini file</p>
+<dl class="py method">
+<dt id="ConfigManager.ConfigManager.get_config_data">
+<code class="sig-name descname">get_config_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">config_type</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/ConfigManager.html#ConfigManager.get_config_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ConfigManager.ConfigManager.get_config_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the data from the ini file sections
+:param config_type:
+:return: Data model with data from the ini file</p>
 </dd></dl>
 
+</dd></dl>
+
+<p><em>Code author: Chris Mahlke &lt;<a class="reference external" href="mailto:cmahlke&#37;&#52;&#48;esri&#46;com">cmahlke<span>&#64;</span>esri<span>&#46;</span>com</a>&gt;</em></p>
+<p><em>Section author: Paul Dodd &lt;<a class="reference external" href="mailto:pdodd&#37;&#52;&#48;esri&#46;com">pdodd<span>&#64;</span>esri<span>&#46;</span>com</a>&gt;</em></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The code author is the individual that wrote the code.  The section author contributed to the section documentation.</p>
+</div>
+</div>
+<div class="section" id="module-FileManager">
+<span id="filemanager"></span><h1>FileManager<a class="headerlink" href="#module-FileManager" title="Permalink to this headline">¶</a></h1>
+<p>Utility methods for working with files and directories</p>
 <dl class="py function">
-<dt id="EventsManager._get_num_events_ceiling">
-<code class="sig-prename descclassname">EventsManager.</code><code class="sig-name descname">_get_num_events_ceiling</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_dict</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#_get_num_events_ceiling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager._get_num_events_ceiling" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the maximum number of events permitted to be written in the events history file.</p>
+<dt id="FileManager.check_file_exist_by_os_path">
+<code class="sig-name descname">check_file_exist_by_os_path</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#check_file_exist_by_os_path"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.check_file_exist_by_os_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the path exist</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_dict</strong> – </p>
+<dd class="field-odd"><p><strong>path</strong> – </p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
@@ -91,12 +225,26 @@ Used to check the elapsed time between now and the last updated time of the feed
 </dd></dl>
 
 <dl class="py function">
-<dt id="EventsManager._get_rss_time_constrains">
-<code class="sig-prename descclassname">EventsManager.</code><code class="sig-name descname">_get_rss_time_constrains</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_dict</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#_get_rss_time_constrains"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager._get_rss_time_constrains" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the time constraints.</p>
+<dt id="FileManager.check_file_exist_by_pathlib">
+<code class="sig-name descname">check_file_exist_by_pathlib</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#check_file_exist_by_pathlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.check_file_exist_by_pathlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the file exists</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>input_dict</strong> – </p>
+<dd class="field-odd"><p><strong>path</strong> – Path to file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating if the file exist</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.create_new_file">
+<code class="sig-name descname">create_new_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#create_new_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.create_new_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new file and write some text in it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_path</strong> – </p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p></p>
@@ -105,14 +253,70 @@ Used to check the elapsed time between now and the last updated time of the feed
 </dd></dl>
 
 <dl class="py function">
-<dt id="EventsManager._is_event_in_time_range">
-<code class="sig-prename descclassname">EventsManager.</code><code class="sig-name descname">_is_event_in_time_range</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_to_check</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_limit</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/EventsManager.html#_is_event_in_time_range"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager._is_event_in_time_range" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check the event time to see if it falls within the range.</p>
-<dl class="field-list simple">
+<dt id="FileManager.create_new_folder">
+<code class="sig-name descname">create_new_folder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#create_new_folder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.create_new_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new directory.
+:param file_path:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.get_response_time_data">
+<code class="sig-name descname">get_response_time_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/FileManager.html#get_response_time_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.get_response_time_data" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>path</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.get_status_from_feed">
+<code class="sig-name descname">get_status_from_feed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#get_status_from_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.get_status_from_feed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the status of the service</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.init_rss_file">
+<code class="sig-name descname">init_rss_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rss_template</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">item_template</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">input_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rss_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#init_rss_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.init_rss_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hydrate an input XML template with an input dictionary and save to disk
+:param rss_template: An XML template
+:param item_template: The XML template for a single item node
+:param input_dict: Input dictionary of data
+:param rss_file: Output file path
+:return: None</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.open_file">
+<code class="sig-name descname">open_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/FileManager.html#open_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.open_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Open the file and return the data
+:param path: Path to the file
+:return: Return the content of the file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.save">
+<code class="sig-name descname">save</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="_modules/FileManager.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.save" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.set_file_permission">
+<code class="sig-name descname">set_file_permission</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#set_file_permission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.set_file_permission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Change the file permission to read and execute only.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="FileManager.update_response_time_data">
+<code class="sig-name descname">update_response_time_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/FileManager.html#update_response_time_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#FileManager.update_response_time_data" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>time_to_check</strong> – </p></li>
-<li><p><strong>time_limit</strong> – Time range in days “ago”</p></li>
+<li><p><strong>path</strong> – </p></li>
+<li><p><strong>input_data</strong> – </p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -121,9 +325,33 @@ Used to check the elapsed time between now and the last updated time of the feed
 </dl>
 </dd></dl>
 
+</div>
+<div class="section" id="module-EventsManager">
+<span id="eventsmanager"></span><h1>EventsManager<a class="headerlink" href="#module-EventsManager" title="Permalink to this headline">¶</a></h1>
+<p>Utility methods for working with storing events on file</p>
+<ul class="simple">
+<li><p>timestamp (chris)</p></li>
+</ul>
+<p>The current time the script is running
+Used to check the elapsed time between now and the last updated time of the feed
+Used to check the elapsed time between now and the last run time of the feed</p>
+<ul class="simple">
+<li><p>lastUpdateTimestamp (paul)</p></li>
+</ul>
+<p>10 digit Timestamp ‘seconds since epoch’ containing time of last Successful Run (and Service update)
+NOT USED in RSS/Events History</p>
+<ul class="simple">
+<li><p>lastRunTimestamp (paul)</p></li>
+</ul>
+<p>10 digit Timestamp ‘seconds since epoch’ containing time of last run (having a Success, a Failure, or a No Action flag (‘No Data Updates’))
+NOT USED in RSS/Events History</p>
+<ul class="simple">
+<li><p>lastBuildTime (chris)</p></li>
+</ul>
+<p>time_utils_response[“datetimeObj”].strftime(“%a, %d %b %Y %H:%M:%S +0000”)</p>
 <dl class="py function">
 <dt id="EventsManager.create_history_file">
-<code class="sig-prename descclassname">EventsManager.</code><code class="sig-name descname">create_history_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">events_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#create_history_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager.create_history_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">create_history_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">events_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#create_history_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager.create_history_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new history file and hydrate it.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -140,7 +368,7 @@ Used to check the elapsed time between now and the last updated time of the feed
 
 <dl class="py function">
 <dt id="EventsManager.update_events_file">
-<code class="sig-prename descclassname">EventsManager.</code><code class="sig-name descname">update_events_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">events_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#update_events_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager.update_events_file" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">update_events_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">events_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/EventsManager.html#update_events_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#EventsManager.update_events_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -156,6 +384,560 @@ Used to check the elapsed time between now and the last updated time of the feed
 </dd></dl>
 
 </div>
+<div class="section" id="module-LoggingUtils">
+<span id="loggingutils"></span><h1>LoggingUtils<a class="headerlink" href="#module-LoggingUtils" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="LoggingUtils.log_item_fail">
+<code class="sig-name descname">log_item_fail</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#log_item_fail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.log_item_fail" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="LoggingUtils.log_item_success">
+<code class="sig-name descname">log_item_success</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#log_item_success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.log_item_success" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="LoggingUtils.log_portal_error">
+<code class="sig-name descname">log_portal_error</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em>, <em class="sig-param"><span class="n">err</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#log_portal_error"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.log_portal_error" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="LoggingUtils.log_portal_success">
+<code class="sig-name descname">log_portal_success</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#log_portal_success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.log_portal_success" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="LoggingUtils.log_status_code_details">
+<code class="sig-name descname">log_status_code_details</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item_id</span></em>, <em class="sig-param"><span class="n">status</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#log_status_code_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.log_status_code_details" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="LoggingUtils.log_validating_new_item">
+<code class="sig-name descname">log_validating_new_item</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">item</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#log_validating_new_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.log_validating_new_item" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="LoggingUtils.print_data">
+<code class="sig-name descname">print_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LoggingUtils.html#print_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#LoggingUtils.print_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-QueryEngine">
+<span id="queryengine"></span><h1>QueryEngine<a class="headerlink" href="#module-QueryEngine" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="obtain-usage-statistics">
+<h2>Obtain usage statistics<a class="headerlink" href="#obtain-usage-statistics" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Requirements for check</p></li>
+</ul>
+<p>Item must be accessible</p>
+<ul class="simple">
+<li><p>Results</p></li>
+</ul>
+<p>Success -   Obtain usage statistics
+Error   -   Use usage statistics from previous run (do not over-write data model)</p>
+</div>
+<div class="section" id="obtain-feature-counts">
+<h2>Obtain feature counts<a class="headerlink" href="#obtain-feature-counts" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Requirements for check</p></li>
+</ul>
+<p>Service and Layers must be accessible</p>
+<ul class="simple">
+<li><p>Results</p></li>
+</ul>
+<p>Success -   Obtain feature counts
+Error   -   Use feature counts from previous run (do not over-write data model)</p>
+<dl class="py function">
+<dt id="QueryEngine.check_alfp_url">
+<code class="sig-name descname">check_alfp_url</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/QueryEngine.html#check_alfp_url"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.check_alfp_url" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_data</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.get_alfp_content">
+<code class="sig-name descname">get_alfp_content</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_items</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/QueryEngine.html#get_alfp_content"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.get_alfp_content" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_items</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.get_feature_counts">
+<code class="sig-name descname">get_feature_counts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/QueryEngine.html#get_feature_counts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.get_feature_counts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the sum of all “included” features in all the feature services in the input data model
+:param data_model: Input data model
+:return: Updated data model</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.get_layers_average_elapsed_time">
+<code class="sig-name descname">get_layers_average_elapsed_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">layers_elapsed_times</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/QueryEngine.html#get_layers_average_elapsed_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.get_layers_average_elapsed_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sum up the elapsed times of all the layers in the service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>layers_elapsed_times</strong> – A dict containing the elapsed times and layer names for a service</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The average (float) of the elapsed times</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.get_retry_count">
+<code class="sig-name descname">get_retry_count</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/QueryEngine.html#get_retry_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.get_retry_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the total number of retries</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.get_service_elapsed_time">
+<code class="sig-name descname">get_service_elapsed_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">service_is_valid</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">response</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/QueryEngine.html#get_service_elapsed_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.get_service_elapsed_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the elapsed time in seconds.</p>
+<p>The amount of time elapsed between sending the request and the arrival of the response (as a timedelta). This
+property specifically measures the time taken between sending the first byte of the request and finishing parsing
+the headers. It is therefore unaffected by consuming the response content or the value of the stream keyword
+argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>service_is_valid</strong> – If the service is not valid, return 0 (which is impossible)</p></li>
+<li><p><strong>response</strong> – The response object</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The response time in seconds</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.get_usage_details">
+<code class="sig-name descname">get_usage_details</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/QueryEngine.html#get_usage_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.get_usage_details" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the item’s usage statistics
+:param data_model: Input data model
+:return: Updated data model dictionary</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.prepare_alfp_query_params">
+<code class="sig-name descname">prepare_alfp_query_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/QueryEngine.html#prepare_alfp_query_params"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.prepare_alfp_query_params" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="QueryEngine.process_alfp_response">
+<code class="sig-name descname">process_alfp_response</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">alfp_response</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/QueryEngine.html#process_alfp_response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#QueryEngine.process_alfp_response" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>alfp_response</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-RequestUtils">
+<span id="requestutils"></span><h1>RequestUtils<a class="headerlink" href="#module-RequestUtils" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="RequestUtils.check_request">
+<code class="sig-name descname">check_request</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">path</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/RequestUtils.html#check_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RequestUtils.check_request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a request and return a dictionary indicating success, failure, and the response object
+:param path:
+:param params:
+:param kwargs:
+:return:</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-RetryUtils">
+<span id="retryutils"></span><h1>RetryUtils<a class="headerlink" href="#module-RetryUtils" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="RetryUtils.CallbackRetry">
+<em class="property">class </em><code class="sig-name descname">CallbackRetry</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#CallbackRetry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.CallbackRetry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass Retry
+Each retry attempt will create a new Retry object with updated values, so
+they can be safely reused.</p>
+<dl class="py method">
+<dt id="RetryUtils.CallbackRetry.increment">
+<code class="sig-name descname">increment</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">url</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#CallbackRetry.increment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.CallbackRetry.increment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a new Retry object with incremented retry counters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>response</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">HTTPResponse</span></code>) – A response object, or None, if the server did not
+return a response.</p></li>
+<li><p><strong>error</strong> (<em>Exception</em>) – An error encountered during the request, or
+None if the response was received successfully.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A new <code class="docutils literal notranslate"><span class="pre">Retry</span></code> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="RetryUtils.CallbackRetry.new">
+<code class="sig-name descname">new</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#CallbackRetry.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.CallbackRetry.new" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="RetryUtils.RetrySession">
+<em class="property">class </em><code class="sig-name descname">RetrySession</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>datetime.timedelta<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#RetrySession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.RetrySession" title="Permalink to this definition">¶</a></dt>
+<dd><p>A session that has a timeout and a <cite>raises_for_status</cite>
+for all of its requests.</p>
+<p>raise_for_status: will raise an HTTPError if the HTTP request returned an
+unsuccessful status code.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="RetryUtils.TimeoutSession">
+<em class="property">class </em><code class="sig-name descname">TimeoutSession</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">timeout</span><span class="p">:</span> <span class="n">Union<span class="p">[</span>int<span class="p">, </span>datetime.timedelta<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">5</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#TimeoutSession"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.TimeoutSession" title="Permalink to this definition">¶</a></dt>
+<dd><p>A session that has a timeout for all of its requests.</p>
+<dl class="py method">
+<dt id="RetryUtils.TimeoutSession.request">
+<code class="sig-name descname">request</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">url</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#TimeoutSession.request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.TimeoutSession.request" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>, prepares it and sends it.
+Returns <code class="xref py py-class docutils literal notranslate"><span class="pre">Response</span></code> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>method</strong> – method for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</p></li>
+<li><p><strong>url</strong> – URL for the new <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> object.</p></li>
+<li><p><strong>params</strong> – (optional) Dictionary or bytes to be sent in the query
+string for the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>data</strong> – (optional) Dictionary, list of tuples, bytes, or file-like
+object to send in the body of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>json</strong> – (optional) json to send in the body of the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>headers</strong> – (optional) Dictionary of HTTP Headers to send with the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>cookies</strong> – (optional) Dict or CookieJar object to send with the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code>.</p></li>
+<li><p><strong>files</strong> – (optional) Dictionary of <code class="docutils literal notranslate"><span class="pre">'filename':</span> <span class="pre">file-like-objects</span></code>
+for multipart encoding upload.</p></li>
+<li><p><strong>auth</strong> – (optional) Auth tuple or callable to enable
+Basic/Digest/Custom HTTP Auth.</p></li>
+<li><p><strong>timeout</strong> (<em>float</em><em> or </em><em>tuple</em>) – (optional) How long to wait for the server to send
+data before giving up, as a float, or a <span class="xref std std-ref">(connect timeout,
+read timeout)</span> tuple.</p></li>
+<li><p><strong>allow_redirects</strong> (<em>bool</em>) – (optional) Set to True by default.</p></li>
+<li><p><strong>proxies</strong> – (optional) Dictionary mapping protocol or protocol and
+hostname to the URL of the proxy.</p></li>
+<li><p><strong>stream</strong> – (optional) whether to immediately download the response
+content. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>verify</strong> – (optional) Either a boolean, in which case it controls whether we verify
+the server’s TLS certificate, or a string, in which case it must be a path
+to a CA bundle to use. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>. When set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, requests will accept any TLS certificate presented by
+the server, and will ignore hostname mismatches and/or expired
+certificates, which will make your application vulnerable to
+man-in-the-middle (MitM) attacks. Setting verify to <code class="docutils literal notranslate"><span class="pre">False</span></code> 
+may be useful during local development or testing.</p></li>
+<li><p><strong>cert</strong> – (optional) if String, path to ssl client cert file (.pem).
+If Tuple, (‘cert’, ‘key’) pair.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>requests.Response</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="RetryUtils.get_retry_output">
+<code class="sig-name descname">get_retry_output</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#get_retry_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.get_retry_output" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="RetryUtils.retry">
+<code class="sig-name descname">retry</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">session</span><span class="p">:</span> <span class="n">Optional<span class="p">[</span>T<span class="p">]</span></span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">retries</span><span class="p">:</span> <span class="n">int</span> <span class="o">=</span> <span class="default_value">3</span></em>, <em class="sig-param"><span class="n">backoff_factor</span><span class="p">:</span> <span class="n">float</span> <span class="o">=</span> <span class="default_value">1</span></em>, <em class="sig-param"><span class="n">status_to_retry</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>int<span class="p">, </span><span class="p">…</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">500, 502, 504</span></em>, <em class="sig-param"><span class="n">prefixes</span><span class="p">:</span> <span class="n">Tuple<span class="p">[</span>str<span class="p">, </span><span class="p">…</span><span class="p">]</span></span> <span class="o">=</span> <span class="default_value">'http://', 'https://'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span> &#x2192; Union<span class="p">[</span>T<span class="p">, </span><a class="reference internal" href="#RetryUtils.RetrySession" title="RetryUtils.RetrySession">RetryUtils.RetrySession</a><span class="p">]</span><a class="reference internal" href="_modules/RetryUtils.html#retry"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.retry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configures the passed-in session to retry on failed requests
+due to connection errors, specific HTTP response codes and
+30X redirections.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>session: A session to allow to retry. None creates a new Session.</dt><dd><p>If necessary, Optional[t] is added for function and method
+annotations if a default value equal to None is set.</p>
+</dd>
+<dt>retries: The number of maximum retries before raising an</dt><dd><p>exception.</p>
+</dd>
+<dt>backoff_factor: A factor used to compute the waiting time between</dt><dd><p>retries.
+See <a href="#id1"><span class="problematic" id="id2">:arg:`urllib3.util.retry.Retry.backoff_factor`</span></a>.</p>
+</dd>
+<dt>status_to_retry: A tuple of status codes that trigger the reply</dt><dd><p>behaviour.</p>
+</dd>
+<dt>prefixes: A tuple of URL prefixes that this retry configuration</dt><dd><p>affects. By default, <code class="docutils literal notranslate"><span class="pre">https</span></code> and <code class="docutils literal notranslate"><span class="pre">https</span></code>.</p>
+</dd>
+<dt><a href="#id3"><span class="problematic" id="id4">**</span></a>kwargs: Extra arguments that are passed to</dt><dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">urllib3.util.retry.Retry</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt>Returns:</dt><dd><p>A session object with the retry setup.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="RetryUtils.retry_callback">
+<code class="sig-name descname">retry_callback</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">url</span></em>, <em class="sig-param"><span class="n">item_id</span></em>, <em class="sig-param"><span class="n">counter</span></em>, <em class="sig-param"><span class="n">start_time</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RetryUtils.html#retry_callback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RetryUtils.retry_callback" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-RSSManager">
+<span id="rssmanager"></span><h1>RSSManager<a class="headerlink" href="#module-RSSManager" title="Permalink to this headline">¶</a></h1>
+<p>Utility methods for working with RSS</p>
+<dl class="py class">
+<dt id="RSSManager.RSS">
+<em class="property">class </em><code class="sig-name descname">RSS</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rss_template</span></em>, <em class="sig-param"><span class="n">item_template</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSSManager.html#RSS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSSManager.RSS" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="RSSManager.RSS.build_item_nodes">
+<code class="sig-name descname">build_item_nodes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">events_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSSManager.html#RSS.build_item_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSSManager.RSS.build_item_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_data</strong> – </p></li>
+<li><p><strong>events_file</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="RSSManager.RSS.update_rss_contents">
+<code class="sig-name descname">update_rss_contents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rss_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/RSSManager.html#RSS.update_rss_contents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#RSSManager.RSS.update_rss_contents" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_data</strong> – </p></li>
+<li><p><strong>rss_file</strong> – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-ServiceValidator">
+<span id="servicevalidator"></span><h1>ServiceValidator<a class="headerlink" href="#module-ServiceValidator" title="Permalink to this headline">¶</a></h1>
+<p>ServiceValidator</p>
+<div class="section" id="validate-item">
+<h2>Validate item<a class="headerlink" href="#validate-item" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Requirements for check</p></li>
+</ul>
+<p>Item ID</p>
+<ul class="simple">
+<li><p>Results</p></li>
+</ul>
+<dl class="simple">
+<dt>Success -   Item is accessible in ArcGIS Online</dt><dd><p>Obtain meta-data (Title, Snippet)
+Validate service
+Validate layers
+Obtain usage statistics
+Obtain feature counts</p>
+</dd>
+<dt>Error   -   Item is either Private or Invalid</dt><dd><p>Does not exist
+Validate service
+Validate layers
+Use meta-data from previous run (do not over-write data model)
+Use usage statistics from previous run (do not over-write data model)</p>
+</dd>
+</dl>
+</div>
+<div class="section" id="validate-service">
+<h2>Validate service<a class="headerlink" href="#validate-service" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Requirements for check</p></li>
+</ul>
+<p>If the item it not accessible, the service url on file (config file) can be used</p>
+<ul class="simple">
+<li><p>Results</p></li>
+</ul>
+<dl class="simple">
+<dt>Success -   Record response</dt><dd><p>Run checks against alfp results
+Validate layers</p>
+</dd>
+</dl>
+<p>Error   -   Use feature counts from previous run (do not over-write data model)</p>
+</div>
+<div class="section" id="validate-service-layers">
+<h2>Validate service layers<a class="headerlink" href="#validate-service-layers" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Requirements for check</p></li>
+</ul>
+<p>Service url on the item or on file must be accessible</p>
+<ul class="simple">
+<li><p>Results</p></li>
+</ul>
+<p>Success -   Obtain feature counts
+Error   -   Use feature counts from previous run (do not over-write data model)</p>
+<dl class="py function">
+<dt id="ServiceValidator.validate_items">
+<code class="sig-name descname">validate_items</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gis</span><span class="p">:</span> <span class="n">arcgis.gis.GIS</span> <span class="o">=</span> <span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/ServiceValidator.html#validate_items"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ServiceValidator.validate_items" title="Permalink to this definition">¶</a></dt>
+<dd><p>Accepts a dict of items and retrieves the item in ArcGIS Online.
+If the item is accessible the title and snippet are updated to reflect any changes that occurred in AGOL</p>
+<p>Validation Rule:
+1) Is the item ID a valid ID
+2) Is the item accessible</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ServiceValidator.validate_layers">
+<code class="sig-name descname">validate_layers</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/ServiceValidator.html#validate_layers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ServiceValidator.validate_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the layers of the service
+:param data_model:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="ServiceValidator.validate_services">
+<code class="sig-name descname">validate_services</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/ServiceValidator.html#validate_services"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#ServiceValidator.validate_services" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate all the services on the input data model
+:param data_model:
+:return: Updated data model with the results of the validated services</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-StatusManager">
+<span id="statusmanager"></span><h1>StatusManager<a class="headerlink" href="#module-StatusManager" title="Permalink to this headline">¶</a></h1>
+<p>This module is responsible for returning a status code and a set of details
+related to the status code</p>
+<dl class="py function">
+<dt id="StatusManager.get_status_code">
+<code class="sig-name descname">get_status_code</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">status_code_key</span><span class="p">:</span> <span class="n">str</span> <span class="o">=</span> <span class="default_value">''</span></em>, <em class="sig-param"><span class="n">input_config</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/StatusManager.html#get_status_code"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#StatusManager.get_status_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the status code and messaging
+:param status_code_key:
+:param input_config:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="StatusManager.update_rss_feed">
+<code class="sig-name descname">update_rss_feed</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">previous_status_output</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">item</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">status_codes_data_model</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="_modules/StatusManager.html#update_rss_feed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#StatusManager.update_rss_feed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether or not we need to update the feed.  The update is based on not the status, but rather the status
+comment.  An item’s status code could have changed, however.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>previous_status_output</strong> – The output status file from the previous run</p></li>
+<li><p><strong>item</strong> – The current status dict from the current item</p></li>
+<li><p><strong>status_codes_data_model</strong> – The status codes model to reference in order to obtain the comments</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Boolean indicating whether or not there was a change in the status</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-TimeUtils">
+<span id="timeutils"></span><h1>TimeUtils<a class="headerlink" href="#module-TimeUtils" title="Permalink to this headline">¶</a></h1>
+<p>Retrieve the timestamp, it will be used to indicated when this script
+is executed.</p>
+<p>This script requires that <cite>datetime</cite> be installed within the Python
+environment you are running this script in.</p>
+<p>This file can also be imported as a module and contains the following
+functions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>getCurrentTimestamp</p></li>
+</ul>
+</div></blockquote>
+<dl class="py function">
+<dt id="TimeUtils.convert_from_utc_to_datetime">
+<code class="sig-name descname">convert_from_utc_to_datetime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">utc_timestamp</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TimeUtils.html#convert_from_utc_to_datetime"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TimeUtils.convert_from_utc_to_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the local date corresponding to the POSIX timestamp
+:param utc_timestamp:
+:return:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="TimeUtils.get_current_time_and_date">
+<code class="sig-name descname">get_current_time_and_date</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/TimeUtils.html#get_current_time_and_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TimeUtils.get_current_time_and_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current date and time (this wil be included at the root level
+of the JSON data model. The datetime module supplies classes for
+manipulating dates and times</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="TimeUtils.is_now_excluded">
+<code class="sig-name descname">is_now_excluded</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">excluded_time_ranges</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excluded_days</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">excluded_dates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ct</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/TimeUtils.html#is_now_excluded"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#TimeUtils.is_now_excluded" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare the current timestamp of the run to any or all of the input exclusion parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>excluded_time_ranges</strong> – A comma separated list of string representing time rangers in the format of</p>
+</dd>
+</dl>
+<p>hh:mm AM/PM - hh:mm AM/PM
+:param excluded_days: A comma separated list of strings each representing a day of the week in integer format
+(e.g. 0,1,3)
+:param excluded_dates: A comma separated list of strings, each representing a specific mm/dd/yyyy
+:param ct: The current timestamp this script is run</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A boolean value indicating whether or not the current timestamp is within the range of ANY of the input</p>
+</dd>
+</dl>
+<p>time parameters</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-UserUtils">
+<span id="userutils"></span><h1>UserUtils<a class="headerlink" href="#module-UserUtils" title="Permalink to this headline">¶</a></h1>
+<p>Print User and Install information to stdout</p>
+<p>This script allows prints to stdout information about the authenticated
+user and install information about the environment in which the script is
+being executed.</p>
+<p>This script requires that datetime and sys be installed within the Python
+environment you are running this script in.</p>
+<dl class="py class">
+<dt id="UserUtils.User">
+<em class="property">class </em><code class="sig-name descname">User</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user</span></em>, <em class="sig-param"><span class="n">install_info</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/UserUtils.html#User"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UserUtils.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prints to stdout information about the current signed in user and the 
+Python and ArcGIS environment</p>
+<p>greeting(self)</p>
+<dl class="py method">
+<dt id="UserUtils.User.greeting">
+<code class="sig-name descname">greeting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/UserUtils.html#User.greeting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#UserUtils.User.greeting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print to stdout a welcome message
+:return: None</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-version">
+<span id="version"></span><h1>version<a class="headerlink" href="#module-version" title="Permalink to this headline">¶</a></h1>
+<p>Version of script as a represented as tuple</p>
+</div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
@@ -166,55 +948,39 @@ Used to check the elapsed time between now and the last updated time of the feed
 </div>
 
 
-            <div class="clearer"></div>
+           </div>
+           
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <h3><a href="#">Table of Contents</a></h3>
-  <ul>
-<li><a class="reference internal" href="#">Welcome to Live Feeds Service Aggregator’s documentation!</a></li>
-<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
-</ul>
+          <footer>
 
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/index.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
-      <input type="submit" value="Go" />
-    </form>
-    </div>
-</div>
-<script>$('#searchbox').show(0);</script>
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Esri.
+
+    </p>
+  </div> 
+
+</footer>
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">Live Feeds Service Aggregator 1.0.0 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Welcome to Live Feeds Service Aggregator’s documentation!</a></li> 
-      </ul>
-    </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2021, Esri.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.2.1.
-    </div>
-  </body>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
 </html>

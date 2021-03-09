@@ -1,0 +1,278 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>RSSManager &mdash; Live Feeds Service Aggregator 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Live Feeds Service Aggregator
+          
+
+          
+            
+            <img src="../_static/living-atlas.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Live Feeds Service Aggregator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>RSSManager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for RSSManager</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Utility methods for working with RSS &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">html</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">FileManager</span> <span class="k">as</span> <span class="nn">FileManager</span>
+<span class="kn">import</span> <span class="nn">TimeUtils</span> <span class="k">as</span> <span class="nn">TimeUtils</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+
+
+<div class="viewcode-block" id="RSS"><a class="viewcode-back" href="../index.html#RSSManager.RSS">[docs]</a><span class="k">class</span> <span class="nc">RSS</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rss_template</span><span class="p">,</span> <span class="n">item_template</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param rss_template:</span>
+<span class="sd">        :param item_template:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rss_template</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">rss_template</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item_template</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">item_template</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RSS.build_item_nodes"><a class="viewcode-back" href="../index.html#RSSManager.RSS.build_item_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">build_item_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">events_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param input_data:</span>
+<span class="sd">        :param events_file:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># JSON from events file</span>
+        <span class="n">status_history_json</span> <span class="o">=</span> <span class="n">FileManager</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">events_file</span><span class="p">)</span>
+        <span class="c1"># history element</span>
+        <span class="n">history</span> <span class="o">=</span> <span class="n">status_history_json</span><span class="p">[</span><span class="s2">&quot;history&quot;</span><span class="p">]</span>
+        <span class="c1"># comments</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1">#</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># build RSS file</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">history</span><span class="p">:</span>
+            <span class="c1"># store the admin comments</span>
+            <span class="n">admin_comments</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="c1"># comments section</span>
+            <span class="n">comments_section</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="c1"># sort the comments in the comments section in reverse order by time</span>
+            <span class="n">sorted_comments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">&quot;comments&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># If there are comments, build the section that will be included in the rss output</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_comments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">sorted_comment</span> <span class="ow">in</span> <span class="n">sorted_comments</span><span class="p">:</span>
+                    <span class="n">comment</span> <span class="o">=</span> <span class="n">sorted_comment</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">]</span>
+                    <span class="n">comment_timestamp</span> <span class="o">=</span> <span class="n">TimeUtils</span><span class="o">.</span><span class="n">convert_from_utc_to_datetime</span><span class="p">(</span>
+                        <span class="n">sorted_comment</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%a</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> %b %Y %H:%M:%S&quot;</span><span class="p">)</span>
+                    <span class="n">admin_comments</span> <span class="o">+=</span> <span class="s2">&quot;&lt;li&gt;&quot;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Posted: </span><span class="si">{</span><span class="n">comment_timestamp</span><span class="si">}</span><span class="s2"> | &lt;b&gt;</span><span class="si">{</span><span class="n">comment</span><span class="si">}</span><span class="s2">&lt;/b&gt;&quot;</span> <span class="o">+</span> <span class="s2">&quot;&lt;/li&gt;&quot;</span>
+                <span class="n">comments_section</span> <span class="o">=</span> <span class="s2">&quot;&lt;h4&gt;&quot;</span> <span class="o">+</span> <span class="n">input_data</span><span class="p">[</span><span class="s2">&quot;rss_comments_header&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&lt;/h4&gt;&quot;</span> <span class="o">+</span> <span class="n">admin_comments</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span> <span class="o">+</span> <span class="n">comments_section</span>
+
+            <span class="c1"># Hydrate the data model to include the comments</span>
+            <span class="n">input_data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;adminComments&quot;</span><span class="p">:</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">comments_section</span><span class="p">),</span>
+                <span class="s2">&quot;lastBuildTime&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;lastBuildTime&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;pubDate&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;pubDate&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;pubEventDate&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;pubEventDate&quot;</span><span class="p">],</span>
+                <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="n">event</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span>
+            <span class="p">})</span>
+
+            <span class="c1"># Open the RSS item template.</span>
+            <span class="c1"># Create the item nodes that will ultimately hydrate the main rss template</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_template</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+                <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="n">input_data</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RSS.update_rss_contents"><a class="viewcode-back" href="../index.html#RSSManager.RSS.update_rss_contents">[docs]</a>    <span class="k">def</span> <span class="nf">update_rss_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rss_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param input_data:</span>
+<span class="sd">        :param rss_file:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Open the RSS main template</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rss_template</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">output_file_contents</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+
+        <span class="c1"># Over-write to an existing or new file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">rss_file</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file_contents</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Esri.
+
+    </p>
+  </div> 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

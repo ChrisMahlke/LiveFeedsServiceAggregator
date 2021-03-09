@@ -1,0 +1,546 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ServiceValidator &mdash; Live Feeds Service Aggregator 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Live Feeds Service Aggregator
+          
+
+          
+            
+            <img src="../_static/living-atlas.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Live Feeds Service Aggregator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>ServiceValidator</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for ServiceValidator</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">ServiceValidator</span>
+
+<span class="sd">Validate item</span>
+<span class="sd">---------------------------</span>
+<span class="sd">- Requirements for check</span>
+<span class="sd">Item ID</span>
+
+<span class="sd">- Results</span>
+<span class="sd">Success -   Item is accessible in ArcGIS Online</span>
+<span class="sd">            Obtain meta-data (Title, Snippet)</span>
+<span class="sd">            Validate service</span>
+<span class="sd">            Validate layers</span>
+<span class="sd">            Obtain usage statistics</span>
+<span class="sd">            Obtain feature counts</span>
+<span class="sd">Error   -   Item is either Private or Invalid</span>
+<span class="sd">            Does not exist</span>
+<span class="sd">            Validate service</span>
+<span class="sd">            Validate layers</span>
+<span class="sd">            Use meta-data from previous run (do not over-write data model)</span>
+<span class="sd">            Use usage statistics from previous run (do not over-write data model)</span>
+
+<span class="sd">Validate service</span>
+<span class="sd">---------------------------</span>
+<span class="sd">- Requirements for check</span>
+<span class="sd">If the item it not accessible, the service url on file (config file) can be used</span>
+
+<span class="sd">- Results</span>
+<span class="sd">Success -   Record response</span>
+<span class="sd">            Run checks against alfp results</span>
+<span class="sd">            Validate layers</span>
+<span class="sd">Error   -   Use feature counts from previous run (do not over-write data model)</span>
+
+<span class="sd">Validate service layers</span>
+<span class="sd">---------------------------</span>
+<span class="sd">- Requirements for check</span>
+<span class="sd">Service url on the item or on file must be accessible</span>
+
+<span class="sd">- Results</span>
+<span class="sd">Success -   Obtain feature counts</span>
+<span class="sd">Error   -   Use feature counts from previous run (do not over-write data model)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">arcgis</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">RequestUtils</span> <span class="k">as</span> <span class="nn">RequestUtils</span>
+
+
+<div class="viewcode-block" id="validate_items"><a class="viewcode-back" href="../index.html#ServiceValidator.validate_items">[docs]</a><span class="k">def</span> <span class="nf">validate_items</span><span class="p">(</span><span class="n">gis</span><span class="p">:</span> <span class="n">arcgis</span><span class="o">.</span><span class="n">gis</span><span class="o">.</span><span class="n">GIS</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">data_model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Accepts a dict of items and retrieves the item in ArcGIS Online.</span>
+<span class="sd">    If the item is accessible the title and snippet are updated to reflect any changes that occurred in AGOL</span>
+
+<span class="sd">    Validation Rule:</span>
+<span class="sd">    1) Is the item ID a valid ID</span>
+<span class="sd">    2) Is the item accessible</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_model</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">validate_item</span><span class="p">(</span><span class="n">current_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate an item&#39;s ID and retrieve its meta-data.  If the item is not accessible and it&#39;s already in the</span>
+<span class="sd">        previous run then propagate the meta-data from the previous run.</span>
+<span class="sd">        :param current_item: The current item ID</span>
+<span class="sd">        :return: Dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># the item ID</span>
+        <span class="n">item_id</span> <span class="o">=</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># the item ID params from the config file and the content from the previous run (if it exist)</span>
+        <span class="n">item_content</span> <span class="o">=</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># initialize the values</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">item_content</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">snippet</span> <span class="o">=</span> <span class="n">item_content</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;snippet&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">service_url</span> <span class="o">=</span> <span class="n">item_content</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;service_url&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">validated_item_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+            <span class="s2">&quot;snippet&quot;</span><span class="p">:</span> <span class="n">snippet</span><span class="p">,</span>
+            <span class="s2">&quot;service_url&quot;</span><span class="p">:</span> <span class="n">service_url</span><span class="p">,</span>
+            <span class="s2">&quot;agolItem&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;itemIsValid&quot;</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="p">}</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">agol_item</span> <span class="o">=</span> <span class="n">gis</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item_id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">agol_item</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># The item ID is invalid</span>
+                <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">validated_item_dict</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> is invalid.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c1"># The item ID is valid, however, not accessible</span>
+            <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">validated_item_dict</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> is inaccessible: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># The item is a valid accessible item in ArcGIS Online</span>
+            <span class="c1"># Fetch the item&#39;s title and snippet</span>
+            <span class="n">title</span> <span class="o">=</span> <span class="n">agol_item</span><span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">]</span>
+            <span class="n">snippet</span> <span class="o">=</span> <span class="n">agol_item</span><span class="p">[</span><span class="s2">&quot;snippet&quot;</span><span class="p">]</span>
+            <span class="n">service_url</span> <span class="o">=</span> <span class="n">agol_item</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+            <span class="n">validated_item_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">title</span><span class="p">,</span>
+                <span class="s2">&quot;snippet&quot;</span><span class="p">:</span> <span class="n">snippet</span><span class="p">,</span>
+                <span class="s2">&quot;service_url&quot;</span><span class="p">:</span> <span class="n">service_url</span><span class="p">,</span>
+                <span class="s2">&quot;agolItem&quot;</span><span class="p">:</span> <span class="n">agol_item</span><span class="p">,</span>
+                <span class="s2">&quot;itemIsValid&quot;</span><span class="p">:</span> <span class="kc">True</span>
+            <span class="p">})</span>
+            <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">validated_item_dict</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">validate_item</span><span class="p">,</span> <span class="n">data_model</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="validate_services"><a class="viewcode-back" href="../index.html#ServiceValidator.validate_services">[docs]</a><span class="k">def</span> <span class="nf">validate_services</span><span class="p">(</span><span class="n">data_model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate all the services on the input data model</span>
+<span class="sd">    :param data_model:</span>
+<span class="sd">    :return: Updated data model with the results of the validated services</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_model</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">validate_service</span><span class="p">(</span><span class="n">current_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Validate a single service</span>
+<span class="sd">        :param current_item: Input item/service</span>
+<span class="sd">        :return: Dictionary of results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item_id</span> <span class="o">=</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">item_content</span> <span class="o">=</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;agolItem&#39;</span><span class="p">]</span>
+        <span class="n">type_keywords</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;typeKeywords&#39;</span><span class="p">]</span>
+        <span class="n">require_token</span> <span class="o">=</span> <span class="n">_requires_token</span><span class="p">(</span><span class="s2">&quot;Requires Subscription&quot;</span><span class="p">,</span> <span class="n">type_keywords</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;default retry count threshold: </span><span class="si">{</span><span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;default_retry_count&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;default timeout threshold: </span><span class="si">{</span><span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;default_timeout&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;service url: </span><span class="si">{</span><span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;service_url&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;requires token: </span><span class="si">{</span><span class="n">require_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">RequestUtils</span><span class="o">.</span><span class="n">check_request</span><span class="p">(</span><span class="n">path</span><span class="o">=</span><span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;service_url&quot;</span><span class="p">],</span>
+                                              <span class="n">params</span><span class="o">=</span><span class="p">{},</span>
+                                              <span class="n">try_json</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                              <span class="n">add_token</span><span class="o">=</span><span class="n">require_token</span><span class="p">,</span>
+                                              <span class="n">retry_factor</span><span class="o">=</span><span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;default_retry_count&quot;</span><span class="p">],</span>
+                                              <span class="n">timeout_factor</span><span class="o">=</span><span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;default_timeout&quot;</span><span class="p">],</span>
+                                              <span class="n">token</span><span class="o">=</span><span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">],</span>
+                                              <span class="nb">id</span><span class="o">=</span><span class="n">item_id</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span>
+            <span class="o">**</span><span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="o">**</span><span class="p">{</span><span class="s2">&quot;serviceResponse&quot;</span><span class="p">:</span> <span class="n">response</span><span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">validate_service</span><span class="p">,</span> <span class="n">data_model</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span></div>
+
+
+<div class="viewcode-block" id="validate_layers"><a class="viewcode-back" href="../index.html#ServiceValidator.validate_layers">[docs]</a><span class="k">def</span> <span class="nf">validate_layers</span><span class="p">(</span><span class="n">data_model</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate the layers of the service</span>
+<span class="sd">    :param data_model:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data_model</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">validate_service_layers</span><span class="p">(</span><span class="n">current_item</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param current_item: The current item</span>
+<span class="sd">        :return: Dictionary of validated layers</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">item_id</span> <span class="o">=</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">item_content</span> <span class="o">=</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">item_title</span> <span class="o">=</span> <span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;agolItem&#39;</span><span class="p">]</span>
+        <span class="n">type_keywords</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;typeKeywords&#39;</span><span class="p">]</span>
+        <span class="n">require_token</span> <span class="o">=</span> <span class="n">_requires_token</span><span class="p">(</span><span class="s2">&quot;Requires Subscription&quot;</span><span class="p">,</span> <span class="n">type_keywords</span><span class="p">)</span>
+        <span class="n">default_timeout</span> <span class="o">=</span> <span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;default_timeout&#39;</span><span class="p">]</span>
+        <span class="n">default_retry_count</span> <span class="o">=</span> <span class="n">item_content</span><span class="p">[</span><span class="s1">&#39;default_retry_count&#39;</span><span class="p">]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">item_title</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;requires token: </span><span class="si">{</span><span class="n">require_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Check if the item is valid.  An item is considered valid only if we can access the item in AGOL so that we can</span>
+        <span class="c1"># access the item&#39;s layers.  Otherwise, we need to access the service and retrieve the layers.</span>
+        <span class="k">if</span> <span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;itemIsValid&quot;</span><span class="p">]:</span>
+            <span class="c1"># item is valid</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;agolItem&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                        <span class="s2">&quot;layerId&quot;</span><span class="p">:</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;addToken&quot;</span><span class="p">:</span> <span class="n">require_token</span><span class="p">,</span>
+                        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;retryCount&quot;</span><span class="p">:</span> <span class="n">default_retry_count</span><span class="p">,</span>
+                        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                        <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">default_timeout</span><span class="p">,</span>
+                        <span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">layer</span><span class="o">.</span><span class="n">url</span>
+                    <span class="p">})</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; The item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> is either inaccessible or not valid: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                    <span class="s2">&quot;layerId&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="n">e</span>
+                <span class="p">})</span>
+                <span class="n">layer_query_params</span> <span class="o">=</span> <span class="n">_prepare_layer_query_params</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="n">layers_are_valid</span> <span class="o">=</span> <span class="n">_check_all_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span><span class="o">**</span><span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="p">{</span><span class="s2">&quot;allLayersAreValid&quot;</span><span class="p">:</span> <span class="n">layers_are_valid</span><span class="p">},</span>
+                                         <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">},</span>
+                                         <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layerQueryParams&quot;</span><span class="p">:</span> <span class="n">layer_query_params</span><span class="p">}}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">layer_query_params</span> <span class="o">=</span> <span class="n">_prepare_layer_query_params</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="n">layers_are_valid</span> <span class="o">=</span> <span class="n">_check_all_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span>
+                    <span class="o">**</span><span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;allLayersAreValid&quot;</span><span class="p">:</span> <span class="n">layers_are_valid</span><span class="p">},</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">},</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layerQueryParams&quot;</span><span class="p">:</span> <span class="n">layer_query_params</span><span class="p">}</span>
+                <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># item is not valid or not accessible, use the url on file</span>
+            <span class="k">if</span> <span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;serviceResponse&quot;</span><span class="p">][</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+                <span class="c1"># check if we received a successful response from using the service url on file</span>
+                <span class="n">response</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;serviceResponse&quot;</span><span class="p">][</span><span class="s2">&quot;response&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">content</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+                <span class="c1"># Check if the response throws and error</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># There was no error returned in the response</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">&quot;layers&quot;</span><span class="p">]):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">layer</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                            <span class="s2">&quot;layerId&quot;</span><span class="p">:</span> <span class="n">layer</span><span class="o">.</span><span class="n">properties</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;addToken&quot;</span><span class="p">:</span> <span class="n">require_token</span><span class="p">,</span>
+                            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;retryCount&quot;</span><span class="p">:</span> <span class="n">default_retry_count</span><span class="p">,</span>
+                            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                            <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">default_timeout</span><span class="p">,</span>
+                            <span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;token&quot;</span><span class="p">],</span>
+                            <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">item_content</span><span class="p">[</span><span class="s2">&quot;service_url&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">layer</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">])</span>
+                        <span class="p">})</span>
+                    <span class="n">layer_query_params</span> <span class="o">=</span> <span class="n">_prepare_layer_query_params</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                    <span class="n">layers_are_valid</span> <span class="o">=</span> <span class="n">_check_all_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># There was an error returned in the response</span>
+                    <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                        <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot; The item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> service url is having issues: </span><span class="si">{</span><span class="n">error</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">})</span>
+                    <span class="n">layer_query_params</span> <span class="o">=</span> <span class="n">_prepare_layer_query_params</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                    <span class="n">layers_are_valid</span> <span class="o">=</span> <span class="n">_check_all_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span>
+                    <span class="o">**</span><span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;allLayersAreValid&quot;</span><span class="p">:</span> <span class="n">layers_are_valid</span><span class="p">},</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">},</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layerQueryParams&quot;</span><span class="p">:</span> <span class="n">layer_query_params</span><span class="p">}</span>
+                <span class="p">}</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># we have a failed response</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot; The item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> not inaccessible or not valid and the service url is not accessible.&quot;</span><span class="p">)</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                    <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot; The item </span><span class="si">{</span><span class="n">item_id</span><span class="si">}</span><span class="s2"> is either inaccessible or not valid and the service url is not &quot;</span>
+                               <span class="sa">f</span><span class="s2">&quot;accessible. &quot;</span>
+                <span class="p">})</span>
+                <span class="n">layer_query_params</span> <span class="o">=</span> <span class="n">_prepare_layer_query_params</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="n">layers_are_valid</span> <span class="o">=</span> <span class="n">_check_all_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">current_item</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">{</span>
+                    <span class="o">**</span><span class="n">current_item</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;allLayersAreValid&quot;</span><span class="p">:</span> <span class="n">layers_are_valid</span><span class="p">},</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">},</span>
+                    <span class="o">**</span><span class="p">{</span><span class="s2">&quot;layerQueryParams&quot;</span><span class="p">:</span> <span class="n">layer_query_params</span><span class="p">}</span>
+                <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_layer_query_params</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build the layer query params for each layer</span>
+<span class="sd">        :param layers:</span>
+<span class="sd">        :return:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">layer_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="n">item_id</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+                <span class="n">layer_id</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;layerId&quot;</span><span class="p">]</span>
+                <span class="n">layer_name</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+                <span class="n">layer_url</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;url&quot;</span><span class="p">]</span>
+                <span class="n">layer_add_token</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;addToken&quot;</span><span class="p">]</span>
+                <span class="n">layer_retry_count</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;retryCount&quot;</span><span class="p">]</span>
+                <span class="n">layer_timeout</span> <span class="o">=</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;timeout&quot;</span><span class="p">]</span>
+                <span class="n">layer_data</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">&quot;add_token&quot;</span><span class="p">:</span> <span class="n">layer_add_token</span><span class="p">,</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                    <span class="s2">&quot;layerId&quot;</span><span class="p">:</span> <span class="n">layer_id</span><span class="p">,</span>
+                    <span class="s2">&quot;layerName&quot;</span><span class="p">:</span> <span class="n">layer_name</span><span class="p">,</span>
+                    <span class="s2">&quot;params&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s1">&#39;where&#39;</span><span class="p">:</span> <span class="s1">&#39;1=1&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;returnGeometry&#39;</span><span class="p">:</span> <span class="s1">&#39;false&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;returnCountOnly&#39;</span><span class="p">:</span> <span class="s1">&#39;true&#39;</span>
+                    <span class="p">},</span>
+                    <span class="s2">&quot;retryCount&quot;</span><span class="p">:</span> <span class="n">layer_retry_count</span><span class="p">,</span>
+                    <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;timeout&quot;</span><span class="p">:</span> <span class="n">layer_timeout</span><span class="p">,</span>
+                    <span class="s2">&quot;token&quot;</span><span class="p">:</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;token&quot;</span><span class="p">],</span>
+                    <span class="s2">&quot;try_json&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+                    <span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="n">layer_url</span> <span class="o">+</span> <span class="s2">&quot;/query&quot;</span>
+                <span class="p">})</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">layer_data</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+                    <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">item_id</span><span class="p">,</span>
+                    <span class="s2">&quot;layerId&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+                    <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span>
+                <span class="p">})</span>
+        <span class="k">return</span> <span class="n">layer_data</span>
+
+    <span class="k">def</span> <span class="nf">_check_all_layers</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a True/False if all the layers were a success or not</span>
+<span class="sd">        :param layers: All layer query results</span>
+<span class="sd">        :return: Boolean value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">layer_check_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">layer</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+                <span class="n">layer_check_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">layer_check_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">layer_check_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">layer_check_list</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">validate_service_layers</span><span class="p">,</span> <span class="n">data_model</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span></div>
+
+
+<span class="k">def</span> <span class="nf">_requires_token</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param x: We ae checking for the string &#39;Requires Subscription&#39;</span>
+<span class="sd">    :param ls: An item&#39;s type keywords</span>
+<span class="sd">    :return: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ls</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Esri.
+
+    </p>
+  </div> 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

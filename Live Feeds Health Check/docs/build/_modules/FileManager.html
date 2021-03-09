@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>FileManager &mdash; Live Feeds Service Aggregator 1.0.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Live Feeds Service Aggregator
+          
+
+          
+            
+            <img src="../_static/living-atlas.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <!-- Local TOC -->
+              <div class="local-toc"></div>
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Live Feeds Service Aggregator</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Module code</a> &raquo;</li>
+        
+      <li>FileManager</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for FileManager</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Utility methods for working with files and directories &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">html</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
+<span class="kn">import</span> <span class="nn">stat</span>
+<span class="kn">import</span> <span class="nn">xml.etree.ElementTree</span> <span class="k">as</span> <span class="nn">Et</span>
+<span class="kn">import</span> <span class="nn">TimeUtils</span> <span class="k">as</span> <span class="nn">TimeUtils</span>
+
+
+<div class="viewcode-block" id="check_file_exist_by_os_path"><a class="viewcode-back" href="../index.html#FileManager.check_file_exist_by_os_path">[docs]</a><span class="k">def</span> <span class="nf">check_file_exist_by_os_path</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the path exist</span>
+
+<span class="sd">    :param path:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># If this file object exist.</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="check_file_exist_by_pathlib"><a class="viewcode-back" href="../index.html#FileManager.check_file_exist_by_pathlib">[docs]</a><span class="k">def</span> <span class="nf">check_file_exist_by_pathlib</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check if the file exists</span>
+
+<span class="sd">    :param path: Path to file</span>
+<span class="sd">    :return: Boolean indicating if the file exist</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Create path lib object.</span>
+    <span class="n">pl</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="c1"># Check whether the path lib exist or not.</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">pl</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="create_new_file"><a class="viewcode-back" href="../index.html#FileManager.create_new_file">[docs]</a><span class="k">def</span> <span class="nf">create_new_file</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a new file and write some text in it.</span>
+
+<span class="sd">    :param file_path:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2"> has been created.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_new_folder"><a class="viewcode-back" href="../index.html#FileManager.create_new_folder">[docs]</a><span class="k">def</span> <span class="nf">create_new_folder</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a new directory.</span>
+<span class="sd">    :param file_path:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">check_file_exist_by_os_path</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s2"> has been created.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="set_file_permission"><a class="viewcode-back" href="../index.html#FileManager.set_file_permission">[docs]</a><span class="k">def</span> <span class="nf">set_file_permission</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Change the file permission to read and execute only. &quot;&quot;&quot;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IEXEC</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWRITE</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save"><a class="viewcode-back" href="../index.html#FileManager.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="open_file"><a class="viewcode-back" href="../index.html#FileManager.open_file">[docs]</a><span class="k">def</span> <span class="nf">open_file</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Open the file and return the data</span>
+<span class="sd">    :param path: Path to the file</span>
+<span class="sd">    :return: Return the content of the file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="get_response_time_data"><a class="viewcode-back" href="../index.html#FileManager.get_response_time_data">[docs]</a><span class="k">def</span> <span class="nf">get_response_time_data</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param path:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">json_file</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="update_response_time_data"><a class="viewcode-back" href="../index.html#FileManager.update_response_time_data">[docs]</a><span class="k">def</span> <span class="nf">update_response_time_data</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">input_data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    :param path:</span>
+<span class="sd">    :param input_data:</span>
+<span class="sd">    :return:</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">input_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">input_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">input_data</span><span class="p">,</span> <span class="n">out_file</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_status_from_feed"><a class="viewcode-back" href="../index.html#FileManager.get_status_from_feed">[docs]</a><span class="k">def</span> <span class="nf">get_status_from_feed</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Retrieve the status of the service &quot;&quot;&quot;</span>
+    <span class="n">xml_doc</span> <span class="o">=</span> <span class="n">Et</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">element</span> <span class="o">=</span> <span class="n">xml_doc</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.//channel/item/description&quot;</span><span class="p">)</span>
+    <span class="n">children</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="s2">&quot;h2&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">attrib</span><span class="p">[</span><span class="s2">&quot;attr&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;status-details&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">child</span><span class="o">.</span><span class="n">text</span></div>
+
+
+<div class="viewcode-block" id="init_rss_file"><a class="viewcode-back" href="../index.html#FileManager.init_rss_file">[docs]</a><span class="k">def</span> <span class="nf">init_rss_file</span><span class="p">(</span><span class="n">rss_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">item_template</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">input_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">rss_file</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hydrate an input XML template with an input dictionary and save to disk</span>
+<span class="sd">    :param rss_template: An XML template</span>
+<span class="sd">    :param item_template: The XML template for a single item node</span>
+<span class="sd">    :param input_dict: Input dictionary of data</span>
+<span class="sd">    :param rss_file: Output file path</span>
+<span class="sd">    :return: None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The RSS comments header (this is set in the config ini file)</span>
+    <span class="n">admin_comments_header</span> <span class="o">=</span> <span class="s2">&quot;&lt;h4&gt;&quot;</span> <span class="o">+</span> <span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;rss_comments_header&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;&lt;/h4&gt;&quot;</span>
+    <span class="c1"># store the admin comments</span>
+    <span class="n">admin_comments</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># comments section</span>
+    <span class="n">comments_section</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="c1"># sort the comments in reverse order by time</span>
+    <span class="n">sorted_comments</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;comments&quot;</span><span class="p">],</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># If there are comments, build the section that will be included in the rss output</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_comments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">sorted_comment</span> <span class="ow">in</span> <span class="n">sorted_comments</span><span class="p">:</span>
+            <span class="n">comment</span> <span class="o">=</span> <span class="n">sorted_comment</span><span class="p">[</span><span class="s2">&quot;comment&quot;</span><span class="p">]</span>
+            <span class="n">comment_timestamp</span> <span class="o">=</span> <span class="n">TimeUtils</span><span class="o">.</span><span class="n">convert_from_utc_to_datetime</span><span class="p">(</span><span class="n">sorted_comment</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">%a</span><span class="s2">, </span><span class="si">%d</span><span class="s2"> %b %Y %H:%M:%S&quot;</span><span class="p">)</span>
+            <span class="n">admin_comments</span> <span class="o">+=</span> <span class="s2">&quot;&lt;li&gt;&quot;</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;Posted: </span><span class="si">{</span><span class="n">comment_timestamp</span><span class="si">}</span><span class="s2"> | &lt;b&gt;</span><span class="si">{</span><span class="n">comment</span><span class="si">}</span><span class="s2">&lt;/b&gt;&quot;</span> <span class="o">+</span> <span class="s2">&quot;&lt;/li&gt;&quot;</span>
+        <span class="n">comments_section</span> <span class="o">=</span> <span class="n">admin_comments_header</span> <span class="o">+</span> <span class="n">admin_comments</span>
+
+    <span class="c1"># Hydrate the data model to include the comments</span>
+    <span class="n">input_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s2">&quot;adminComments&quot;</span><span class="p">:</span> <span class="n">html</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">comments_section</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Open the RSS item template.</span>
+    <span class="c1"># Create the item nodes that will ultimately hydrate the main rss template</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">item_template</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">items</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+    <span class="c1"># Update the dictionary</span>
+    <span class="c1"># rss_items is the placeholder in the main rss_template file</span>
+    <span class="n">input_dict</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+        <span class="s2">&quot;rss_items&quot;</span><span class="p">:</span> <span class="n">items</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Open the RSS main template</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">rss_template</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">output_file_contents</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">format_map</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+    <span class="c1"># Over-write to an existing or new file</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">rss_file</span><span class="p">,</span> <span class="s2">&quot;w+&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+        <span class="n">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">output_file_contents</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Esri.
+
+    </p>
+  </div> 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
